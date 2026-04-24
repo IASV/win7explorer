@@ -16,43 +16,52 @@ qt_add_executable(win7explorer
     src/iconprovider.h
 )
 
-# Mark Win7Theme as a QML singleton so qt_add_qml_module emits "singleton" in qmldir
-set_source_files_properties(qml/styles/Win7Theme.qml PROPERTIES
-    QT_QML_SINGLETON_TYPE TRUE
-)
-
 qt_add_qml_module(win7explorer
     URI Win7Explorer
     VERSION 1.0
     QML_FILES
-        qml/main.qml
-        qml/styles/Win7Theme.js
-        qml/styles/Win7Theme.qml
-        qml/components/NavigationBar.qml
-        qml/components/CommandBar.qml
-        qml/components/NavigationPanel.qml
-        qml/components/FolderTreeNode.qml
-        qml/components/ContentArea.qml
-        qml/components/DetailsPanel.qml
-        qml/components/PreviewPanel.qml
-        qml/components/StatusBar.qml
-    RESOURCES
-        resources/icons/nav-back.svg
-        resources/icons/nav-forward.svg
-        resources/icons/nav-up.svg
-        resources/icons/nav-recent.svg
-        resources/icons/search.svg
-        resources/icons/views.svg
-        resources/icons/folder.svg
-        resources/icons/file-generic.svg
-        resources/icons/star-favoritos.svg
-        resources/icons/library.svg
-        resources/icons/computer.svg
-        resources/icons/network.svg
-        resources/icons/help.svg
-        resources/icons/chevron-right.svg
-        resources/icons/chevron-down.svg
-        resources/icons/dropdown-arrow.svg
+        qml/Explorer.qml
+        qml/FileSystem.qml
+        qml/SidebarGroup.qml
+        qml/SidebarItem.qml
+)
+
+# Icons at qrc:/Win7Explorer/icons/ so relative "../icons/" from qml/Explorer.qml resolves correctly
+qt_add_resources(win7explorer "winicons"
+    PREFIX "/Win7Explorer"
+    BASE "html"
+    FILES
+        html/icons/control-panel.ico
+        html/icons/document.ico
+        html/icons/drive-cd.ico
+        html/icons/drive-dvd.ico
+        html/icons/drive-dvdram.ico
+        html/icons/drive-dvdr.ico
+        html/icons/drive-dvdrom.ico
+        html/icons/drive-dvdrw.ico
+        html/icons/drive-empty.ico
+        html/icons/drive-floppy2.ico
+        html/icons/drive-floppy.ico
+        html/icons/drive-local.ico
+        html/icons/drive-removable.ico
+        html/icons/drive-system.ico
+        html/icons/file-generic.ico
+        html/icons/folder-blue-empty.ico
+        html/icons/folder-blue.ico
+        html/icons/folder-closed.ico
+        html/icons/folder-empty.ico
+        html/icons/folder-search.ico
+        html/icons/folder-semi.ico
+        html/icons/games.ico
+        html/icons/mail.ico
+        html/icons/music.ico
+        html/icons/network.ico
+        html/icons/picture.ico
+        html/icons/printer.ico
+        html/icons/search.ico
+        html/icons/shield.ico
+        html/icons/video.ico
+        html/icons/window.ico
 )
 
 target_link_libraries(win7explorer PRIVATE

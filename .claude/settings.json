@@ -30,7 +30,13 @@
       "Read(//usr/lib/qt6/qml/QtQuick/Controls/**)",
       "Read(//usr/lib64/qt6/qml/**)",
       "Read(//usr/lib64/qt6/plugins/**)",
-      "Read(//usr/share/**)"
+      "Read(//usr/share/**)",
+      "Bash(cp /home/iasuarez/Documents/projects/win7explorer/win7explorer/html/qml/Explorer.qml /home/iasuarez/Documents/projects/win7explorer/win7explorer/qml/Explorer.qml)",
+      "Bash(cp /home/iasuarez/Documents/projects/win7explorer/win7explorer/html/qml/FileSystem.qml /home/iasuarez/Documents/projects/win7explorer/win7explorer/qml/FileSystem.qml)",
+      "Bash(grep -E \"\\(error|warning|Built target win7explorer$|\\\\[100\\\\%\\\\]\\)\")",
+      "Bash(grep -E \"\\(error:|warning:|Built target win7explorer$|\\\\[100\\\\%\\\\]\\)\")",
+      "Bash(grep -E \"\\(error:|warning:|100%|Built target win7explorer$\\)\")",
+      "Bash(grep -E \"\\(error:|warning [^C]|100%|Built target win7explorer$\\)\")"
     ],
     "additionalDirectories": [
       "/home/iasuarez/.continue"
