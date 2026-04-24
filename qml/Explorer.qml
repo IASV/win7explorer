@@ -5,7 +5,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 
 ApplicationWindow {
     id: win
@@ -13,7 +12,7 @@ ApplicationWindow {
     height: 760
     visible: true
     title: currentNode ? currentNode.name : "Explorador"
-    flags: Qt.Window | Qt.FramelessWindowHint
+    flags: Qt.Window
 
     // ---------- Modelo ----------
     FileSystem { id: fs }
@@ -255,66 +254,6 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
-
-            // ---------- TITLEBAR ----------
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 32
-                color: win.pal.titlebar
-                border.color: win.pal.border
-
-                MouseArea {
-                    anchors.fill: parent
-                    property point startPos
-                    onPressed: (mouse) => { startPos = Qt.point(mouse.x, mouse.y) }
-                    onPositionChanged: (mouse) => {
-                        if (pressed) {
-                            win.x += mouse.x - startPos.x
-                            win.y += mouse.y - startPos.y
-                        }
-                    }
-                    onDoubleClicked: win.visibility = (win.visibility === Window.Maximized ? Window.Windowed : Window.Maximized)
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    spacing: 4
-
-                    Label {
-                        text: win.title
-                        color: win.pal.titleText
-                        font.pixelSize: 12
-                        Layout.fillWidth: true
-                    }
-
-                    Repeater {
-                        model: [
-                            { label: "—", action: function(){ win.showMinimized() } },
-                            { label: "□", action: function(){ win.visibility = win.visibility === Window.Maximized ? Window.Windowed : Window.Maximized } },
-                            { label: "✕", action: function(){ Qt.quit() }, close: true }
-                        ]
-                        delegate: Rectangle {
-                            Layout.preferredWidth: 40
-                            Layout.preferredHeight: 26
-                            color: hoverArea.containsMouse ? (modelData.close ? "#e23d3d" : Qt.rgba(100/255, 140/255, 180/255, 0.2)) : "transparent"
-                            radius: 2
-                            Label {
-                                anchors.centerIn: parent
-                                text: modelData.label
-                                color: modelData.close && hoverArea.containsMouse ? "white" : win.pal.titleText
-                                font.pixelSize: 12
-                            }
-                            MouseArea {
-                                id: hoverArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: modelData.action()
-                            }
-                        }
-                    }
-                }
-            }
 
             // ---------- ADDRESS BAR ----------
             Rectangle {

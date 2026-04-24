@@ -30,7 +30,7 @@ Column {
             }
 
             Image {
-                source: sgRoot.fs.iconForGroup(sgRoot.group.kind)
+                source: sgRoot.fs ? sgRoot.fs.iconForGroup(sgRoot.group.kind) : ""
                 Layout.preferredWidth: 14
                 Layout.preferredHeight: 14
                 fillMode: Image.PreserveAspectFit

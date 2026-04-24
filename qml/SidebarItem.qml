@@ -38,7 +38,7 @@ Column {
             }
 
             Image {
-                source: siRoot.fs.iconFor(siRoot.item)
+                source: siRoot.fs ? siRoot.fs.iconFor(siRoot.item) : ""
                 Layout.preferredWidth: 14
                 Layout.preferredHeight: 14
                 fillMode: Image.PreserveAspectFit
