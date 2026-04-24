@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "components"
-import "styles"
+import "styles/Win7Theme.js" as Win7Theme
 
 ApplicationWindow {
     id: root
@@ -19,14 +19,12 @@ ApplicationWindow {
     }
     color: Win7Theme.windowBackground
 
-    // ── Panel visibility ──
     property bool showNavPanel: true
     property bool showDetailsPanel: true
     property bool showPreviewPanel: false
     property int navPanelWidth: Win7Theme.navPanelDefaultWidth
     property int previewPanelWidth: 280
 
-    // ── Error notification ──
     Connections {
         target: fileSystemBackend
         function onErrorOccurred(message) {
@@ -52,8 +50,6 @@ ApplicationWindow {
         Text {
             id: errorText
             anchors.centerIn: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
             text: errorBar.message
             color: "white"
             font.family: Win7Theme.fontFamily
@@ -70,19 +66,16 @@ ApplicationWindow {
         }
     }
 
-    // ── Main Layout ──
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // ═══ Navigation Bar ═══
         NavigationBar {
             id: navigationBar
             Layout.fillWidth: true
             Layout.preferredHeight: Win7Theme.navBarHeight + 6
         }
 
-        // ═══ Command Bar ═══
         CommandBar {
             id: commandBar
             Layout.fillWidth: true
@@ -104,7 +97,7 @@ ApplicationWindow {
                 let p = fileSystemBackend.selectedFileInfo.path
                 if (p) { contentArea.cbPath = p; contentArea.cbMode = "copy" }
             }
-            onPasteRequested:        contentArea.pasteItem()
+            onPasteRequested:   contentArea.pasteItem()
             onDeleteRequested: {
                 let p = fileSystemBackend.selectedFileInfo.path
                 if (p) contentArea.openDeleteDialog(p)
@@ -113,17 +106,15 @@ ApplicationWindow {
                 let info = fileSystemBackend.selectedFileInfo
                 if (info.path) contentArea.openRenameDialog(info.path, info.name)
             }
-            onSelectAllRequested:    contentArea.selectAll()
+            onSelectAllRequested: contentArea.selectAll()
         }
 
-        // ═══ Separator ═══
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
             color: Win7Theme.cmdBarBorderBottom
         }
 
-        // ═══ Main Content Area ═══
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -132,7 +123,6 @@ ApplicationWindow {
                 anchors.fill: parent
                 spacing: 0
 
-                // ── Navigation Panel (Left Sidebar) ──
                 NavigationPanel {
                     id: navPanel
                     Layout.preferredWidth: root.showNavPanel ? root.navPanelWidth : 0
@@ -142,7 +132,6 @@ ApplicationWindow {
                     clip: true
                 }
 
-                // ── NavPanel Splitter ──
                 Rectangle {
                     Layout.preferredWidth: root.showNavPanel ? Win7Theme.splitterWidth : 0
                     Layout.maximumWidth: root.showNavPanel ? Win7Theme.splitterWidth : 0
@@ -154,21 +143,14 @@ ApplicationWindow {
                         cursorShape: Qt.SplitHCursor
                         property int startX: 0
                         property int startWidth: 0
-
-                        onPressed: (mouse) => {
-                            startX = mouse.x
-                            startWidth = root.navPanelWidth
-                        }
+                        onPressed: (mouse) => { startX = mouse.x; startWidth = root.navPanelWidth }
                         onPositionChanged: (mouse) => {
-                            if (pressed) {
-                                let nw = startWidth + (mouse.x - startX)
-                                root.navPanelWidth = Math.max(150, Math.min(400, nw))
-                            }
+                            if (pressed)
+                                root.navPanelWidth = Math.max(150, Math.min(400, startWidth + (mouse.x - startX)))
                         }
                     }
                 }
 
-                // ── Content + Details ──
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -181,7 +163,6 @@ ApplicationWindow {
                         searchQuery: navigationBar.searchText
                     }
 
-                    // Details separator
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: root.showDetailsPanel ? 1 : 0
@@ -189,7 +170,6 @@ ApplicationWindow {
                         color: Win7Theme.detailsPanelBorder
                     }
 
-                    // Details panel
                     DetailsPanel {
                         id: detailsPanel
                         Layout.fillWidth: true
@@ -199,7 +179,6 @@ ApplicationWindow {
                     }
                 }
 
-                // ── Preview Panel Splitter ──
                 Rectangle {
                     Layout.preferredWidth: root.showPreviewPanel ? Win7Theme.splitterWidth : 0
                     Layout.maximumWidth: root.showPreviewPanel ? Win7Theme.splitterWidth : 0
@@ -211,21 +190,14 @@ ApplicationWindow {
                         cursorShape: Qt.SplitHCursor
                         property int startX: 0
                         property int startWidth: 0
-
-                        onPressed: (mouse) => {
-                            startX = mouse.x
-                            startWidth = root.previewPanelWidth
-                        }
+                        onPressed: (mouse) => { startX = mouse.x; startWidth = root.previewPanelWidth }
                         onPositionChanged: (mouse) => {
-                            if (pressed) {
-                                let nw = startWidth - (mouse.x - startX)
-                                root.previewPanelWidth = Math.max(180, Math.min(500, nw))
-                            }
+                            if (pressed)
+                                root.previewPanelWidth = Math.max(180, Math.min(500, startWidth - (mouse.x - startX)))
                         }
                     }
                 }
 
-                // ── Preview Panel ──
                 PreviewPanel {
                     id: previewPanel
                     Layout.preferredWidth: root.showPreviewPanel ? root.previewPanelWidth : 0
@@ -237,7 +209,6 @@ ApplicationWindow {
             }
         }
 
-        // ═══ Status Bar ═══
         StatusBar {
             id: statusBar
             Layout.fillWidth: true

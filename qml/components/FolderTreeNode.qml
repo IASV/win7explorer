@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import "../styles"
+import "../styles/Win7Theme.js" as Win7Theme
 
 // Recursive folder tree node — used by NavigationPanel for the Equipo section.
 // Children are loaded lazily on first expand; auto-expands when navigating into a child path.
@@ -63,7 +63,7 @@ Item {
             Image {
                 width: 16; height: 16
                 sourceSize: Qt.size(16, 16)
-                source: "image://fileicons/" + encodeURIComponent(treeNode.nodePath)
+                source: treeNode.nodePath ? "image://fileicons/" + encodeURIComponent(treeNode.nodePath) : ""
                 fillMode: Image.PreserveAspectFit
             }
 
@@ -103,12 +103,16 @@ Item {
         Repeater {
             model: treeNode.loadedChildren
 
-            FolderTreeNode {
+            Loader {
                 width: childCol.width
-                nodePath: modelData.path
-                nodeName: modelData.name
-                depth: treeNode.depth + 1
-                nodeHasChildren: modelData.hasChildren
+                height: status === Loader.Ready ? item.implicitHeight : 0
+                source: Qt.resolvedUrl("FolderTreeNode.qml")
+                onLoaded: {
+                    item.nodePath = modelData.path
+                    item.nodeName = modelData.name
+                    item.depth = treeNode.depth + 1
+                    item.nodeHasChildren = modelData.hasChildren
+                }
             }
         }
     }

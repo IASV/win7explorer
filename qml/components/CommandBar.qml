@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles"
+import "../styles/Win7Theme.js" as Win7Theme
 
 // ═══════════════════════════════════════════════════
 // Command Bar: Organizar ▾ | context buttons... | Views ▾ | ?

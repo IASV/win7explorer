@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles"
+import "../styles/Win7Theme.js" as Win7Theme
 
 Rectangle {
     id: contentArea
@@ -334,6 +334,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         clip: true
+        background: null
         ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
         // Icon Grid View

@@ -16,11 +16,17 @@ qt_add_executable(win7explorer
     src/iconprovider.h
 )
 
+# Mark Win7Theme as a QML singleton so qt_add_qml_module emits "singleton" in qmldir
+set_source_files_properties(qml/styles/Win7Theme.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(win7explorer
     URI Win7Explorer
     VERSION 1.0
     QML_FILES
         qml/main.qml
+        qml/styles/Win7Theme.js
         qml/styles/Win7Theme.qml
         qml/components/NavigationBar.qml
         qml/components/CommandBar.qml
