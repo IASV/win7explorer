@@ -12,6 +12,8 @@ qt_add_executable(win7explorer
     src/main.cpp
     src/filesystembackend.cpp
     src/filesystembackend.h
+    src/iconprovider.cpp
+    src/iconprovider.h
 )
 
 qt_add_qml_module(win7explorer
@@ -26,6 +28,7 @@ qt_add_qml_module(win7explorer
         qml/components/FolderTreeNode.qml
         qml/components/ContentArea.qml
         qml/components/DetailsPanel.qml
+        qml/components/PreviewPanel.qml
         qml/components/StatusBar.qml
     RESOURCES
         resources/icons/nav-back.svg

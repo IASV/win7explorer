@@ -10,7 +10,24 @@ import "../styles"
 Rectangle {
     id: cmdBar
 
-    signal newFolderRequested
+    // ── Signals for cross-component operations ──
+    signal newFolderRequested()
+    signal cutRequested()
+    signal copyRequested()
+    signal pasteRequested()
+    signal deleteRequested()
+    signal renameRequested()
+    signal selectAllRequested()
+    signal navPanelToggled()
+    signal detailsPanelToggled()
+    signal previewPanelToggled()
+
+    // ── State received from main.qml ──
+    property bool hasClipboard: false
+    property bool hasSelection: fileSystemBackend.selectedCount > 0
+    property bool navPanelVisible: true
+    property bool detailsPanelVisible: true
+    property bool previewPanelVisible: false
 
     gradient: Gradient {
         GradientStop { position: 0.0; color: Win7Theme.cmdBarGradientTop }
@@ -25,6 +42,85 @@ Rectangle {
         color: Win7Theme.cmdBarBorderTop
     }
 
+    // ════════════════════════════════════════
+    // Organizar ▾ full dropdown menu (Win7-faithful)
+    // ════════════════════════════════════════
+    Menu {
+        id: organizarMenu
+        y: cmdBar.height
+
+        MenuItem {
+            text: "Cortar"
+            enabled: cmdBar.hasSelection
+            onTriggered: cmdBar.cutRequested()
+        }
+        MenuItem {
+            text: "Copiar"
+            enabled: cmdBar.hasSelection
+            onTriggered: cmdBar.copyRequested()
+        }
+        MenuItem {
+            text: "Pegar"
+            enabled: cmdBar.hasClipboard
+            onTriggered: cmdBar.pasteRequested()
+        }
+        MenuSeparator {}
+        MenuItem {
+            text: "Deshacer"
+            enabled: false  // future
+        }
+        MenuItem {
+            text: "Rehacer"
+            enabled: false
+        }
+        MenuItem {
+            text: "Seleccionar todo"
+            onTriggered: cmdBar.selectAllRequested()
+        }
+        MenuSeparator {}
+
+        // Diseño submenu
+        Menu {
+            title: "Diseño"
+
+            MenuItem {
+                text: "Panel de navegación"
+                checkable: true
+                checked: cmdBar.navPanelVisible
+                onTriggered: cmdBar.navPanelToggled()
+            }
+            MenuItem {
+                text: "Panel de detalles"
+                checkable: true
+                checked: cmdBar.detailsPanelVisible
+                onTriggered: cmdBar.detailsPanelToggled()
+            }
+            MenuItem {
+                text: "Panel de vista previa"
+                checkable: true
+                checked: cmdBar.previewPanelVisible
+                onTriggered: cmdBar.previewPanelToggled()
+            }
+        }
+
+        MenuSeparator {}
+        MenuItem {
+            text: "Eliminar"
+            enabled: cmdBar.hasSelection
+            onTriggered: cmdBar.deleteRequested()
+        }
+        MenuItem {
+            text: "Cambiar nombre"
+            enabled: cmdBar.hasSelection
+            onTriggered: cmdBar.renameRequested()
+        }
+        MenuSeparator {}
+        MenuItem {
+            text: "Propiedades"
+            enabled: false
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 8
@@ -35,12 +131,13 @@ Rectangle {
         CmdBarButton {
             text: "Organizar ▾"
             isBold: false
+            onClicked: organizarMenu.open()
         }
 
         // ── Separator ──
         CmdBarSeparator {}
 
-        // ── Context buttons (change based on selection) ──
+        // ── Context buttons ──
         CmdBarButton {
             text: "Incluir en biblioteca ▾"
             visible: !fileSystemBackend.selectedFileInfo.isDir ||
@@ -51,7 +148,7 @@ Rectangle {
             text: "Compartir con ▾"
         }
 
-        CmdBarSeparator { visible: true }
+        CmdBarSeparator {}
 
         CmdBarButton {
             text: "Grabar"
@@ -65,10 +162,10 @@ Rectangle {
         // Spacer
         Item { Layout.fillWidth: true }
 
-        // ── Right side: Views dropdown + Help ──
+        // ── Right side ──
         CmdBarSeparator {}
 
-        // Views slider button (simplified as dropdown for now)
+        // Views menu button
         Rectangle {
             width: 24
             height: parent.height - 4
@@ -100,13 +197,12 @@ Rectangle {
 
                 MenuItem { text: "Iconos muy grandes" }
                 MenuItem { text: "Iconos grandes" }
-                MenuItem { text: "Iconos medianos" }
+                MenuItem { text: "Iconos medianos"; checkable: true; checked: true }
                 MenuItem { text: "Iconos pequeños" }
                 MenuSeparator {}
                 MenuItem { text: "Lista" }
                 MenuItem { text: "Detalles" }
                 MenuItem { text: "Mosaicos" }
-                MenuItem { text: "Contenido" }
             }
         }
 
@@ -115,9 +211,11 @@ Rectangle {
             width: 24
             height: parent.height - 4
             radius: 2
-            color: previewBtnMa.containsPress ? Win7Theme.cmdBarBtnPressed
-                 : previewBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover
-                 : "transparent"
+            color: cmdBar.previewPanelVisible
+                   ? Win7Theme.cmdBarBtnPressed
+                   : previewBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover : "transparent"
+            border.color: cmdBar.previewPanelVisible ? Win7Theme.selectionBorder : "transparent"
+            border.width: 1
 
             Text {
                 anchors.centerIn: parent
@@ -130,6 +228,7 @@ Rectangle {
                 id: previewBtnMa
                 anchors.fill: parent
                 hoverEnabled: true
+                onClicked: cmdBar.previewPanelToggled()
             }
 
             ToolTip.text: "Panel de vista previa"

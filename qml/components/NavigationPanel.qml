@@ -46,9 +46,9 @@ Rectangle {
                     expanded: true
 
                     model: ListModel {
-                        ListElement { name: "Descargas"; icon: "📥" }
-                        ListElement { name: "Escritorio"; icon: "🖥" }
-                        ListElement { name: "Sitios recientes"; icon: "🕐" }
+                        ListElement { name: "Descargas"; icon: "image://fileicons/folder-download" }
+                        ListElement { name: "Escritorio"; icon: "image://fileicons/user-desktop" }
+                        ListElement { name: "Sitios recientes"; icon: "image://fileicons/document-open-recent" }
                     }
 
                     onItemClicked: function(itemName) {
@@ -73,10 +73,10 @@ Rectangle {
                     expanded: true
 
                     model: ListModel {
-                        ListElement { name: "Documentos"; icon: "📄" }
-                        ListElement { name: "Imágenes"; icon: "🖼" }
-                        ListElement { name: "Música"; icon: "🎵" }
-                        ListElement { name: "Vídeos"; icon: "🎬" }
+                        ListElement { name: "Documentos"; icon: "image://fileicons/folder-documents" }
+                        ListElement { name: "Imágenes"; icon: "image://fileicons/folder-pictures" }
+                        ListElement { name: "Música"; icon: "image://fileicons/folder-music" }
+                        ListElement { name: "Vídeos"; icon: "image://fileicons/folder-video" }
                     }
 
                     onItemClicked: function(itemName) {
@@ -248,12 +248,14 @@ Rectangle {
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 28
+                    anchors.leftMargin: 24
                     spacing: 4
 
-                    Text {
-                        text: model.icon
-                        font.pixelSize: 13
+                    Image {
+                        width: 16; height: 16
+                        sourceSize: Qt.size(16, 16)
+                        source: model.icon
+                        fillMode: Image.PreserveAspectFit
                     }
 
                     Text {

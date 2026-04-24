@@ -26,7 +26,13 @@ Rectangle {
     property string cbMode: "copy"
     property bool hasClipboard: cbPath !== ""
 
-    // ── Public API for CommandBar ──
+    // ── Public API for CommandBar / main.qml ──
+    function selectAll() {
+        // Select the first item — full multi-selection is a future feature
+        if (fileSystemBackend.currentFiles.length > 0)
+            fileSystemBackend.selectFile(fileSystemBackend.currentFiles[0].path)
+    }
+
     function openNewFolderDialog() {
         newFolderField.text = "Nueva carpeta"
         newFolderDialog.open()
@@ -376,10 +382,14 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: modelData.isDir ? "📁" : fileIconEmoji(modelData.name)
-                                font.pixelSize: contentArea.iconSize * 0.7
+                                width: contentArea.iconSize
+                                height: contentArea.iconSize
+                                sourceSize: Qt.size(contentArea.iconSize, contentArea.iconSize)
+                                source: "image://fileicons/" + encodeURIComponent(modelData.path)
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
                                 opacity: modelData.isHidden ? 0.5 : 1.0
                             }
                         }
@@ -456,9 +466,12 @@ Rectangle {
                         spacing: 4
                         clip: true
 
-                        Text {
-                            text: modelData.isDir ? "📁" : "📄"
-                            font.pixelSize: 14
+                        Image {
+                            width: 16; height: 16
+                            sourceSize: Qt.size(16, 16)
+                            source: "image://fileicons/" + encodeURIComponent(modelData.path)
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {

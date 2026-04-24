@@ -4,6 +4,7 @@
 #include <QQuickStyle>
 #include <QIcon>
 #include "filesystembackend.h"
+#include "iconprovider.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,6 +21,9 @@ int main(int argc, char *argv[])
     // Register C++ backend
     FileSystemBackend *backend = new FileSystemBackend(&app);
     engine.rootContext()->setContextProperty("fileSystemBackend", backend);
+
+    // Image provider: image://fileicons/<encoded-path-or-theme-name>
+    engine.addImageProvider("fileicons", new IconProvider());
 
     // Load main QML
     const QUrl url(u"qrc:/Win7Explorer/qml/main.qml"_qs);

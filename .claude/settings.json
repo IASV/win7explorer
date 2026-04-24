@@ -23,7 +23,8 @@
       "Bash(cmake --build build -j4)",
       "Bash(cmake --build /home/iasuarez/Documents/projects/win7explorer/win7explorer/build -j4)",
       "Bash(cmake -B build -S . -DCMAKE_BUILD_TYPE=Release)",
-      "Bash(cmake --build build --parallel 4)"
+      "Bash(cmake --build build --parallel 4)",
+      "WebFetch(domain:gitgud.io)"
     ],
     "additionalDirectories": [
       "/home/iasuarez/.continue"

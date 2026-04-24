@@ -42,5 +42,37 @@ Crear una réplica visual y funcional del Explorador de Windows 7 en Linux, opti
     *   [X] **Búsqueda de archivos** — Barra de búsqueda (ya existente en `NavigationBar`) conectada a `ContentArea.searchQuery`. Filtro reactivo: `displayFiles` filtra `currentFiles` por nombre en tiempo real. Encabezado muestra "Resultados de búsqueda" al buscar. Se limpia al navegar a otra carpeta.
 *   **Estado:** Completa. Compila limpio `[100%]`.
 
+## 🎨 PRIORIDAD 4: Fidelidad Visual y Funcionalidad Avanzada — **(COMPLETADA)**
+
+### A — Iconos Reales del Sistema (impacto visual máximo)
+*   [X] **`IconProvider` C++** (`src/iconprovider.h/cpp`) — `QQuickImageProvider` que sirve iconos del sistema KDE/GTK via `image://fileicons/<id>`. Soporta rutas absolutas (`QFileIconProvider`) y nombres de tema (`QIcon::fromTheme`).
+*   [X] **Registro en `main.cpp`** — `engine.addImageProvider("fileicons", new IconProvider())`.
+*   [X] **ContentArea** — Grid y List view usan `Image { source: "image://fileicons/" + encodeURIComponent(path) }` en vez de emoji. `sourceSize` correcto por vista.
+*   [X] **FolderTreeNode** — Icono de carpeta real del sistema en lugar de 📁.
+*   [X] **NavigationPanel** — NavSection items usan iconos de tema FreeDesktop (`folder-download`, `user-desktop`, `folder-documents`, `folder-pictures`, `folder-music`, `folder-video`).
+*   [X] **DetailsPanel** — Icono de sistema en el panel de detalles; thumbnail real para imágenes.
+
+### B — Menú "Organizar ▾" Funcional (fiel al Win7 original)
+*   [X] Menú completo con: Cortar, Copiar, Pegar (enable/disable según estado), Deshacer/Rehacer, Seleccionar todo.
+*   [X] Submenú **Diseño** con checkboxes: Panel de navegación ✓, Panel de detalles ✓, Panel de vista previa.
+*   [X] Opciones: Eliminar, Cambiar nombre, Propiedades.
+*   [X] Botón de vista previa en la barra con estado visual (activo/inactivo).
+*   [X] Señales en `CommandBar` conectadas a `main.qml`: `cutRequested`, `copyRequested`, `pasteRequested`, `deleteRequested`, `renameRequested`, `selectAllRequested`, `navPanelToggled`, `detailsPanelToggled`, `previewPanelToggled`.
+*   [X] **Paneles togglables**: navPanel, detailsPanel y previewPanel se muestran/ocultan correctamente con `Layout.preferredWidth/Height` + `Layout.maximumWidth/Height = 0`.
+
+### C — Panel de Vista Previa (derecha, togglable)
+*   [X] **`PreviewPanel.qml`** (nuevo) — Panel lateral derecho con splitter redimensionable.
+*   [X] **Imágenes**: muestra la imagen a tamaño completo dentro de `ScrollView`.
+*   [X] **Archivos de texto** (txt, md, sh, py, js, cpp, c, h, rs, go, json, yaml, etc.): muestra contenido vía `fileSystemBackend.readFilePreview()` en `TextArea` monoespaciado.
+*   [X] **`readFilePreview(path, maxChars)`** agregado al backend C++ — detecta binarios por bytes nulos.
+*   [X] **Otros tipos**: muestra icono del sistema + "Vista previa no disponible".
+
+### D — Breadcrumb Arrows Interactivas (fiel al Win7 original)
+*   [X] Cada flecha `▸` entre segmentos del breadcrumb es un botón clickeable con hover/pressed.
+*   [X] Al hacer clic abre un `Menu` con los subdirectorios del segmento correspondiente (vía `getSubdirectories()`).
+*   [X] Iconos del sistema en cada ítem del menú.
+*   [X] Navega directamente al subdirectorio seleccionado.
+
 ## ⚠️ NOTAS IMPORTANTES
 *   El progreso de las fases se actualizará aquí a medida que se completen los módulos clave.
+*   **Iconos**: Los iconos del sistema dependen del tema instalado en KDE. Con AeroThemePlasma activo, se mostrarán los iconos Win7 auténticos (carpetas amarillas 3D, etc.).

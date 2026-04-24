@@ -251,6 +251,22 @@ QVariantList FileSystemBackend::getSubdirectories(const QString &path) const
     return result;
 }
 
+QString FileSystemBackend::readFilePreview(const QString &path, int maxChars) const
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly))
+        return QString();
+
+    QByteArray data = file.read(maxChars);
+    file.close();
+
+    // Treat as binary if it contains null bytes
+    if (data.contains('\0'))
+        return QString();
+
+    return QString::fromUtf8(data);
+}
+
 QString FileSystemBackend::homePath() const { return QDir::homePath(); }
 QString FileSystemBackend::desktopPath() const { return QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); }
 QString FileSystemBackend::documentsPath() const { return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation); }

@@ -155,6 +155,20 @@ Rectangle {
 
                 Item { width: 2 }
 
+                // Shared breadcrumb dropdown — shows subdirs of the clicked segment
+                property var breadcrumbMenuSubs: []
+                Menu {
+                    id: breadcrumbMenu
+                    Repeater {
+                        model: addressBar.breadcrumbMenuSubs
+                        MenuItem {
+                            text: modelData.name
+                            icon.source: "image://fileicons/" + encodeURIComponent(modelData.path)
+                            onTriggered: fileSystemBackend.navigateTo(modelData.path)
+                        }
+                    }
+                }
+
                 // Breadcrumb segments
                 Repeater {
                     model: fileSystemBackend.pathSegments
@@ -162,18 +176,37 @@ Rectangle {
                     delegate: Row {
                         spacing: 0
 
-                        // Separator arrow (except for first segment)
-                        Text {
-                            text: "▸"
-                            font.pixelSize: 9
-                            color: Win7Theme.breadcrumbSeparator
-                            anchors.verticalCenter: parent.verticalCenter
+                        // Separator arrow — clickable dropdown showing subdirs of this segment
+                        Rectangle {
+                            height: 20
+                            width: 16
                             visible: index > 0
-                            leftPadding: 2
-                            rightPadding: 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            radius: 2
+                            color: segArrowMa.containsPress ? Win7Theme.breadcrumbPressed
+                                 : segArrowMa.containsMouse ? Win7Theme.breadcrumbHover
+                                 : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "▸"
+                                font.pixelSize: 9
+                                color: Win7Theme.breadcrumbSeparator
+                            }
+
+                            MouseArea {
+                                id: segArrowMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    addressBar.breadcrumbMenuSubs =
+                                        fileSystemBackend.getSubdirectories(modelData.path)
+                                    breadcrumbMenu.popup()
+                                }
+                            }
                         }
 
-                        // Segment button
+                        // Segment button — navigates directly to this path
                         Rectangle {
                             height: 20
                             width: segmentLabel.implicitWidth + 8

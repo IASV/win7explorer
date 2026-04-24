@@ -60,9 +60,11 @@ Item {
                 opacity: (treeNode.nodeHasChildren || treeNode.loadedChildren.length > 0) ? 1.0 : 0.0
             }
 
-            Text {
-                text: "📁"
-                font.pixelSize: 12
+            Image {
+                width: 16; height: 16
+                sourceSize: Qt.size(16, 16)
+                source: "image://fileicons/" + encodeURIComponent(treeNode.nodePath)
+                fillMode: Image.PreserveAspectFit
             }
 
             Text {

@@ -68,6 +68,7 @@ public:
     Q_INVOKABLE QString formatFileSize(qint64 bytes) const;
     Q_INVOKABLE QString getMimeIcon(const QString &filePath) const;
     Q_INVOKABLE QVariantList getSubdirectories(const QString &path) const;
+    Q_INVOKABLE QString readFilePreview(const QString &path, int maxChars = 3000) const;
 
     // Quick access paths
     Q_INVOKABLE QString homePath() const;

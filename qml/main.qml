@@ -19,6 +19,13 @@ ApplicationWindow {
     }
     color: Win7Theme.windowBackground
 
+    // ── Panel visibility ──
+    property bool showNavPanel: true
+    property bool showDetailsPanel: true
+    property bool showPreviewPanel: false
+    property int navPanelWidth: Win7Theme.navPanelDefaultWidth
+    property int previewPanelWidth: 280
+
     // ── Error notification ──
     Connections {
         target: fileSystemBackend
@@ -68,7 +75,7 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 0
 
-        // ═══ Navigation Bar (Back/Forward + Address Bar + Search) ═══
+        // ═══ Navigation Bar ═══
         NavigationBar {
             id: navigationBar
             Layout.fillWidth: true
@@ -80,17 +87,43 @@ ApplicationWindow {
             id: commandBar
             Layout.fillWidth: true
             Layout.preferredHeight: Win7Theme.cmdBarHeight
-            onNewFolderRequested: contentArea.openNewFolderDialog()
+            hasClipboard: contentArea.hasClipboard
+            navPanelVisible: root.showNavPanel
+            detailsPanelVisible: root.showDetailsPanel
+            previewPanelVisible: root.showPreviewPanel
+
+            onNewFolderRequested:    contentArea.openNewFolderDialog()
+            onNavPanelToggled:       root.showNavPanel = !root.showNavPanel
+            onDetailsPanelToggled:   root.showDetailsPanel = !root.showDetailsPanel
+            onPreviewPanelToggled:   root.showPreviewPanel = !root.showPreviewPanel
+            onCutRequested: {
+                let p = fileSystemBackend.selectedFileInfo.path
+                if (p) { contentArea.cbPath = p; contentArea.cbMode = "cut" }
+            }
+            onCopyRequested: {
+                let p = fileSystemBackend.selectedFileInfo.path
+                if (p) { contentArea.cbPath = p; contentArea.cbMode = "copy" }
+            }
+            onPasteRequested:        contentArea.pasteItem()
+            onDeleteRequested: {
+                let p = fileSystemBackend.selectedFileInfo.path
+                if (p) contentArea.openDeleteDialog(p)
+            }
+            onRenameRequested: {
+                let info = fileSystemBackend.selectedFileInfo
+                if (info.path) contentArea.openRenameDialog(info.path, info.name)
+            }
+            onSelectAllRequested:    contentArea.selectAll()
         }
 
-        // ═══ Separator line ═══
+        // ═══ Separator ═══
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
             color: Win7Theme.cmdBarBorderBottom
         }
 
-        // ═══ Main Content Area (Nav Panel + Content + Preview) ═══
+        // ═══ Main Content Area ═══
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -102,13 +135,17 @@ ApplicationWindow {
                 // ── Navigation Panel (Left Sidebar) ──
                 NavigationPanel {
                     id: navPanel
-                    Layout.preferredWidth: Win7Theme.navPanelDefaultWidth
+                    Layout.preferredWidth: root.showNavPanel ? root.navPanelWidth : 0
+                    Layout.maximumWidth: root.showNavPanel ? 400 : 0
+                    Layout.minimumWidth: 0
                     Layout.fillHeight: true
+                    clip: true
                 }
 
-                // ── Splitter ──
+                // ── NavPanel Splitter ──
                 Rectangle {
-                    Layout.preferredWidth: Win7Theme.splitterWidth
+                    Layout.preferredWidth: root.showNavPanel ? Win7Theme.splitterWidth : 0
+                    Layout.maximumWidth: root.showNavPanel ? Win7Theme.splitterWidth : 0
                     Layout.fillHeight: true
                     color: Win7Theme.splitterColor
 
@@ -120,25 +157,23 @@ ApplicationWindow {
 
                         onPressed: (mouse) => {
                             startX = mouse.x
-                            startWidth = navPanel.Layout.preferredWidth
+                            startWidth = root.navPanelWidth
                         }
                         onPositionChanged: (mouse) => {
                             if (pressed) {
-                                let newWidth = startWidth + (mouse.x - startX)
-                                navPanel.Layout.preferredWidth =
-                                    Math.max(150, Math.min(400, newWidth))
+                                let nw = startWidth + (mouse.x - startX)
+                                root.navPanelWidth = Math.max(150, Math.min(400, nw))
                             }
                         }
                     }
                 }
 
-                // ── Content Area + Details Panel ──
+                // ── Content + Details ──
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 0
 
-                    // Content Area
                     ContentArea {
                         id: contentArea
                         Layout.fillWidth: true
@@ -146,19 +181,58 @@ ApplicationWindow {
                         searchQuery: navigationBar.searchText
                     }
 
-                    // Details Panel separator
+                    // Details separator
                     Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 1
+                        Layout.preferredHeight: root.showDetailsPanel ? 1 : 0
+                        Layout.maximumHeight: root.showDetailsPanel ? 1 : 0
                         color: Win7Theme.detailsPanelBorder
                     }
 
-                    // Details Panel
+                    // Details panel
                     DetailsPanel {
                         id: detailsPanel
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Win7Theme.detailsPanelHeight
+                        Layout.preferredHeight: root.showDetailsPanel ? Win7Theme.detailsPanelHeight : 0
+                        Layout.maximumHeight: root.showDetailsPanel ? Win7Theme.detailsPanelHeight : 0
+                        clip: true
                     }
+                }
+
+                // ── Preview Panel Splitter ──
+                Rectangle {
+                    Layout.preferredWidth: root.showPreviewPanel ? Win7Theme.splitterWidth : 0
+                    Layout.maximumWidth: root.showPreviewPanel ? Win7Theme.splitterWidth : 0
+                    Layout.fillHeight: true
+                    color: Win7Theme.splitterColor
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.SplitHCursor
+                        property int startX: 0
+                        property int startWidth: 0
+
+                        onPressed: (mouse) => {
+                            startX = mouse.x
+                            startWidth = root.previewPanelWidth
+                        }
+                        onPositionChanged: (mouse) => {
+                            if (pressed) {
+                                let nw = startWidth - (mouse.x - startX)
+                                root.previewPanelWidth = Math.max(180, Math.min(500, nw))
+                            }
+                        }
+                    }
+                }
+
+                // ── Preview Panel ──
+                PreviewPanel {
+                    id: previewPanel
+                    Layout.preferredWidth: root.showPreviewPanel ? root.previewPanelWidth : 0
+                    Layout.maximumWidth: root.showPreviewPanel ? 500 : 0
+                    Layout.minimumWidth: 0
+                    Layout.fillHeight: true
+                    clip: true
                 }
             }
         }

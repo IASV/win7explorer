@@ -44,15 +44,13 @@ Rectangle {
                 visible: status === Image.Ready
             }
 
-            // Fallback emoji for non-image files or while loading
-            Text {
-                anchors.centerIn: parent
-                text: {
-                    if (!info || !info.name) return ""
-                    return info.isDir ? "📁" : detailsPanel.fileEmoji(info.name)
-                }
-                font.pixelSize: 38
-                visible: !thumbImage.visible
+            // Fallback: system theme icon (for non-image or while image loads)
+            Image {
+                anchors.fill: parent
+                sourceSize: Qt.size(48, 48)
+                source: (info && info.path) ? "image://fileicons/" + encodeURIComponent(info.path) : ""
+                fillMode: Image.PreserveAspectFit
+                visible: !thumbImage.visible && (info && !!info.path)
             }
         }
 
