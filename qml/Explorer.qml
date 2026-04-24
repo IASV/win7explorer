@@ -1,6 +1,5 @@
-// Explorer.qml - Explorador de archivos en Qt 6 QML
-// Port del prototipo HTML: chrome, sidebar, breadcrumbs, múltiples vistas,
-// panel de preview, status bar, menú contextual y 5 temas.
+// Explorer.qml — Qt 6 QML · Win7 File Explorer replica
+// Visually matches the HTML prototype (html/Explorador.html)
 
 import QtQuick
 import QtQuick.Controls
@@ -24,82 +23,74 @@ ApplicationWindow {
     property var currentNode: fs.findNode(currentId)
     property var pathToCurrent: fs.pathTo(currentId) || []
 
-    property string viewMode: "large"   // large|medium|list|details|content
+    property string viewMode: "large"
     property var selectedIds: ({})
     property int selectedCount: 0
     property string searchQuery: ""
     property string sortBy: "name"
     property string sortDir: "asc"
 
-    // ---------- Tweaks ----------
     property string themeName: "glass"
     property string density: "comfortable"
-    property int accentHue: 230
-    property int radiusVal: 6
     property bool showSidebar: true
     property bool showPreview: true
 
-    // ---------- Paletas ----------
+    // ---------- Paletas (con stops de gradiente) ----------
     readonly property var palettes: ({
         glass: {
             bg1: "#e8f0fa", bg2: "#c8d9ee",
-            titlebar: "#e4ecf7", titleText: "#2a3a4d",
             panel: "#f6f9fc", border: "#c0ccd9", borderSoft: "#e2e8f0",
             sidebar: "#eef4fb", sbText: "#26334a",
             sbHover: "#d4e4f5", sbCurrent: "#b8d4f0",
-            toolbar: "#eef4fb", cmdHover: "#d4e4f5",
+            tbar1: "#fafcff", tbar2: "#e7eef7",
             content: "#ffffff", text: "#1e2836", muted: "#6a7788",
             selection: "#b8d4f0", selectionBorder: "#5a9bd4", selText: "#0c2a4a",
             accent: "#3f7cb8", accentSoft: "#d4e6f7",
-            status: "#e8eff7"
+            stat1: "#f1f5fa", stat2: "#e3ebf4"
         },
         flat: {
             bg1: "#f5f7fa", bg2: "#f5f7fa",
-            titlebar: "#ffffff", titleText: "#1e2836",
             panel: "#ffffff", border: "#e2e8f0", borderSoft: "#eef2f6",
             sidebar: "#fafbfc", sbText: "#1e2836",
             sbHover: "#eef2f6", sbCurrent: "#e7f0fb",
-            toolbar: "#ffffff", cmdHover: "#eef2f6",
+            tbar1: "#ffffff", tbar2: "#ffffff",
             content: "#ffffff", text: "#1e2836", muted: "#6a7788",
             selection: "#e7f0fb", selectionBorder: "#86b4e2", selText: "#13243a",
             accent: "#3f7cb8", accentSoft: "#e7f0fb",
-            status: "#fafbfc"
+            stat1: "#fafbfc", stat2: "#fafbfc"
         },
         dark: {
             bg1: "#1a1f2b", bg2: "#0f131c",
-            titlebar: "#1e2430", titleText: "#d9e1ed",
             panel: "#1e242f", border: "#2d3441", borderSoft: "#262d3b",
             sidebar: "#1c222d", sbText: "#c8d0dd",
             sbHover: "#262d3b", sbCurrent: "#2d3e5e",
-            toolbar: "#1e242f", cmdHover: "#262d3b",
+            tbar1: "#1e242f", tbar2: "#1e242f",
             content: "#161b24", text: "#d9e1ed", muted: "#8a94a6",
             selection: "#2d3e5e", selectionBorder: "#5a7eb8", selText: "#e8eef8",
             accent: "#6ba7e0", accentSoft: "#2d3e5e",
-            status: "#1c222d"
+            stat1: "#1c222d", stat2: "#1c222d"
         },
         warm: {
             bg1: "#faf2e0", bg2: "#ebdec2",
-            titlebar: "#f5ebd0", titleText: "#3d3220",
             panel: "#fcf7eb", border: "#d4c6a4", borderSoft: "#e4d7b8",
             sidebar: "#f9f2e0", sbText: "#3d3220",
             sbHover: "#f1e7cd", sbCurrent: "#e8d8b0",
-            toolbar: "#fbf5e8", cmdHover: "#f1e7cd",
+            tbar1: "#fbf5e8", tbar2: "#fbf5e8",
             content: "#fffaed", text: "#3d3220", muted: "#7d6b48",
             selection: "#f0d998", selectionBorder: "#b39040", selText: "#3d2a0a",
             accent: "#b37c1d", accentSoft: "#f5e4ba",
-            status: "#f9f2e0"
+            stat1: "#f9f2e0", stat2: "#f9f2e0"
         },
         neon: {
             bg1: "#080d18", bg2: "#030509",
-            titlebar: "#0a0f1a", titleText: "#7ee8d8",
             panel: "#0a0f1a", border: "#1a2540", borderSoft: "#18203a",
             sidebar: "#0a0f1a", sbText: "#a0b4c8",
             sbHover: "#122038", sbCurrent: "#1a3358",
-            toolbar: "#0a0f1a", cmdHover: "#122038",
+            tbar1: "#0a0f1a", tbar2: "#0a0f1a",
             content: "#05080f", text: "#c8e8f5", muted: "#6a8aa8",
             selection: "#132030", selectionBorder: "#7ee8d8", selText: "#7ee8d8",
             accent: "#7ee8d8", accentSoft: "#132030",
-            status: "#080d18"
+            stat1: "#080d18", stat2: "#080d18"
         }
     })
     readonly property var pal: palettes[themeName]
@@ -200,7 +191,6 @@ ApplicationWindow {
         fs.deleteItems(Object.keys(selectedIds))
         showToast("Eliminado" + (selectedCount > 1 ? "s" : "") + " " + selectedCount + " elemento(s)")
         selectedIds = ({}); selectedCount = 0
-        // refrescar currentNode
         currentNode = fs.findNode(currentId)
     }
     function handleNewFolder() {
@@ -249,42 +239,79 @@ ApplicationWindow {
         anchors.fill: parent
         color: win.pal.panel
         border.color: win.pal.border
-        radius: win.radiusVal
 
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
 
-            // ---------- ADDRESS BAR ----------
+            // ==================== ADDRESS BAR ====================
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                color: win.pal.toolbar
                 border.color: win.pal.borderSoft
+                gradient: Gradient {
+                    GradientStop { position: 0; color: win.pal.tbar1 }
+                    GradientStop { position: 1; color: win.pal.tbar2 }
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 6
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    anchors.topMargin: 6
+                    anchors.bottomMargin: 6
                     spacing: 6
 
-                    // Nav arrows
+                    // Nav arrows: back · forward · up
                     RowLayout {
                         spacing: 2
                         Repeater {
                             model: [
-                                { label: "◀", enabled: win.historyIndex > 0, action: function(){ win.goBack() } },
-                                { label: "▶", enabled: win.historyIndex < win.historyStack.length - 1, action: function(){ win.goForward() } },
-                                { label: "▲", enabled: win.pathToCurrent.length > 1, action: function(){ win.goUp() } }
+                                { pts: [[9,2],[4,7],[9,12]], clr: "accent",
+                                  get enabled() { return win.historyIndex > 0 },
+                                  action: function(){ win.goBack() } },
+                                { pts: [[5,2],[10,7],[5,12]], clr: "accent",
+                                  get enabled() { return win.historyIndex < win.historyStack.length - 1 },
+                                  action: function(){ win.goForward() } },
+                                { pts: [[2,9],[7,4],[12,9]], clr: "muted",
+                                  get enabled() { return win.pathToCurrent.length > 1 },
+                                  action: function(){ win.goUp() } }
                             ]
                             delegate: Rectangle {
-                                Layout.preferredWidth: 26; Layout.preferredHeight: 26
+                                Layout.preferredWidth: 26
+                                Layout.preferredHeight: 26
                                 radius: 13
-                                color: arrowArea.containsMouse && modelData.enabled ? win.pal.cmdHover : "transparent"
-                                border.color: arrowArea.containsMouse && modelData.enabled ? win.pal.border : "transparent"
-                                opacity: modelData.enabled ? 1 : 0.35
-                                Label { anchors.centerIn: parent; text: modelData.label; color: win.pal.accent; font.pixelSize: 11 }
+                                color: navArea.containsMouse && modelData.enabled
+                                       ? win.pal.accentSoft : "transparent"
+                                border.color: navArea.containsMouse && modelData.enabled
+                                              ? win.pal.border : "transparent"
+                                opacity: modelData.enabled ? 1.0 : 0.35
+
+                                Canvas {
+                                    anchors.centerIn: parent
+                                    width: 14; height: 14
+                                    property var pts: modelData.pts
+                                    property color fg: modelData.clr === "accent"
+                                        ? win.pal.accent : win.pal.muted
+                                    onFgChanged: requestPaint()
+                                    Component.onCompleted: requestPaint()
+                                    onPaint: {
+                                        var ctx = getContext("2d")
+                                        ctx.clearRect(0, 0, 14, 14)
+                                        ctx.strokeStyle = fg
+                                        ctx.lineWidth = 1.8
+                                        ctx.lineCap = "round"
+                                        ctx.lineJoin = "round"
+                                        ctx.beginPath()
+                                        ctx.moveTo(pts[0][0], pts[0][1])
+                                        ctx.lineTo(pts[1][0], pts[1][1])
+                                        ctx.lineTo(pts[2][0], pts[2][1])
+                                        ctx.stroke()
+                                    }
+                                }
+
                                 MouseArea {
-                                    id: arrowArea
+                                    id: navArea
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     enabled: modelData.enabled
@@ -294,41 +321,63 @@ ApplicationWindow {
                         }
                     }
 
-                    // Breadcrumb
+                    // Breadcrumb bar
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 26
                         color: win.pal.content
-                        border.color: win.pal.border
+                        border.color: win.pal.borderSoft
                         radius: 3
+                        clip: true
+
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 6
-                            anchors.rightMargin: 6
-                            spacing: 2
+                            anchors.leftMargin: 4
+                            anchors.rightMargin: 4
+                            spacing: 0
+
                             Repeater {
                                 model: win.pathToCurrent
                                 delegate: RowLayout {
-                                    spacing: 2
-                                    Label {
+                                    spacing: 0
+
+                                    // SVG separator chevron (›)
+                                    Canvas {
                                         visible: index > 0
-                                        text: "›"
-                                        color: win.pal.muted
+                                        Layout.preferredWidth: 8
+                                        Layout.preferredHeight: 10
+                                        property color fg: win.pal.muted
+                                        onFgChanged: requestPaint()
+                                        Component.onCompleted: requestPaint()
+                                        onPaint: {
+                                            var ctx = getContext("2d")
+                                            ctx.clearRect(0, 0, 8, 10)
+                                            ctx.strokeStyle = fg
+                                            ctx.lineWidth = 1.4
+                                            ctx.lineCap = "round"
+                                            ctx.beginPath()
+                                            ctx.moveTo(2, 1)
+                                            ctx.lineTo(6, 5)
+                                            ctx.lineTo(2, 9)
+                                            ctx.stroke()
+                                        }
                                     }
+
                                     Rectangle {
                                         Layout.preferredHeight: 20
-                                        color: crumbArea.containsMouse ? win.pal.cmdHover : "transparent"
+                                        color: crumbHov.containsMouse ? win.pal.accentSoft : "transparent"
                                         radius: 2
-                                        implicitWidth: crumbLabel.implicitWidth + 12
+                                        implicitWidth: crumbLbl.implicitWidth + 14
+
                                         Label {
-                                            id: crumbLabel
+                                            id: crumbLbl
                                             anchors.centerIn: parent
                                             text: modelData.name
-                                            color: crumbArea.containsMouse ? win.pal.accent : win.pal.text
+                                            color: crumbHov.containsMouse ? win.pal.accent : win.pal.text
                                             font.pixelSize: 12
                                         }
                                         MouseArea {
-                                            id: crumbArea
+                                            id: crumbHov
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             onClicked: win.navigate(modelData.id)
@@ -340,76 +389,139 @@ ApplicationWindow {
                         }
                     }
 
-                    // Search
+                    // Search box
                     Rectangle {
                         Layout.preferredWidth: 200
                         Layout.preferredHeight: 26
                         color: win.pal.content
-                        border.color: searchField.activeFocus ? win.pal.accent : win.pal.border
+                        border.color: searchFld.activeFocus ? win.pal.accent : win.pal.borderSoft
                         radius: 3
+
                         TextField {
-                            id: searchField
+                            id: searchFld
                             anchors.fill: parent
-                            anchors.rightMargin: 24
+                            anchors.rightMargin: 26
                             placeholderText: win.currentNode ? ("Buscar en " + win.currentNode.name) : "Buscar"
                             background: Item {}
                             color: win.pal.text
                             font.pixelSize: 12
+                            leftPadding: 8
                             onTextChanged: win.searchQuery = text
                         }
-                        Label {
-                            anchors.right: parent.right; anchors.rightMargin: 8
+
+                        // SVG magnifying glass icon
+                        Canvas {
+                            anchors.right: parent.right
+                            anchors.rightMargin: 7
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "🔍"; color: win.pal.muted; font.pixelSize: 11
+                            width: 14; height: 14
+                            property color fg: win.pal.muted
+                            onFgChanged: requestPaint()
+                            Component.onCompleted: requestPaint()
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.clearRect(0, 0, 14, 14)
+                                ctx.strokeStyle = fg
+                                ctx.lineWidth = 1.6
+                                ctx.lineCap = "round"
+                                ctx.beginPath()
+                                ctx.arc(6, 6, 4, 0, Math.PI * 2)
+                                ctx.stroke()
+                                ctx.beginPath()
+                                ctx.moveTo(9, 9)
+                                ctx.lineTo(12.5, 12.5)
+                                ctx.stroke()
+                            }
                         }
                     }
                 }
             }
 
-            // ---------- COMMAND BAR ----------
+            // ==================== COMMAND BAR ====================
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 34
-                color: win.pal.toolbar
                 border.color: win.pal.borderSoft
+                gradient: Gradient {
+                    GradientStop { position: 0; color: win.pal.tbar1 }
+                    GradientStop { position: 1; color: win.pal.tbar2 }
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    anchors.topMargin: 4
+                    anchors.bottomMargin: 4
                     spacing: 2
 
+                    // Command buttons
                     Repeater {
                         model: [
-                            { label: "Organizar ▾", always: true, action: function(){} },
+                            { label: "Organizar", chevron: true, always: true, bold: true, action: function(){} },
                             { sep: true },
-                            { label: "Abrir ▾", requireSel: true, action: function(){} },
+                            { label: "Abrir", chevron: true, requireSel: true, action: function(){} },
                             { label: "Compartir con", requireSel: true, action: function(){ win.handleCopy() } },
+                            { label: "Imprimir", requireSel: true, action: function(){ win.showToast("Imprimir...") } },
+                            { label: "Correo", requireSel: true, action: function(){ win.showToast("Enviar por correo...") } },
                             { label: "Eliminar", requireSel: true, action: function(){ win.handleDelete() } },
                             { label: "Nueva carpeta", always: true, action: function(){ win.handleNewFolder() } }
                         ]
                         delegate: Loader {
                             sourceComponent: modelData.sep ? sepComp : btnComp
-                            Component { id: sepComp
+                            Component {
+                                id: sepComp
                                 Rectangle { implicitWidth: 1; implicitHeight: 18; color: win.pal.border }
                             }
-                            Component { id: btnComp
+                            Component {
+                                id: btnComp
                                 Rectangle {
-                                    implicitWidth: btnLbl.implicitWidth + 20
-                                    implicitHeight: 26
                                     property bool isEnabled: modelData.always || win.selectedCount > 0
-                                    color: btnHover.containsMouse && isEnabled ? win.pal.cmdHover : "transparent"
-                                    border.color: btnHover.containsMouse && isEnabled ? win.pal.border : "transparent"
+                                    implicitWidth: btnRow.implicitWidth + 16
+                                    implicitHeight: 26
+                                    color: btnHov.containsMouse && isEnabled ? win.pal.accentSoft : "transparent"
+                                    border.color: btnHov.containsMouse && isEnabled ? win.pal.border : "transparent"
                                     radius: 2
-                                    opacity: isEnabled ? 1 : 0.45
-                                    Label {
-                                        id: btnLbl
+                                    opacity: isEnabled ? 1 : 0.4
+
+                                    Row {
+                                        id: btnRow
                                         anchors.centerIn: parent
-                                        text: modelData.label
-                                        color: win.pal.text
-                                        font.pixelSize: 12
+                                        spacing: 3
+
+                                        Label {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: modelData.label
+                                            color: win.pal.text
+                                            font.pixelSize: 12
+                                            font.bold: modelData.bold || false
+                                        }
+
+                                        // Chevron for buttons that have it
+                                        Canvas {
+                                            visible: modelData.chevron || false
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 8; height: 6
+                                            property color fg: win.pal.muted
+                                            onFgChanged: requestPaint()
+                                            Component.onCompleted: requestPaint()
+                                            onPaint: {
+                                                var ctx = getContext("2d")
+                                                ctx.clearRect(0, 0, 8, 6)
+                                                ctx.strokeStyle = fg
+                                                ctx.lineWidth = 1.3
+                                                ctx.lineCap = "round"
+                                                ctx.beginPath()
+                                                ctx.moveTo(1, 1.5)
+                                                ctx.lineTo(4, 4.5)
+                                                ctx.lineTo(7, 1.5)
+                                                ctx.stroke()
+                                            }
+                                        }
                                     }
+
                                     MouseArea {
-                                        id: btnHover
+                                        id: btnHov
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         enabled: parent.isEnabled
@@ -422,35 +534,192 @@ ApplicationWindow {
 
                     Item { Layout.fillWidth: true }
 
-                    // View switcher
-                    ComboBox {
-                        id: viewCombo
-                        Layout.preferredWidth: 140
-                        model: [
-                            { text: "Iconos grandes", val: "large" },
-                            { text: "Iconos medianos", val: "medium" },
-                            { text: "Lista", val: "list" },
-                            { text: "Detalles", val: "details" },
-                            { text: "Contenido", val: "content" }
-                        ]
-                        textRole: "text"
-                        currentIndex: 0
-                        onActivated: win.viewMode = model[currentIndex].val
+                    // Preview panel toggle (SVG: two rects, right one shaded)
+                    Rectangle {
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 26
+                        color: prevHov.containsMouse || win.showPreview ? win.pal.accentSoft : "transparent"
+                        border.color: prevHov.containsMouse || win.showPreview ? win.pal.border : "transparent"
+                        radius: 2
+
+                        Canvas {
+                            anchors.centerIn: parent
+                            width: 18; height: 14
+                            property color fg: win.pal.muted
+                            onFgChanged: requestPaint()
+                            Component.onCompleted: requestPaint()
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.clearRect(0, 0, 18, 14)
+                                ctx.strokeStyle = fg
+                                ctx.lineWidth = 1.2
+                                ctx.strokeRect(0.5, 0.5, 17, 13)
+                                ctx.fillStyle = Qt.rgba(
+                                    parseInt(fg.toString().slice(1,3), 16)/255,
+                                    parseInt(fg.toString().slice(3,5), 16)/255,
+                                    parseInt(fg.toString().slice(5,7), 16)/255,
+                                    0.18)
+                                ctx.fillRect(10, 0.5, 7.5, 13)
+                            }
+                        }
+
+                        MouseArea {
+                            id: prevHov
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: win.showPreview = !win.showPreview
+                        }
                     }
 
-                    // Preview toggle
+                    // View switcher: icon + chevron → dropdown
+                    Row {
+                        spacing: 0
+
+                        Rectangle {
+                            width: 28; height: 26
+                            color: vsIconHov.containsMouse ? win.pal.accentSoft : "transparent"
+                            border.color: vsIconHov.containsMouse ? win.pal.border : "transparent"
+                            radius: 2
+
+                            Canvas {
+                                id: vsCanvas
+                                anchors.centerIn: parent
+                                width: 16; height: 16
+                                property string vm: win.viewMode
+                                property color fg: win.pal.muted
+                                onVmChanged: requestPaint()
+                                onFgChanged: requestPaint()
+                                Component.onCompleted: requestPaint()
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0, 0, 16, 16)
+                                    ctx.fillStyle = fg
+                                    var m = vm
+                                    if (m === "large" || m === "medium") {
+                                        var s = m === "large" ? 4.5 : 3.5
+                                        var xs = [1, 8 - s/2, 15 - s]
+                                        var ys = [1, 8 - s/2]
+                                        for (var yi = 0; yi < ys.length; yi++)
+                                            for (var xi = 0; xi < xs.length; xi++)
+                                                ctx.fillRect(xs[xi], ys[yi], s, s)
+                                    } else if (m === "list") {
+                                        ctx.fillRect(1,2,3,3); ctx.fillRect(5,3,10,1)
+                                        ctx.fillRect(1,7,3,3); ctx.fillRect(5,8,10,1)
+                                        ctx.fillRect(1,12,3,3); ctx.fillRect(5,13,10,1)
+                                    } else if (m === "details") {
+                                        ctx.fillRect(1,2,2,2); ctx.fillRect(4,2.5,11,1)
+                                        ctx.fillRect(1,6,2,2); ctx.fillRect(4,6.5,11,1)
+                                        ctx.fillRect(1,10,2,2); ctx.fillRect(4,10.5,11,1)
+                                        ctx.fillRect(1,14,2,1.2); ctx.fillRect(4,14,11,1.2)
+                                    } else {
+                                        ctx.fillRect(1,2,4,4); ctx.fillRect(6,2.5,9,1); ctx.fillRect(6,4.5,7,1)
+                                        ctx.fillRect(1,8,4,4); ctx.fillRect(6,8.5,9,1); ctx.fillRect(6,10.5,7,1)
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: vsIconHov
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: viewMenu.popup()
+                            }
+                        }
+
+                        // Chevron dropdown trigger
+                        Rectangle {
+                            width: 16; height: 26
+                            color: vsChevHov.containsMouse ? win.pal.accentSoft : "transparent"
+                            border.color: vsChevHov.containsMouse ? win.pal.border : "transparent"
+                            radius: 2
+
+                            Canvas {
+                                anchors.centerIn: parent
+                                width: 8; height: 6
+                                property color fg: win.pal.muted
+                                onFgChanged: requestPaint()
+                                Component.onCompleted: requestPaint()
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0, 0, 8, 6)
+                                    ctx.strokeStyle = fg
+                                    ctx.lineWidth = 1.3
+                                    ctx.lineCap = "round"
+                                    ctx.beginPath()
+                                    ctx.moveTo(1, 1.5)
+                                    ctx.lineTo(4, 4.5)
+                                    ctx.lineTo(7, 1.5)
+                                    ctx.stroke()
+                                }
+                            }
+
+                            MouseArea {
+                                id: vsChevHov
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: viewMenu.popup()
+                            }
+                        }
+                    }
+
+                    // View dropdown menu
+                    Menu {
+                        id: viewMenu
+                        MenuItem { text: "Iconos grandes";  checkable: true; checked: win.viewMode === "large";   onTriggered: win.viewMode = "large" }
+                        MenuItem { text: "Iconos medianos"; checkable: true; checked: win.viewMode === "medium";  onTriggered: win.viewMode = "medium" }
+                        MenuItem { text: "Lista";           checkable: true; checked: win.viewMode === "list";    onTriggered: win.viewMode = "list" }
+                        MenuItem { text: "Detalles";        checkable: true; checked: win.viewMode === "details"; onTriggered: win.viewMode = "details" }
+                        MenuItem { text: "Contenido";       checkable: true; checked: win.viewMode === "content"; onTriggered: win.viewMode = "content" }
+                    }
+
+                    // Help button (circle + ?)
                     Rectangle {
-                        Layout.preferredWidth: 28; Layout.preferredHeight: 26
-                        color: win.showPreview ? win.pal.cmdHover : (prevHover.containsMouse ? win.pal.cmdHover : "transparent")
-                        border.color: win.showPreview ? win.pal.border : "transparent"
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 26
+                        color: helpHov.containsMouse ? win.pal.accentSoft : "transparent"
+                        border.color: helpHov.containsMouse ? win.pal.border : "transparent"
                         radius: 2
-                        Label { anchors.centerIn: parent; text: "▭"; color: win.pal.text; font.pixelSize: 14 }
-                        MouseArea { id: prevHover; anchors.fill: parent; hoverEnabled: true; onClicked: win.showPreview = !win.showPreview }
+
+                        Canvas {
+                            anchors.centerIn: parent
+                            width: 16; height: 16
+                            property color fg: win.pal.muted
+                            onFgChanged: requestPaint()
+                            Component.onCompleted: requestPaint()
+                            onPaint: {
+                                var ctx = getContext("2d")
+                                ctx.clearRect(0, 0, 16, 16)
+                                ctx.strokeStyle = fg
+                                ctx.lineWidth = 1.4
+                                ctx.lineCap = "round"
+                                ctx.beginPath()
+                                ctx.arc(8, 8, 6.5, 0, Math.PI * 2)
+                                ctx.stroke()
+                                ctx.beginPath()
+                                ctx.moveTo(6, 6)
+                                ctx.quadraticCurveTo(6, 4, 8, 4)
+                                ctx.quadraticCurveTo(10, 4, 10, 6)
+                                ctx.quadraticCurveTo(10, 7.5, 8, 8)
+                                ctx.lineTo(8, 9.5)
+                                ctx.stroke()
+                                ctx.fillStyle = fg
+                                ctx.beginPath()
+                                ctx.arc(8, 12, 0.8, 0, Math.PI * 2)
+                                ctx.fill()
+                            }
+                        }
+
+                        MouseArea {
+                            id: helpHov
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: win.showToast("Win7 File Explorer — Qt 6 QML")
+                        }
                     }
                 }
             }
 
-            // ---------- BODY ----------
+            // ==================== BODY ====================
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -461,14 +730,19 @@ ApplicationWindow {
                     visible: win.showSidebar
                     Layout.preferredWidth: 200
                     Layout.fillHeight: true
-                    color: win.pal.sidebar
                     border.color: win.pal.borderSoft
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: win.pal.sidebar }
+                        GradientStop { position: 1; color: win.pal.sidebar }
+                    }
 
                     ScrollView {
                         anchors.fill: parent
                         clip: true
                         Column {
                             width: 200
+                            topPadding: 6
+                            bottomPadding: 6
                             spacing: 2
                             Repeater {
                                 model: fs.root.children
@@ -485,7 +759,7 @@ ApplicationWindow {
                     }
                 }
 
-                // MAIN
+                // MAIN CONTENT AREA
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -522,8 +796,9 @@ ApplicationWindow {
                     }
                 }
 
-                // PREVIEW
+                // PREVIEW PANEL
                 Rectangle {
+                    id: previewPanel
                     visible: win.showPreview
                     Layout.preferredWidth: 240
                     Layout.fillHeight: true
@@ -539,68 +814,148 @@ ApplicationWindow {
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 16
-                        spacing: 12
+                        spacing: 10
 
+                        // Hero preview area
                         Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 180
+
+                            // Empty state: file-preview placeholder SVG
+                            Column {
+                                visible: previewPanel.previewItem === null
+                                anchors.centerIn: parent
+                                spacing: 10
+
+                                Canvas {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: 48; height: 48
+                                    property color fg: win.pal.muted
+                                    onFgChanged: requestPaint()
+                                    Component.onCompleted: requestPaint()
+                                    onPaint: {
+                                        var ctx = getContext("2d")
+                                        ctx.clearRect(0, 0, 48, 48)
+                                        ctx.strokeStyle = fg
+                                        ctx.globalAlpha = 0.4
+                                        ctx.lineWidth = 1.2
+                                        ctx.strokeRect(8, 6, 32, 36)
+                                        ctx.beginPath()
+                                        ctx.moveTo(16, 16); ctx.lineTo(32, 16)
+                                        ctx.moveTo(16, 22); ctx.lineTo(32, 22)
+                                        ctx.moveTo(16, 28); ctx.lineTo(26, 28)
+                                        ctx.stroke()
+                                    }
+                                }
+
+                                Label {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Selecciona un archivo\npara previsualizar"
+                                    color: win.pal.muted
+                                    horizontalAlignment: Text.AlignHCenter
+                                    font.pixelSize: 12
+                                }
+                            }
+
+                            // File icon
                             Image {
-                                visible: parent.parent.parent.previewItem !== null
+                                visible: previewPanel.previewItem !== null
                                 anchors.centerIn: parent
                                 width: 96; height: 96
                                 fillMode: Image.PreserveAspectFit
-                                source: parent.parent.parent.previewItem ? fs.iconFor(parent.parent.parent.previewItem) : ""
-                            }
-                            Label {
-                                visible: parent.parent.parent.previewItem === null
-                                anchors.centerIn: parent
-                                text: "Selecciona un archivo\npara previsualizar"
-                                color: win.pal.muted
-                                horizontalAlignment: Text.AlignHCenter
-                                font.pixelSize: 12
+                                source: previewPanel.previewItem ? fs.iconFor(previewPanel.previewItem) : ""
                             }
                         }
 
+                        // File name
                         Label {
-                            visible: parent.parent.previewItem !== null
+                            visible: previewPanel.previewItem !== null
                             Layout.fillWidth: true
-                            text: parent.parent.previewItem ? parent.parent.previewItem.name : ""
+                            text: previewPanel.previewItem ? previewPanel.previewItem.name : ""
                             color: win.pal.text
                             font.pixelSize: 12; font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             wrapMode: Text.Wrap
                         }
+
+                        // File type
                         Label {
-                            visible: parent.parent.previewItem !== null
+                            visible: previewPanel.previewItem !== null
                             Layout.fillWidth: true
-                            text: parent.parent.previewItem ? fs.typeLabel(parent.parent.previewItem) : ""
+                            text: previewPanel.previewItem ? fs.typeLabel(previewPanel.previewItem) : ""
                             color: win.pal.muted
                             font.pixelSize: 11
                             horizontalAlignment: Text.AlignHCenter
                         }
+
+                        // File metadata (size, date, dimensions, duration)
+                        Column {
+                            visible: previewPanel.previewItem !== null
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            Repeater {
+                                model: {
+                                    var it = previewPanel.previewItem
+                                    if (!it) return []
+                                    var rows = []
+                                    if (it.modified) rows.push({ lbl: "Modificado", val: it.modified })
+                                    if (it.size)     rows.push({ lbl: "Tamaño",     val: it.size })
+                                    if (it.dim)      rows.push({ lbl: "Dimensiones",val: it.dim })
+                                    if (it.duration) rows.push({ lbl: "Duración",   val: it.duration })
+                                    return rows
+                                }
+                                delegate: RowLayout {
+                                    width: parent.width
+                                    Label {
+                                        text: modelData.lbl + ":"
+                                        color: win.pal.muted
+                                        font.pixelSize: 11
+                                        Layout.preferredWidth: 80
+                                    }
+                                    Label {
+                                        text: modelData.val
+                                        color: win.pal.text
+                                        font.pixelSize: 11
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                            }
+                        }
+
                         Item { Layout.fillHeight: true }
                     }
                 }
             }
 
-            // ---------- STATUS BAR ----------
+            // ==================== STATUS BAR ====================
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: win.selectedCount === 1 ? 60 : 28
-                color: win.pal.status
+                Layout.preferredHeight: win.selectedCount === 1 ? 58 : 26
                 border.color: win.pal.borderSoft
+                gradient: Gradient {
+                    GradientStop { position: 0; color: win.pal.stat1 }
+                    GradientStop { position: 1; color: win.pal.stat2 }
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 12
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    anchors.topMargin: 4
+                    anchors.bottomMargin: 4
+                    spacing: 10
 
+                    // No selection: count
                     Label {
                         visible: win.selectedCount === 0
                         text: win.items.length + " elemento" + (win.items.length === 1 ? "" : "s")
                         color: win.pal.muted
                         font.pixelSize: 11
                     }
+
+                    // Multi-selection count
                     Label {
                         visible: win.selectedCount > 1
                         text: win.selectedCount + " elementos seleccionados"
@@ -608,7 +963,7 @@ ApplicationWindow {
                         font.pixelSize: 11
                     }
 
-                    // Detalle de un único seleccionado
+                    // Single item detail
                     Image {
                         visible: win.selectedCount === 1
                         source: {
@@ -617,31 +972,50 @@ ApplicationWindow {
                             var it = win.items.find(function(i){ return i.id === id })
                             return it ? fs.iconFor(it) : ""
                         }
-                        Layout.preferredWidth: 36; Layout.preferredHeight: 36
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 32
                         fillMode: Image.PreserveAspectFit
                     }
+
                     ColumnLayout {
                         visible: win.selectedCount === 1
                         Layout.fillWidth: true
                         spacing: 2
-                        property var item: {
+
+                        property var selItem: {
                             if (win.selectedCount !== 1) return null
                             var id = Object.keys(win.selectedIds)[0]
                             return win.items.find(function(i){ return i.id === id }) || null
                         }
+
                         Label {
-                            text: parent.item ? parent.item.name : ""
-                            color: win.pal.text; font.pixelSize: 12; font.bold: true
+                            text: parent.selItem ? parent.selItem.name : ""
+                            color: win.pal.text
+                            font.pixelSize: 12; font.bold: true
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
                         }
-                        Label {
-                            text: {
-                                var it = parent.item; if (!it) return ""
-                                var parts = [fs.typeLabel(it)]
-                                if (it.modified) parts.push("Modificado: " + it.modified)
-                                if (it.size) parts.push("Tamaño: " + it.size)
-                                return parts.join("  ·  ")
+
+                        RowLayout {
+                            spacing: 12
+
+                            Repeater {
+                                model: {
+                                    var it = parent.parent.selItem
+                                    if (!it) return []
+                                    var parts = [{ lbl: "Tipo", val: fs.typeLabel(it) }]
+                                    if (it.modified) parts.push({ lbl: "Modificado", val: it.modified })
+                                    if (it.size)     parts.push({ lbl: "Tamaño",     val: it.size })
+                                    if (it.dim)      parts.push({ lbl: "Dim",        val: it.dim })
+                                    if (it.duration) parts.push({ lbl: "Duración",   val: it.duration })
+                                    return parts
+                                }
+                                delegate: Row {
+                                    spacing: 4
+                                    Label { text: modelData.lbl + ":"; color: win.pal.muted; font.pixelSize: 11 }
+                                    Label { text: modelData.val;       color: win.pal.text;  font.pixelSize: 11 }
+                                }
                             }
-                            color: win.pal.muted; font.pixelSize: 11
                         }
                     }
                 }
@@ -649,7 +1023,7 @@ ApplicationWindow {
         }
     }
 
-    // ---------- MENÚ CONTEXTUAL ----------
+    // ==================== CONTEXT MENU ====================
     Menu {
         id: ctxMenu
         property var targetItem: null
@@ -664,7 +1038,7 @@ ApplicationWindow {
         MenuItem { text: "Propiedades" }
     }
 
-    // ---------- TOAST ----------
+    // ==================== TOAST ====================
     Rectangle {
         visible: win.toastMsg.length > 0
         anchors.horizontalCenter: parent.horizontalCenter
@@ -684,7 +1058,7 @@ ApplicationWindow {
         }
     }
 
-    // ---------- VISTAS ----------
+    // ==================== VIEW COMPONENTS ====================
 
     Component {
         id: emptyView
@@ -785,12 +1159,14 @@ ApplicationWindow {
         id: detailsView
         ColumnLayout {
             spacing: 0
-            // Header
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 28
-                color: win.pal.toolbar
-                border.color: win.pal.border
+                gradient: Gradient {
+                    GradientStop { position: 0; color: win.pal.tbar1 }
+                    GradientStop { position: 1; color: win.pal.tbar2 }
+                }
+                border.color: win.pal.borderSoft
                 RowLayout {
                     anchors.fill: parent
                     spacing: 0
@@ -805,7 +1181,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             Layout.preferredWidth: modelData.stretch * 100
                             Layout.fillHeight: true
-                            color: colHover.containsMouse ? win.pal.cmdHover : "transparent"
+                            color: colHov.containsMouse ? win.pal.accentSoft : "transparent"
                             border.color: win.pal.borderSoft
                             RowLayout {
                                 anchors.fill: parent
@@ -818,7 +1194,7 @@ ApplicationWindow {
                                 }
                                 Label { visible: win.sortBy === modelData.id; text: win.sortDir === "asc" ? "▲" : "▼"; color: win.pal.accent; font.pixelSize: 9 }
                             }
-                            MouseArea { id: colHover; anchors.fill: parent; hoverEnabled: true; onClicked: win.setSort(modelData.id) }
+                            MouseArea { id: colHov; anchors.fill: parent; hoverEnabled: true; onClicked: win.setSort(modelData.id) }
                         }
                     }
                 }
@@ -837,8 +1213,7 @@ ApplicationWindow {
                         spacing: 0
                         RowLayout {
                             Layout.fillWidth: true; Layout.preferredWidth: 300
-                            Layout.leftMargin: 8
-                            spacing: 6
+                            Layout.leftMargin: 8; spacing: 6
                             Image { source: fs.iconFor(modelData); Layout.preferredWidth: 16; Layout.preferredHeight: 16; fillMode: Image.PreserveAspectFit }
                             Label { text: modelData.name; color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.text; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
                         }
@@ -871,9 +1246,12 @@ ApplicationWindow {
             delegate: Rectangle {
                 width: ListView.view.width
                 height: 64
-                color: win.isSelected(modelData.id) ? win.pal.selection : (cvHover.containsMouse ? win.pal.accentSoft : "transparent")
-                border.color: win.pal.borderSoft
-                border.width: 0
+                color: win.isSelected(modelData.id) ? win.pal.selection : (cvHov.containsMouse ? win.pal.accentSoft : "transparent")
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width; height: 1
+                    color: win.pal.borderSoft
+                }
                 RowLayout {
                     anchors.fill: parent
                     anchors.margins: 10
@@ -891,14 +1269,12 @@ ApplicationWindow {
                                 return parts.join("  ·  ")
                             }
                             color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.muted
-                            font.pixelSize: 11
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                            font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true
                         }
                     }
                 }
                 MouseArea {
-                    id: cvHover
+                    id: cvHov
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -963,7 +1339,11 @@ ApplicationWindow {
                                                 Rectangle {
                                                     width: parent.width * (modelData.total ? (modelData.total - modelData.free) / modelData.total : 0)
                                                     height: parent.height; radius: 3
-                                                    gradient: Gradient { GradientStop { position: 0; color: "#4fd1e8" } GradientStop { position: 1; color: "#1a8ab8" } }
+                                                    gradient: Gradient {
+                                                        orientation: Gradient.Horizontal
+                                                        GradientStop { position: 0; color: "#4fd1e8" }
+                                                        GradientStop { position: 1; color: "#1a8ab8" }
+                                                    }
                                                 }
                                             }
                                             Label {

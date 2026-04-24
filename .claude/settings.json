@@ -37,7 +37,8 @@
       "Bash(grep -E \"\\(error:|warning:|Built target win7explorer$|\\\\[100\\\\%\\\\]\\)\")",
       "Bash(grep -E \"\\(error:|warning:|100%|Built target win7explorer$\\)\")",
       "Bash(grep -E \"\\(error:|warning [^C]|100%|Built target win7explorer$\\)\")",
-      "Bash(grep -E \"\\(error:|100%|Built target win7explorer$\\)\")"
+      "Bash(grep -E \"\\(error:|100%|Built target win7explorer$\\)\")",
+      "Bash(cmake --build build)"
     ],
     "additionalDirectories": [
       "/home/iasuarez/.continue"

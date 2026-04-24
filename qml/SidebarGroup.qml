@@ -16,17 +16,40 @@ Column {
     Rectangle {
         width: parent.width
         height: 24
-        color: sgHover.containsMouse ? sgRoot.pal.sbHover : "transparent"
+        color: sgHov.containsMouse ? sgRoot.pal.sbHover : "transparent"
 
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 8
+            anchors.rightMargin: 8
             spacing: 6
 
-            Label {
-                text: sgRoot.expanded ? "▼" : "▶"
-                color: sgRoot.pal.muted
-                font.pixelSize: 9
+            // Rotating chevron
+            Item {
+                Layout.preferredWidth: 12
+                Layout.preferredHeight: 12
+                rotation: sgRoot.expanded ? 90 : 0
+                Behavior on rotation { NumberAnimation { duration: 120 } }
+
+                Canvas {
+                    anchors.fill: parent
+                    property color fg: sgRoot.pal ? sgRoot.pal.muted : "#888"
+                    onFgChanged: requestPaint()
+                    Component.onCompleted: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.clearRect(0, 0, 12, 12)
+                        ctx.strokeStyle = fg
+                        ctx.lineWidth = 1.4
+                        ctx.lineCap = "round"
+                        ctx.lineJoin = "round"
+                        ctx.beginPath()
+                        ctx.moveTo(3, 1.5)
+                        ctx.lineTo(9, 6)
+                        ctx.lineTo(3, 10.5)
+                        ctx.stroke()
+                    }
+                }
             }
 
             Image {
@@ -46,7 +69,7 @@ Column {
         }
 
         MouseArea {
-            id: sgHover
+            id: sgHov
             anchors.fill: parent
             hoverEnabled: true
             onClicked: sgRoot.expanded = !sgRoot.expanded
