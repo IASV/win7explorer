@@ -6,8 +6,7 @@ import QtQuick
 QtObject {
     id: fs
 
-    // Ruta base de iconos (relativa a la carpeta qml/)
-    readonly property string iconBase: "../icons/"
+    readonly property string iconBase: "qrc:/icons/"
 
     // Árbol raíz
     property var root: ({

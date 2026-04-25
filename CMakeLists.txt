@@ -26,42 +26,42 @@ qt_add_qml_module(win7explorer
         qml/SidebarItem.qml
 )
 
-# Icons at qrc:/Win7Explorer/icons/ so relative "../icons/" from qml/Explorer.qml resolves correctly
+# Icons from project root icons/ → qrc:/icons/
 qt_add_resources(win7explorer "winicons"
-    PREFIX "/Win7Explorer"
-    BASE "html"
+    PREFIX "/icons"
+    BASE "icons"
     FILES
-        html/icons/control-panel.ico
-        html/icons/document.ico
-        html/icons/drive-cd.ico
-        html/icons/drive-dvd.ico
-        html/icons/drive-dvdram.ico
-        html/icons/drive-dvdr.ico
-        html/icons/drive-dvdrom.ico
-        html/icons/drive-dvdrw.ico
-        html/icons/drive-empty.ico
-        html/icons/drive-floppy2.ico
-        html/icons/drive-floppy.ico
-        html/icons/drive-local.ico
-        html/icons/drive-removable.ico
-        html/icons/drive-system.ico
-        html/icons/file-generic.ico
-        html/icons/folder-blue-empty.ico
-        html/icons/folder-blue.ico
-        html/icons/folder-closed.ico
-        html/icons/folder-empty.ico
-        html/icons/folder-search.ico
-        html/icons/folder-semi.ico
-        html/icons/games.ico
-        html/icons/mail.ico
-        html/icons/music.ico
-        html/icons/network.ico
-        html/icons/picture.ico
-        html/icons/printer.ico
-        html/icons/search.ico
-        html/icons/shield.ico
-        html/icons/video.ico
-        html/icons/window.ico
+        icons/control-panel.ico
+        icons/document.ico
+        icons/drive-cd.ico
+        icons/drive-dvd.ico
+        icons/drive-dvdram.ico
+        icons/drive-dvdr.ico
+        icons/drive-dvdrom.ico
+        icons/drive-dvdrw.ico
+        icons/drive-empty.ico
+        icons/drive-floppy2.ico
+        icons/drive-floppy.ico
+        icons/drive-local.ico
+        icons/drive-removable.ico
+        icons/drive-system.ico
+        icons/file-generic.ico
+        icons/folder-blue-empty.ico
+        icons/folder-blue.ico
+        icons/folder-closed.ico
+        icons/folder-empty.ico
+        icons/folder-search.ico
+        icons/folder-semi.ico
+        icons/games.ico
+        icons/mail.ico
+        icons/music.ico
+        icons/network.ico
+        icons/picture.ico
+        icons/printer.ico
+        icons/search.ico
+        icons/shield.ico
+        icons/video.ico
+        icons/window.ico
 )
 
 target_link_libraries(win7explorer PRIVATE

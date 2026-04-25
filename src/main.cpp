@@ -4,6 +4,8 @@
 #include <QIcon>
 #include <QLoggingCategory>
 
+#include "iconprovider.h"
+
 using namespace Qt::StringLiterals;
 
 int main(int argc, char *argv[])
@@ -20,9 +22,12 @@ int main(int argc, char *argv[])
         searchPaths.prepend("/usr/share/icons");
     QIcon::setThemeSearchPaths(searchPaths);
     if (QIcon::themeName().isEmpty())
-        QIcon::setThemeName("breeze");
+        QIcon::setThemeName("Windows 7 Aero");
 
     QQmlApplicationEngine engine;
+
+    // Register custom icon provider
+    engine.addImageProvider("fileicons", new IconProvider);
 
     const QUrl url(u"qrc:/Win7Explorer/qml/Explorer.qml"_s);
     engine.load(url);
