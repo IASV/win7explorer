@@ -6,7 +6,7 @@ import QtQuick
 QtObject {
     id: fs
 
-    readonly property string iconBase: "qrc:/icons/"
+    readonly property string iconBase: "image://fileicons/"
 
     // Árbol raíz
     property var root: ({
@@ -143,50 +143,50 @@ QtObject {
     function iconForFile(ext) {
         ext = (ext || "").toLowerCase()
         var map = {
-            pdf: "document.ico", doc: "document.ico", docx: "document.ico", txt: "document.ico",
-            rtf: "document.ico", xls: "document.ico", xlsx: "document.ico", ppt: "document.ico", pptx: "document.ico",
-            jpg: "picture.ico", jpeg: "picture.ico", png: "picture.ico", gif: "picture.ico",
-            bmp: "picture.ico", svg: "picture.ico", ico: "picture.ico",
-            mp3: "music.ico", wav: "music.ico", wma: "music.ico", flac: "music.ico", ogg: "music.ico",
-            mp4: "video.ico", mov: "video.ico", avi: "video.ico", mpg: "video.ico", mkv: "video.ico",
-            eml: "mail.ico", msg: "mail.ico",
-            exe: "shield.ico", msi: "shield.ico"
+            pdf: "document.png", doc: "document.png", docx: "document.png", txt: "document.png",
+            rtf: "document.png", xls: "document.png", xlsx: "document.png", ppt: "document.png", pptx: "document.png",
+            jpg: "picture.png", jpeg: "picture.png", png: "picture.png", gif: "picture.png",
+            bmp: "picture.png", svg: "picture.png", ico: "picture.png",
+            mp3: "music.png", wav: "music.png", wma: "music.png", flac: "music.png", ogg: "music.png",
+            mp4: "video.png", mov: "video.png", avi: "video.png", mpg: "video.png", mkv: "video.png",
+            eml: "mail.png", msg: "mail.png",
+            exe: "shield.png", msi: "shield.png"
         }
-        return iconBase + (map[ext] || "file-generic.ico")
+        return iconBase + (map[ext] || "file-generic.png")
     }
 
     function iconForFolder(kind, empty) {
-        if (kind === "lib-docs") return iconBase + "document.ico"
-        if (kind === "lib-music") return iconBase + "music.ico"
-        if (kind === "lib-pics") return iconBase + "picture.ico"
-        if (kind === "lib-video") return iconBase + "video.ico"
-        if (kind === "downloads") return iconBase + "folder-blue.ico"
-        if (kind === "desktop") return iconBase + "folder-closed.ico"
-        if (kind === "recent") return iconBase + "folder-search.ico"
-        if (kind === "pc") return iconBase + "window.ico"
-        if (kind === "printer") return iconBase + "printer.ico"
-        return empty ? iconBase + "folder-empty.ico" : iconBase + "folder-closed.ico"
+        if (kind === "lib-docs") return iconBase + "document.png"
+        if (kind === "lib-music") return iconBase + "music.png"
+        if (kind === "lib-pics") return iconBase + "picture.png"
+        if (kind === "lib-video") return iconBase + "video.png"
+        if (kind === "downloads") return iconBase + "folder-blue.png"
+        if (kind === "desktop") return iconBase + "folder-closed.png"
+        if (kind === "recent") return iconBase + "folder-search.png"
+        if (kind === "pc") return iconBase + "window.png"
+        if (kind === "printer") return iconBase + "printer.png"
+        return empty ? iconBase + "folder-empty.png" : iconBase + "folder-closed.png"
     }
 
     function iconForDrive(kind, name) {
         name = name || ""
         if (kind === "disc") {
-            if (/dvd-?rw/i.test(name)) return iconBase + "drive-dvdrw.ico"
-            if (/dvd-?rom/i.test(name)) return iconBase + "drive-dvdrom.ico"
-            if (/dvd/i.test(name)) return iconBase + "drive-dvd.ico"
-            return iconBase + "drive-cd.ico"
+            if (/dvd-?rw/i.test(name)) return iconBase + "drive-dvdrw.png"
+            if (/dvd-?rom/i.test(name)) return iconBase + "drive-dvdrom.png"
+            if (/dvd/i.test(name)) return iconBase + "drive-dvd.png"
+            return iconBase + "drive-cd.png"
         }
-        if (kind === "removable") return iconBase + "drive-removable.ico"
-        if (kind === "system") return iconBase + "drive-system.ico"
-        return iconBase + "drive-local.ico"
+        if (kind === "removable") return iconBase + "drive-removable.png"
+        if (kind === "system") return iconBase + "drive-system.png"
+        return iconBase + "drive-local.png"
     }
 
     function iconForGroup(kind) {
-        if (kind === "favorites") return iconBase + "folder-closed.ico"
-        if (kind === "libraries") return iconBase + "document.ico"
-        if (kind === "computer") return iconBase + "window.ico"
-        if (kind === "network") return iconBase + "network.ico"
-        return iconBase + "folder-closed.ico"
+        if (kind === "favorites") return iconBase + "folder-closed.png"
+        if (kind === "libraries") return iconBase + "document.png"
+        if (kind === "computer") return iconBase + "window.png"
+        if (kind === "network") return iconBase + "network.png"
+        return iconBase + "folder-closed.png"
     }
 
     function iconFor(item) {
