@@ -13,27 +13,38 @@ ApplicationWindow {
     title: currentNode ? currentNode.name : "Explorador"
     flags: Qt.Window
 
-    // ---------- Modelo ----------
-    FileSystem { id: fs }
+// ---------- Modelo ----------
+FileSystem { id: fs }
 
-    // ---------- Estado ----------
-    property var historyStack: [["libraries"]]
-    property int historyIndex: 0
-    property string currentId: historyStack[historyIndex][historyStack[historyIndex].length - 1]
-    property var currentNode: fs.findNode(currentId)
-    property var pathToCurrent: fs.pathTo(currentId) || []
+// ---------- Estado ----------
+property var historyStack: [["libraries"]]
+property int historyIndex: 0
+property string currentId: historyStack[historyIndex][historyStack[historyIndex].length - 1]
+property var currentNode: fs.findNode(currentId)
+property var pathToCurrent: fs.pathTo(currentId) || []
 
-    property string viewMode: "large"
-    property var selectedIds: ({})
-    property int selectedCount: 0
-    property string searchQuery: ""
-    property string sortBy: "name"
-    property string sortDir: "asc"
+property string viewMode: "large"
+property var selectedIds: ({})
+property int selectedCount: 0
+property string searchQuery: ""
+property string sortBy: "name"
+property string sortDir: "asc"
 
-    property string themeName: "glass"
-    property string density: "comfortable"
-    property bool showSidebar: true
-    property bool showPreview: true
+property string themeName: "glass"
+property string density: "comfortable"
+property bool showSidebar: true
+property bool showPreview: true
+
+// Nuevas propiedades para vistas especiales
+property var storageDevices: []
+property var libraries: []
+property string currentSpecialView: "" // "computer", "libraries", "", etc.
+
+// Cargar datos del sistema
+Component.onCompleted: {
+    storageDevices = fsBackend.getStorageDevices()
+    libraries = fsBackend.getLibraries()
+}
 
     // ---------- Paletas (con stops de gradiente) ----------
     readonly property var palettes: ({
@@ -725,39 +736,288 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 spacing: 0
 
-                // SIDEBAR
-                Rectangle {
-                    visible: win.showSidebar
-                    Layout.preferredWidth: 200
-                    Layout.fillHeight: true
-                    border.color: win.pal.borderSoft
-                    gradient: Gradient {
-                        GradientStop { position: 0; color: win.pal.sidebar }
-                        GradientStop { position: 1; color: win.pal.sidebar }
-                    }
+// SIDEBAR
+    Rectangle {
+      visible: win.showSidebar
+      Layout.preferredWidth: 200
+      Layout.fillHeight: true
+      border.color: win.pal.borderSoft
+      gradient: Gradient {
+        GradientStop { position: 0; color: win.pal.sidebar }
+        GradientStop { position: 1; color: win.pal.sidebar }
+      }
 
-                    ScrollView {
-                        anchors.fill: parent
-                        clip: true
-                        Column {
-                            width: 200
-                            topPadding: 6
-                            bottomPadding: 6
-                            spacing: 2
-                            Repeater {
-                                model: fs.root.children
-                                delegate: SidebarGroup {
-                                    group: modelData
-                                    width: parent.width
-                                    pal: win.pal
-                                    fs: fs
-                                    currentId: win.currentId
-                                    navigateFn: win.navigate
-                                }
-                            }
-                        }
-                    }
+      ScrollView {
+        anchors.fill: parent
+        clip: true
+        Column {
+          width: 200
+          topPadding: 6
+          bottomPadding: 6
+          spacing: 2
+          
+          // Favorites section
+          Rectangle {
+            width: parent.width
+            height: 24
+            color: "transparent"
+            RowLayout {
+              anchors.fill: parent
+              anchors.leftMargin: 8
+              anchors.rightMargin: 8
+              spacing: 6
+              
+              Image {
+                source: "qrc:/icons/favorites.png"
+                Layout.preferredWidth: 14
+                Layout.preferredHeight: 14
+                fillMode: Image.PreserveAspectFit
+              }
+              Label {
+                text: "Favoritos"
+                color: win.pal.sbText
+                font.pixelSize: 12
+                font.bold: true
+                Layout.fillWidth: true
+              }
+            }
+          }
+          
+          // Desktop
+          Rectangle {
+            width: parent.width
+            height: 22
+            color: win.currentId === "desktop" ? win.pal.sbCurrent : (desktopHov.containsMouse ? win.pal.sbHover : "transparent")
+            Rectangle {
+              anchors.left: parent.left
+              anchors.top: parent.top
+              anchors.bottom: parent.bottom
+              width: 2
+              color: win.currentId === "desktop" ? win.pal.selectionBorder : "transparent"
+            }
+            RowLayout {
+              anchors.fill: parent
+              anchors.leftMargin: 22
+              anchors.rightMargin: 6
+              spacing: 6
+              Image {
+                source: "qrc:/icons/desktop.png"
+                Layout.preferredWidth: 16
+                Layout.preferredHeight: 16
+                fillMode: Image.PreserveAspectFit
+              }
+              Label {
+                text: "Escritorio"
+                color: win.currentId === "desktop" ? win.pal.selText : win.pal.sbText
+                font.pixelSize: 12
+                font.bold: win.currentId === "desktop"
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+              }
+            }
+            MouseArea {
+              id: desktopHov
+              anchors.fill: parent
+              hoverEnabled: true
+              onClicked: win.navigate("desktop")
+            }
+          }
+          
+          // Downloads
+          Rectangle {
+            width: parent.width
+            height: 22
+            color: win.currentId === "downloads" ? win.pal.sbCurrent : (downloadsHov.containsMouse ? win.pal.sbHover : "transparent")
+            Rectangle {
+              anchors.left: parent.left
+              anchors.top: parent.top
+              anchors.bottom: parent.bottom
+              width: 2
+              color: win.currentId === "downloads" ? win.pal.selectionBorder : "transparent"
+            }
+            RowLayout {
+              anchors.fill: parent
+              anchors.leftMargin: 22
+              anchors.rightMargin: 6
+              spacing: 6
+              Image {
+                source: "qrc:/icons/downloads.png"
+                Layout.preferredWidth: 16
+                Layout.preferredHeight: 16
+                fillMode: Image.PreserveAspectFit
+              }
+              Label {
+                text: "Descargas"
+                color: win.currentId === "downloads" ? win.pal.selText : win.pal.sbText
+                font.pixelSize: 12
+                font.bold: win.currentId === "downloads"
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+              }
+            }
+            MouseArea {
+              id: downloadsHov
+              anchors.fill: parent
+              hoverEnabled: true
+              onClicked: win.navigate("downloads")
+            }
+          }
+          
+          // Libraries section
+          Rectangle {
+            width: parent.width
+            height: 24
+            color: "transparent"
+            RowLayout {
+              anchors.fill: parent
+              anchors.leftMargin: 8
+              anchors.rightMargin: 8
+              spacing: 6
+              
+              Image {
+                source: "qrc:/icons/libraries.png"
+                Layout.preferredWidth: 14
+                Layout.preferredHeight: 14
+                fillMode: Image.PreserveAspectFit
+              }
+              Label {
+                text: "Bibliotecas"
+                color: win.pal.sbText
+                font.pixelSize: 12
+                font.bold: true
+                Layout.fillWidth: true
+              }
+            }
+          }
+          
+          // Libraries items
+          Repeater {
+            model: win.libraries
+            delegate: Rectangle {
+              width: parent.width
+              height: 22
+              color: win.currentId === modelData.path ? win.pal.sbCurrent : (libHov.containsMouse ? win.pal.sbHover : "transparent")
+              Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 2
+                color: win.currentId === modelData.path ? win.pal.selectionBorder : "transparent"
+              }
+              RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 22
+                anchors.rightMargin: 6
+                spacing: 6
+                Image {
+                  source: "qrc:/icons/" + modelData.icon + ".png"
+                  Layout.preferredWidth: 16
+                  Layout.preferredHeight: 16
+                  fillMode: Image.PreserveAspectFit
                 }
+                Label {
+                  text: modelData.name
+                  color: win.currentId === modelData.path ? win.pal.selText : win.pal.sbText
+                  font.pixelSize: 12
+                  font.bold: win.currentId === modelData.path
+                  Layout.fillWidth: true
+                  elide: Text.ElideRight
+                }
+              }
+              MouseArea {
+                id: libHov
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: win.navigate(modelData.path)
+              }
+            }
+          }
+          
+          // Computer section
+          Rectangle {
+            width: parent.width
+            height: 24
+            color: "transparent"
+            RowLayout {
+              anchors.fill: parent
+              anchors.leftMargin: 8
+              anchors.rightMargin: 8
+              spacing: 6
+              
+              Image {
+                source: "qrc:/icons/computer.png"
+                Layout.preferredWidth: 14
+                Layout.preferredHeight: 14
+                fillMode: Image.PreserveAspectFit
+              }
+              Label {
+                text: "Equipo"
+                color: win.pal.sbText
+                font.pixelSize: 12
+                font.bold: true
+                Layout.fillWidth: true
+              }
+            }
+          }
+          
+          // Computer - drives
+          Repeater {
+            model: win.storageDevices
+            delegate: Rectangle {
+              width: parent.width
+              height: 22
+              color: win.currentId === modelData.path ? win.pal.sbCurrent : (driveHov.containsMouse ? win.pal.sbHover : "transparent")
+              Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 2
+                color: win.currentId === modelData.path ? win.pal.selectionBorder : "transparent"
+              }
+              RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 22
+                anchors.rightMargin: 6
+                spacing: 6
+                Image {
+                  source: "qrc:/icons/drive-" + modelData.kind + ".png"
+                  Layout.preferredWidth: 16
+                  Layout.preferredHeight: 16
+                  fillMode: Image.PreserveAspectFit
+                }
+                Label {
+                  text: modelData.label
+                  color: win.currentId === modelData.path ? win.pal.selText : win.pal.sbText
+                  font.pixelSize: 12
+                  font.bold: win.currentId === modelData.path
+                  Layout.fillWidth: true
+                  elide: Text.ElideRight
+                }
+              }
+              MouseArea {
+                id: driveHov
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: win.navigate(modelData.path)
+              }
+            }
+          }
+          
+          // Original folder tree (for compatibility)
+          Repeater {
+            model: fs.root.children
+            delegate: SidebarGroup {
+              group: modelData
+              width: parent.width
+              pal: win.pal
+              fs: fs
+              currentId: win.currentId
+              navigateFn: win.navigate
+            }
+          }
+        }
+      }
+    }
 
                 // MAIN CONTENT AREA
                 ColumnLayout {
@@ -1023,20 +1283,89 @@ ApplicationWindow {
         }
     }
 
-    // ==================== CONTEXT MENU ====================
-    Menu {
-        id: ctxMenu
-        property var targetItem: null
-        MenuItem { text: "Abrir"; enabled: ctxMenu.targetItem !== null; onTriggered: win.doubleClickItem(ctxMenu.targetItem) }
-        MenuSeparator {}
-        MenuItem { text: "Copiar\tCtrl+C"; enabled: win.selectedCount > 0; onTriggered: win.handleCopy() }
-        MenuItem { text: "Eliminar\tSupr"; enabled: win.selectedCount > 0; onTriggered: win.handleDelete() }
-        MenuItem { text: "Cambiar nombre"; enabled: ctxMenu.targetItem !== null }
-        MenuSeparator {}
-        MenuItem { text: "Nueva carpeta"; onTriggered: win.handleNewFolder() }
-        MenuSeparator {}
-        MenuItem { text: "Propiedades" }
+// ==================== CONTEXT MENU ====================
+  Menu {
+    id: ctxMenu
+    property var targetItem: null
+    property bool hasSelection: win.selectedCount > 0
+    property bool isFolder: ctxMenu.targetItem && ctxMenu.targetItem.type === "folder"
+    property bool isFile: ctxMenu.targetItem && ctxMenu.targetItem.type !== "folder"
+    
+    // Estilo Windows 7 Aero
+    palette.window: win.pal.panel
+    palette.windowText: win.pal.text
+    palette.base: win.pal.content
+    palette.text: win.pal.text
+    palette.highlight: win.pal.accentSoft
+    palette.highlightedText: win.pal.accent
+    
+    MenuItem {
+      text: "Abrir"
+      enabled: ctxMenu.targetItem !== null
+      icon.source: "qrc:/icons/open.png"
+      onTriggered: win.doubleClickItem(ctxMenu.targetItem)
     }
+    MenuItem {
+      text: "Abrir en una nueva ventana"
+      enabled: ctxMenu.isFolder
+      icon.source: "qrc:/icons/open-new-window.png"
+      onTriggered: win.showToast("Abrir en nueva ventana...")
+    }
+    MenuSeparator {}
+    MenuItem {
+      text: "Cortar"
+      enabled: ctxMenu.hasSelection
+      icon.source: "qrc:/icons/cut.png"
+      onTriggered: win.showToast("Cortar...")
+    }
+    MenuItem {
+      text: "Copiar"
+      enabled: ctxMenu.hasSelection
+      icon.source: "qrc:/icons/copy.png"
+      onTriggered: win.handleCopy()
+    }
+    MenuItem {
+      text: "Pegar"
+      enabled: true
+      icon.source: "qrc:/icons/paste.png"
+      onTriggered: win.showToast("Pegar...")
+    }
+    MenuSeparator {}
+    MenuItem {
+      text: "Crear acceso directo"
+      enabled: ctxMenu.targetItem !== null
+      icon.source: "qrc:/icons/shortcut.png"
+      onTriggered: win.showToast("Crear acceso directo...")
+    }
+    MenuItem {
+      text: "Eliminar"
+      enabled: ctxMenu.hasSelection
+      icon.source: "qrc:/icons/delete.png"
+      onTriggered: win.handleDelete()
+    }
+    MenuItem {
+      text: "Cambiar nombre"
+      enabled: ctxMenu.targetItem !== null
+      icon.source: "qrc:/icons/rename.png"
+      onTriggered: win.showToast("Cambiar nombre...")
+    }
+    MenuSeparator {}
+    MenuItem {
+      text: "Propiedades"
+      enabled: ctxMenu.targetItem !== null
+      icon.source: "qrc:/icons/properties.png"
+      onTriggered: win.showToast("Propiedades...")
+    }
+    MenuSeparator {
+      visible: ctxMenu.isFolder
+    }
+    MenuItem {
+      text: "Nueva carpeta"
+      visible: ctxMenu.isFolder || ctxMenu.targetItem === null
+      icon.source: "qrc:/icons/new-folder.png"
+      onTriggered: win.handleNewFolder()
+    }
+  }
 
     // ==================== TOAST ====================
     Rectangle {

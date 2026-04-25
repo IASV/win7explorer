@@ -1,9 +1,9 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QQuickStyle>
 #include <QIcon>
 #include <QLoggingCategory>
-
 #include "iconprovider.h"
 #include "filesystembackend.h"
 
@@ -12,7 +12,6 @@ using namespace Qt::StringLiterals;
 int main(int argc, char *argv[])
 {
     QLoggingCategory::setFilterRules("kf.iconthemes=false\nqt.svg=false");
-
     QApplication app(argc, argv);
     app.setApplicationName("Win7Explorer");
 
