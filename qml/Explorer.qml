@@ -34,6 +34,8 @@ property string themeName: "glass"
 property string density: "comfortable"
 property bool showSidebar: true
 property bool showPreview: true
+property bool showMenuBar: false
+property bool showDetailsPanel: false
 
 // Nuevas propiedades para vistas especiales
 property var storageDevices: []
@@ -235,6 +237,8 @@ Component.onCompleted: {
         selectedIds = all; selectedCount = items.length
     }}
     Shortcut { sequence: "F5"; onActivated: showToast("Actualizando...") }
+    Shortcut { sequence: "F10"; onActivated: win.showMenuBar = !win.showMenuBar }
+    Shortcut { sequence: "Alt+F10"; onActivated: win.showMenuBar = !win.showMenuBar }
 
     // ---------- Raíz visual ----------
     Rectangle {
@@ -448,6 +452,59 @@ Component.onCompleted: {
                 }
             }
 
+            // ==================== MENU BAR (F10 toggle) ====================
+            Rectangle {
+                visible: win.showMenuBar
+                Layout.fillWidth: true
+                Layout.preferredHeight: 24
+                color: win.pal.tbar1
+                border.color: win.pal.borderSoft
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 6
+                    anchors.rightMargin: 6
+                    spacing: 0
+
+                    Repeater {
+                        model: [
+                            { title: "Archivo",      menuId: "archivoMenu" },
+                            { title: "Edición",      menuId: "edicionMenu" },
+                            { title: "Ver",          menuId: "verMenu" },
+                            { title: "Herramientas", menuId: "herramientasMenu" },
+                            { title: "Ayuda",        menuId: "ayudaMenu" }
+                        ]
+                        delegate: Rectangle {
+                            implicitWidth: mbLabel.implicitWidth + 16
+                            implicitHeight: 22
+                            color: mbArea.containsMouse ? win.pal.accentSoft : "transparent"
+                            border.color: mbArea.containsMouse ? win.pal.border : "transparent"
+                            radius: 2
+                            Label {
+                                id: mbLabel
+                                anchors.centerIn: parent
+                                text: modelData.title
+                                color: win.pal.text
+                                font.pixelSize: 12
+                            }
+                            MouseArea {
+                                id: mbArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (modelData.menuId === "archivoMenu") archivoMenu.popup()
+                                    else if (modelData.menuId === "edicionMenu") edicionMenu.popup()
+                                    else if (modelData.menuId === "verMenu") verMenu.popup()
+                                    else if (modelData.menuId === "herramientasMenu") herramientasMenu.popup()
+                                    else if (modelData.menuId === "ayudaMenu") ayudaMenu.popup()
+                                }
+                            }
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+            }
+
             // ==================== COMMAND BAR ====================
             Rectangle {
                 Layout.fillWidth: true
@@ -469,7 +526,7 @@ Component.onCompleted: {
                     // Command buttons
                     Repeater {
                         model: [
-                            { label: "Organizar", chevron: true, always: true, bold: true, action: function(){} },
+                            { label: "Organizar", chevron: true, always: true, bold: true, action: function(){ organizeMenu.popup() } },
                             { sep: true },
                             { label: "Abrir", chevron: true, requireSel: true, action: function(){} },
                             { label: "Compartir con", requireSel: true, action: function(){ win.handleCopy() } },
@@ -1189,6 +1246,83 @@ Component.onCompleted: {
                 }
             }
 
+            // ==================== DETAILS PANEL (bottom, full-width) ====================
+            Rectangle {
+                id: detailsPanel
+                visible: win.showDetailsPanel
+                Layout.fillWidth: true
+                Layout.preferredHeight: 72
+                color: win.pal.panel
+                border.color: win.pal.borderSoft
+
+                property var detailItem: {
+                    if (win.selectedCount !== 1) return null
+                    var id = Object.keys(win.selectedIds)[0]
+                    return win.items.find(function(i){ return i.id === id }) || null
+                }
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 14
+                    anchors.rightMargin: 14
+                    anchors.topMargin: 10
+                    anchors.bottomMargin: 10
+                    spacing: 14
+
+                    Image {
+                        visible: detailsPanel.detailItem !== null
+                        source: detailsPanel.detailItem ? fs.iconFor(detailsPanel.detailItem) : ""
+                        Layout.preferredWidth: 48
+                        Layout.preferredHeight: 48
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    Canvas {
+                        visible: detailsPanel.detailItem === null
+                        width: 48; height: 48
+                        property color fg: win.pal.muted
+                        onFgChanged: requestPaint()
+                        Component.onCompleted: requestPaint()
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.clearRect(0, 0, 48, 48)
+                            ctx.strokeStyle = fg; ctx.globalAlpha = 0.25
+                            ctx.lineWidth = 1.2; ctx.strokeRect(8, 5, 28, 38)
+                            ctx.beginPath()
+                            ctx.moveTo(14, 18); ctx.lineTo(30, 18)
+                            ctx.moveTo(14, 24); ctx.lineTo(30, 24)
+                            ctx.moveTo(14, 30); ctx.lineTo(24, 30)
+                            ctx.stroke()
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Label {
+                            text: detailsPanel.detailItem ? detailsPanel.detailItem.name
+                                                          : "Selecciona un archivo para ver sus detalles"
+                            color: detailsPanel.detailItem ? win.pal.text : win.pal.muted
+                            font.pixelSize: 13
+                            font.bold: detailsPanel.detailItem !== null
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
+                        RowLayout {
+                            visible: detailsPanel.detailItem !== null
+                            spacing: 18
+                            Label { text: detailsPanel.detailItem ? fs.typeLabel(detailsPanel.detailItem) : ""; color: win.pal.muted; font.pixelSize: 11 }
+                            Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.size;     text: detailsPanel.detailItem ? (detailsPanel.detailItem.size || "") : ""; color: win.pal.muted; font.pixelSize: 11 }
+                            Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.modified; text: detailsPanel.detailItem ? ("Modificado: " + (detailsPanel.detailItem.modified || "")) : ""; color: win.pal.muted; font.pixelSize: 11 }
+                            Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.dim;      text: detailsPanel.detailItem ? (detailsPanel.detailItem.dim || "") : ""; color: win.pal.muted; font.pixelSize: 11 }
+                            Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.duration; text: detailsPanel.detailItem ? (detailsPanel.detailItem.duration || "") : ""; color: win.pal.muted; font.pixelSize: 11 }
+                        }
+                    }
+                }
+            }
+
             // ==================== STATUS BAR ====================
             Rectangle {
                 Layout.fillWidth: true
@@ -1615,6 +1749,140 @@ Component.onCompleted: {
                 }
             }
         }
+    }
+
+    // ==================== ORGANIZE MENU ====================
+    Menu {
+        id: organizeMenu
+        palette.window: win.pal.panel
+        palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft
+        palette.highlightedText: win.pal.accent
+
+        MenuItem { text: "Deshacer";       enabled: false;                      onTriggered: win.showToast("Deshacer...") }
+        MenuItem { text: "Rehacer";        enabled: false;                      onTriggered: win.showToast("Rehacer...") }
+        MenuSeparator {}
+        MenuItem { text: "Cortar";         enabled: win.selectedCount > 0;      onTriggered: win.showToast("Cortar...") }
+        MenuItem { text: "Copiar";         enabled: win.selectedCount > 0;      onTriggered: win.handleCopy() }
+        MenuItem { text: "Pegar";                                               onTriggered: win.showToast("Pegar...") }
+        MenuSeparator {}
+        MenuItem { text: "Seleccionar todo"; onTriggered: {
+            var all = {}
+            for (var i = 0; i < win.items.length; i++) all[win.items[i].id] = true
+            win.selectedIds = all; win.selectedCount = win.items.length
+        }}
+        MenuSeparator {}
+        Menu {
+            title: "Diseño"
+            MenuItem { text: "Barra de menús";        checkable: true; checked: win.showMenuBar;        onTriggered: win.showMenuBar = !win.showMenuBar }
+            MenuItem { text: "Panel de detalles";     checkable: true; checked: win.showDetailsPanel;   onTriggered: win.showDetailsPanel = !win.showDetailsPanel }
+            MenuItem { text: "Panel de vista previa"; checkable: true; checked: win.showPreview;        onTriggered: win.showPreview = !win.showPreview }
+            MenuItem { text: "Panel de navegación";   checkable: true; checked: win.showSidebar;        onTriggered: win.showSidebar = !win.showSidebar }
+        }
+        MenuSeparator {}
+        MenuItem { text: "Eliminar";       enabled: win.selectedCount > 0;      onTriggered: win.handleDelete() }
+        MenuItem { text: "Cambiar nombre"; enabled: win.selectedCount === 1;    onTriggered: win.showToast("Cambiar nombre...") }
+        MenuSeparator {}
+        MenuItem { text: "Propiedades";    enabled: win.selectedCount > 0;      onTriggered: win.showToast("Propiedades...") }
+        MenuSeparator {}
+        MenuItem { text: "Cerrar";                                              onTriggered: Qt.quit() }
+    }
+
+    // ==================== MENU BAR MENUS ====================
+    Menu {
+        id: archivoMenu
+        palette.window: win.pal.panel; palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft; palette.highlightedText: win.pal.accent
+        MenuItem { text: "Nueva carpeta";        onTriggered: win.handleNewFolder() }
+        MenuSeparator {}
+        MenuItem { text: "Eliminar";             enabled: win.selectedCount > 0; onTriggered: win.handleDelete() }
+        MenuItem { text: "Cambiar nombre";       enabled: win.selectedCount === 1; onTriggered: win.showToast("Cambiar nombre...") }
+        MenuItem { text: "Propiedades";          enabled: win.selectedCount > 0; onTriggered: win.showToast("Propiedades...") }
+        MenuSeparator {}
+        MenuItem { text: "Cerrar";               onTriggered: Qt.quit() }
+    }
+
+    Menu {
+        id: edicionMenu
+        palette.window: win.pal.panel; palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft; palette.highlightedText: win.pal.accent
+        MenuItem { text: "Deshacer";             enabled: false; onTriggered: win.showToast("Deshacer...") }
+        MenuItem { text: "Rehacer";              enabled: false; onTriggered: win.showToast("Rehacer...") }
+        MenuSeparator {}
+        MenuItem { text: "Cortar";               enabled: win.selectedCount > 0; onTriggered: win.showToast("Cortar...") }
+        MenuItem { text: "Copiar";               enabled: win.selectedCount > 0; onTriggered: win.handleCopy() }
+        MenuItem { text: "Pegar";                onTriggered: win.showToast("Pegar...") }
+        MenuSeparator {}
+        MenuItem { text: "Seleccionar todo";     onTriggered: {
+            var all = {}
+            for (var i = 0; i < win.items.length; i++) all[win.items[i].id] = true
+            win.selectedIds = all; win.selectedCount = win.items.length
+        }}
+        MenuItem { text: "Invertir selección";   onTriggered: {
+            var inv = {}
+            for (var i = 0; i < win.items.length; i++) {
+                if (!win.selectedIds[win.items[i].id]) inv[win.items[i].id] = true
+            }
+            win.selectedIds = inv; win.selectedCount = Object.keys(inv).length
+        }}
+    }
+
+    Menu {
+        id: verMenu
+        palette.window: win.pal.panel; palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft; palette.highlightedText: win.pal.accent
+        Menu {
+            title: "Vista"
+            MenuItem { text: "Iconos grandes";  checkable: true; checked: win.viewMode === "large";   onTriggered: win.viewMode = "large" }
+            MenuItem { text: "Iconos medianos"; checkable: true; checked: win.viewMode === "medium";  onTriggered: win.viewMode = "medium" }
+            MenuItem { text: "Lista";           checkable: true; checked: win.viewMode === "list";    onTriggered: win.viewMode = "list" }
+            MenuItem { text: "Detalles";        checkable: true; checked: win.viewMode === "details"; onTriggered: win.viewMode = "details" }
+            MenuItem { text: "Contenido";       checkable: true; checked: win.viewMode === "content"; onTriggered: win.viewMode = "content" }
+        }
+        Menu {
+            title: "Organizar iconos por"
+            MenuItem { text: "Nombre";            onTriggered: win.setSort("name") }
+            MenuItem { text: "Fecha de modificación"; onTriggered: win.setSort("modified") }
+            MenuItem { text: "Tipo";              onTriggered: win.setSort("type") }
+            MenuItem { text: "Tamaño";            onTriggered: win.setSort("size") }
+        }
+        MenuSeparator {}
+        MenuItem { text: "Barra de menús";        checkable: true; checked: win.showMenuBar;        onTriggered: win.showMenuBar = !win.showMenuBar }
+        MenuItem { text: "Panel de detalles";     checkable: true; checked: win.showDetailsPanel;   onTriggered: win.showDetailsPanel = !win.showDetailsPanel }
+        MenuItem { text: "Panel de vista previa"; checkable: true; checked: win.showPreview;        onTriggered: win.showPreview = !win.showPreview }
+        MenuItem { text: "Panel de navegación";   checkable: true; checked: win.showSidebar;        onTriggered: win.showSidebar = !win.showSidebar }
+        MenuSeparator {}
+        MenuItem { text: "Actualizar";            onTriggered: win.showToast("Actualizando...") }
+    }
+
+    Menu {
+        id: herramientasMenu
+        palette.window: win.pal.panel; palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft; palette.highlightedText: win.pal.accent
+        MenuItem { text: "Conectar a unidad de red...";    onTriggered: win.showToast("Conectar a unidad de red...") }
+        MenuItem { text: "Desconectar unidad de red...";   onTriggered: win.showToast("Desconectar unidad de red...") }
+        MenuSeparator {}
+        MenuItem { text: "Abrir símbolo del sistema";      onTriggered: win.showToast("Terminal...") }
+        MenuSeparator {}
+        Menu {
+            title: "Tema"
+            MenuItem { text: "Glass (predeterminado)"; checkable: true; checked: win.themeName === "glass"; onTriggered: win.themeName = "glass" }
+            MenuItem { text: "Plano";                  checkable: true; checked: win.themeName === "flat";  onTriggered: win.themeName = "flat" }
+            MenuItem { text: "Oscuro";                 checkable: true; checked: win.themeName === "dark";  onTriggered: win.themeName = "dark" }
+            MenuItem { text: "Cálido";                 checkable: true; checked: win.themeName === "warm";  onTriggered: win.themeName = "warm" }
+            MenuItem { text: "Neón";                   checkable: true; checked: win.themeName === "neon";  onTriggered: win.themeName = "neon" }
+        }
+        MenuSeparator {}
+        MenuItem { text: "Opciones de carpeta...";         onTriggered: win.showToast("Opciones de carpeta...") }
+    }
+
+    Menu {
+        id: ayudaMenu
+        palette.window: win.pal.panel; palette.windowText: win.pal.text
+        palette.highlight: win.pal.accentSoft; palette.highlightedText: win.pal.accent
+        MenuItem { text: "Ver ayuda";         onTriggered: win.showToast("Ayuda...") }
+        MenuSeparator {}
+        MenuItem { text: "Acerca de Win7 Explorer"; onTriggered: win.showToast("Win7 Explorer — Qt 6 QML replica") }
     }
 
     Component {
