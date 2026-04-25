@@ -70,6 +70,10 @@ public:
     Q_INVOKABLE QVariantList getSubdirectories(const QString &path) const;
     Q_INVOKABLE QString readFilePreview(const QString &path, int maxChars = 3000) const;
 
+    // Storage & libraries
+    Q_INVOKABLE QVariantList getStorageDevices() const;
+    Q_INVOKABLE QVariantList getLibraries() const;
+
     // Quick access paths
     Q_INVOKABLE QString homePath() const;
     Q_INVOKABLE QString desktopPath() const;

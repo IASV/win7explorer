@@ -5,6 +5,7 @@
 #include <QLoggingCategory>
 
 #include "iconprovider.h"
+#include "filesystembackend.h"
 
 using namespace Qt::StringLiterals;
 
@@ -25,6 +26,10 @@ int main(int argc, char *argv[])
         QIcon::setThemeName("Windows 7 Aero");
 
     QQmlApplicationEngine engine;
+
+    // Expose real filesystem backend to QML
+    FileSystemBackend *fsBackend = new FileSystemBackend(&app);
+    engine.rootContext()->setContextProperty("fsBackend", fsBackend);
 
     // Register custom icon provider
     engine.addImageProvider("fileicons", new IconProvider);

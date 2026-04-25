@@ -267,6 +267,80 @@ QString FileSystemBackend::readFilePreview(const QString &path, int maxChars) co
     return QString::fromUtf8(data);
 }
 
+QVariantList FileSystemBackend::getStorageDevices() const {
+    QVariantList result;
+    static const QSet<QString> skipFs = {
+        "tmpfs","devtmpfs","squashfs","proc","sysfs","devpts","cgroup","cgroup2",
+        "securityfs","efivarfs","fusectl","configfs","bpf","tracefs","debugfs",
+        "hugetlbfs","mqueue","pstore","autofs","rpc_pipefs"
+    };
+    for (const QStorageInfo &si : QStorageInfo::mountedVolumes()) {
+        if (!si.isValid() || !si.isReady() || si.bytesTotal() <= 0) continue;
+        QString fsType = QString::fromLatin1(si.fileSystemType());
+        if (skipFs.contains(fsType)) continue;
+        const QString root = si.rootPath();
+        if (root.startsWith("/sys") || root.startsWith("/proc")
+            || root.startsWith("/dev") || root.startsWith("/run")
+            || root.startsWith("/snap")) continue;
+
+        double totalGb = si.bytesTotal() / (1024.0 * 1024.0 * 1024.0);
+        double freeGb  = si.bytesFree()  / (1024.0 * 1024.0 * 1024.0);
+
+        QString label = si.name();
+        if (label.isEmpty()) {
+            if (si.isRoot()) label = "Disco local";
+            else label = root.section('/', -1, -1);
+            if (label.isEmpty()) label = root;
+        }
+        // Friendly label with path hint
+        QString display = label + " (" + root + ")";
+
+        QString kind = "local";
+        QString dev = QString::fromLatin1(si.device());
+        if (dev.contains("cdrom") || dev.contains("dvd") || fsType == "iso9660" || fsType == "udf")
+            kind = "disc";
+        else if (si.isRoot())
+            kind = "system";
+        else if (dev.startsWith("/dev/sd") || dev.startsWith("/dev/vd"))
+            kind = "local";
+
+        QVariantMap m;
+        m["displayName"] = display;
+        m["label"]       = label;
+        m["path"]        = root;
+        m["totalGb"]     = totalGb;
+        m["freeGb"]      = freeGb;
+        m["usedGb"]      = totalGb - freeGb;
+        m["kind"]        = kind;
+        m["fsType"]      = fsType;
+        result.append(m);
+    }
+    return result;
+}
+
+QVariantList FileSystemBackend::getLibraries() const {
+    struct Lib { const char *name; const char *icon; QStandardPaths::StandardLocation loc; };
+    static const Lib libs[] = {
+        {"Documentos", "document", QStandardPaths::DocumentsLocation},
+        {"Música",     "music",    QStandardPaths::MusicLocation},
+        {"Imágenes",   "picture",  QStandardPaths::PicturesLocation},
+        {"Vídeos",     "video",    QStandardPaths::MoviesLocation},
+    };
+    QVariantList result;
+    for (const auto &lib : libs) {
+        QString path = QStandardPaths::writableLocation(lib.loc);
+        QDir dir(path);
+        QVariantMap m;
+        m["name"]      = QString::fromUtf8(lib.name);
+        m["icon"]      = QString::fromLatin1(lib.icon);
+        m["path"]      = path;
+        m["itemCount"] = dir.exists()
+            ? (int)dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot).count() : 0;
+        result.append(m);
+    }
+    return result;
+}
+
 QString FileSystemBackend::homePath() const { return QDir::homePath(); }
 QString FileSystemBackend::desktopPath() const { return QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); }
 QString FileSystemBackend::documentsPath() const { return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation); }
