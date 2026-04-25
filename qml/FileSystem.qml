@@ -6,7 +6,7 @@ import QtQuick
 QtObject {
     id: fs
 
-    readonly property string iconBase: "image://fileicons/"
+    readonly property string iconBase: "qrc:/icons/"
 
     // Árbol raíz
     property var root: ({
