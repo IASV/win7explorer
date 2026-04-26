@@ -30,7 +30,7 @@ ApplicationWindow {
     FileSystem { id: fs }
 
     // ── Navigation state ───────────────────────────────────────────────────
-    property string currentId: "lib-docs"
+    property string currentId: fsBackend.homePath()
     property var    historyStack:   [currentId]
     property int    historyIndex:   0
 
@@ -55,8 +55,9 @@ ApplicationWindow {
         var keys = Object.keys(selectedIds)
         if (keys.length !== 1) return null
         var id = keys[0]
-        for (var i = 0; i < items.length; i++)
-            if (items[i].id === id) return items[i]
+        var pool = useGroupedView ? groupedItems : items
+        for (var i = 0; i < pool.length; i++)
+            if (pool[i].id === id) return pool[i]
         return null
     }
 
@@ -91,11 +92,10 @@ ApplicationWindow {
                     id:       f.path,
                     name:     f.name,
                     type:     f.isDir ? "folder" : "file",
-                    ext:      f.ext || "",
-                    size:     f.size || "",
+                    size:     f.sizeFormatted || "",
                     modified: f.modified || "",
-                    iconSrc:  f.iconSrc  || "qrc:/icons/file-generic.png",
-                    typeStr:  f.typeStr  || f.mimeType || ""
+                    iconSrc:  "image://fileicons/" + (f.mimeIcon || "file-generic"),
+                    typeStr:  f.type || ""
                 })
             }
             win.realFiles = arr
@@ -151,17 +151,22 @@ ApplicationWindow {
         var n = currentNode
         var arr = []
         if (n.kind === "computer") {
-            // Combine drives + network locations — mirrors Windows 7 "Equipo"
-            var netNode = fs.findNode("network")
-            arr = (n.children || []).slice()
-            if (netNode && netNode.children) arr = arr.concat(netNode.children.slice())
-        } else {
-            arr = (n.children || []).slice()
+            var drives = fsBackend.getStorageDevices()
+            for (var i = 0; i < drives.length; i++) {
+                var d = drives[i]
+                arr.push({
+                    id:      d.path,
+                    name:    d.label,
+                    type:    "drive",
+                    kind:    d.kind,
+                    total:   d.totalGb,
+                    free:    d.freeGb,
+                    iconSrc: "image://fileicons/drive-" + d.kind,
+                    typeStr: d.fsType || "Unidad local"
+                })
+            }
         }
-        arr.forEach(function(item) {
-            if (!item.iconSrc) item.iconSrc = fs.iconFor(item)
-            if (!item.typeStr) item.typeStr  = fs.typeLabel(item)
-        })
+        // "network": no backend API yet — arr stays empty, GroupedView shows nothing
         return arr
     }
 
@@ -630,7 +635,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.preferredHeight: 28
             pal:           win.pal
-            itemCount:     win.items.length
+            itemCount:     win.useGroupedView ? win.groupedItems.length : win.items.length
             selectedCount: win.selectedCount
             selItem:       win.selectedItem
         }
