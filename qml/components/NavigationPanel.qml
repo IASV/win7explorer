@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Win7Explorer
 
 Rectangle {
     id: root

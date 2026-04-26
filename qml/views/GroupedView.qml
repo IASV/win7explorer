@@ -5,6 +5,7 @@ import QtQuick.Layouts
 ScrollView {
     id: root
     property var pal
+    property var model:       []
     property var selectedIds: ({})
 
     signal itemClicked(var item, bool ctrl, bool shift)

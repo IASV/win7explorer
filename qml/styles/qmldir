@@ -1,2 +1,0 @@
-module Win7Explorer.styles
-singleton Win7Theme 1.0 Win7Theme.qml
