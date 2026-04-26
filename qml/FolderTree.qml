@@ -39,15 +39,14 @@ Item {
             readonly property int    itemIndex:       index
 
             color: {
-                if (itemType === "header") return "transparent"
-                return (currentPath === itemPath)
-                       ? pal.sbCurrent
-                       : (rowMouse.containsMouse ? pal.sbHover : "transparent")
+                if (itemType === "header" && itemPath === "") return "transparent"
+                if (currentPath === itemPath) return pal.sbCurrent
+                return rowMouse.containsMouse ? pal.sbHover : "transparent"
             }
 
             // Left selection indicator
             Rectangle {
-                visible: itemType !== "header" && currentPath === itemPath
+                visible: itemPath !== "" && currentPath === itemPath
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
@@ -108,9 +107,9 @@ Item {
 
                 Label {
                     text: itemName
-                    color: itemType === "header"   ? pal.muted
-                         : currentPath === itemPath ? pal.selText
-                         :                            pal.sbText
+                    color: currentPath === itemPath && itemPath !== "" ? pal.selText
+                         : itemType === "header" ? pal.muted
+                         : pal.sbText
                     font.pixelSize: 12
                     font.bold: itemType === "header"
                     Layout.fillWidth: true
@@ -123,9 +122,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    if (itemType !== "header" && itemPath) {
-                        folderTree.folderActivated(itemPath)
-                    }
+                    if (itemPath) folderTree.folderActivated(itemPath)
                 }
             }
         }
@@ -185,10 +182,13 @@ Item {
             treeModel.append({ name: libs[i].name, type: "special", level: 1, icon: libs[i].icon, path: libs[i].path, hasChildren: false, expanded: false })
 
         // Computer / drives
-        treeModel.append({ name: "Equipo",        type: "header",  level: 0, icon: "window",        path: "",                              hasChildren: false, expanded: false })
+        treeModel.append({ name: "Equipo", type: "header", level: 0, icon: "window", path: "computer", hasChildren: false, expanded: false })
         var drives = fsBackend.getStorageDevices()
         for (var j = 0; j < drives.length; j++)
             treeModel.append({ name: drives[j].label, type: "special", level: 1, icon: "drive-" + drives[j].kind, path: drives[j].path, hasChildren: drives[j].path !== "", expanded: false })
+
+        // Network
+        treeModel.append({ name: "Red", type: "header", level: 0, icon: "network", path: "network", hasChildren: false, expanded: false })
 
         // Home folder tree
         treeModel.append({ name: "Inicio",        type: "header",  level: 0, icon: "folder-closed", path: "",                              hasChildren: false, expanded: false })

@@ -139,6 +139,32 @@ ApplicationWindow {
         return arr
     }
 
+    // ── Grouped view (Equipo / Red) ────────────────────────────────────────
+    readonly property bool useGroupedView: {
+        if (isRealPath) return false
+        var n = currentNode
+        return n !== null && n.type === "group" && (n.kind === "computer" || n.kind === "network")
+    }
+
+    readonly property var groupedItems: {
+        if (!useGroupedView) return []
+        var n = currentNode
+        var arr = []
+        if (n.kind === "computer") {
+            // Combine drives + network locations — mirrors Windows 7 "Equipo"
+            var netNode = fs.findNode("network")
+            arr = (n.children || []).slice()
+            if (netNode && netNode.children) arr = arr.concat(netNode.children.slice())
+        } else {
+            arr = (n.children || []).slice()
+        }
+        arr.forEach(function(item) {
+            if (!item.iconSrc) item.iconSrc = fs.iconFor(item)
+            if (!item.typeStr) item.typeStr  = fs.typeLabel(item)
+        })
+        return arr
+    }
+
     // ── Navigation helpers ─────────────────────────────────────────────────
     function navigate(id) {
         if (id === currentId) return
@@ -422,6 +448,21 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: groupedComp
+        GroupedView {
+            pal: win.pal
+            model: win.groupedItems
+            selectedIds: win.selectedIds
+            onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
+            onItemDoubleClicked: function(item) { win.handleOpen(item) }
+            onContextMenuRequested: function(item) {
+                if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
+                ctxMenu.targetItem = item; ctxMenu.popup()
+            }
+        }
+    }
+
     // ── Layout ─────────────────────────────────────────────────────────────
     ColumnLayout {
         anchors.fill: parent
@@ -518,7 +559,8 @@ ApplicationWindow {
                     id: viewLoader
                     anchors.fill: parent
                     sourceComponent: {
-                        if (win.items.length === 0) return emptyComp
+                        if (win.useGroupedView)        return groupedComp
+                        if (win.items.length === 0)    return emptyComp
                         if (win.viewMode === "large" || win.viewMode === "medium") return iconsComp
                         if (win.viewMode === "list")    return listComp
                         if (win.viewMode === "details") return detailsComp
