@@ -157,26 +157,51 @@ ScrollView {
                                         Layout.fillWidth: true
                                     }
 
-                                    // Disk usage bar (only for drives)
-                                    Rectangle {
+                                    // Disk usage bar — Win7 Aero style
+                                    Item {
+                                        id: barItem
                                         visible: modelData.total !== undefined && modelData.total > 0
                                         Layout.fillWidth: true
-                                        height: 10
-                                        radius: 2
-                                        color: root.pal.borderSoft
-                                        clip: true
+                                        height: 14
 
+                                        readonly property real usedRatio: modelData.total > 0
+                                            ? Math.min((modelData.total - modelData.free) / modelData.total, 1.0)
+                                            : 0
+                                        readonly property bool critical: usedRatio > 0.9
+
+                                        // Container — inset look (1px border, gray background)
                                         Rectangle {
-                                            readonly property real usedRatio: modelData.total > 0
-                                                ? Math.min((modelData.total - modelData.free) / modelData.total, 1.0)
-                                                : 0
-                                            width: parent.width * usedRatio
-                                            height: parent.height
-                                            radius: parent.radius
-                                            gradient: Gradient {
-                                                orientation: Gradient.Horizontal
-                                                GradientStop { position: 0.0; color: usedRatio > 0.9 ? "#e85050" : "#50d1ea" }
-                                                GradientStop { position: 1.0; color: usedRatio > 0.9 ? "#b81a1a" : "#1a8ab8" }
+                                            anchors.fill: parent
+                                            color: "#dce0e4"
+                                            border.color: "#9aa0a8"
+                                            border.width: 1
+
+                                            // Filled portion
+                                            Rectangle {
+                                                x: 1; y: 1
+                                                width:  (parent.width  - 2) * barItem.usedRatio
+                                                height: parent.height - 2
+                                                clip: true
+
+                                                // Bottom half — base color
+                                                Rectangle {
+                                                    anchors.fill: parent
+                                                    color: barItem.critical ? "#cc1a1a" : "#0090c8"
+                                                }
+                                                // Top half — lighter gloss band
+                                                Rectangle {
+                                                    anchors.top: parent.top
+                                                    width: parent.width
+                                                    height: Math.ceil(parent.height * 0.50)
+                                                    color: barItem.critical ? "#e85858" : "#7ad8f4"
+                                                }
+                                                // Subtle shine line at very top
+                                                Rectangle {
+                                                    anchors.top: parent.top
+                                                    width: parent.width
+                                                    height: 1
+                                                    color: barItem.critical ? "#f08080" : "#b8eeff"
+                                                }
                                             }
                                         }
                                     }
