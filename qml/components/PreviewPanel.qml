@@ -1,117 +1,95 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles/Win7Theme.js" as Win7Theme
 
-// ═══════════════════════════════════════════════════
-// Preview Panel: Right-side panel showing file content
-// Toggled by the CommandBar preview button
-// ═══════════════════════════════════════════════════
 Rectangle {
-    id: previewPanel
+    id: root
+    property var pal
+    property var previewItem: null
 
-    color: Win7Theme.contentBg
+    color: pal.panel
+    border.color: pal.borderSoft
 
-    // Left border
-    Rectangle {
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        width: 1
-        color: Win7Theme.navPanelBorder
-    }
-
-    property var info: fileSystemBackend.selectedFileInfo
-
-    readonly property bool isImage: {
-        if (!info || !info.path) return false
-        let ext = info.path.split('.').pop().toLowerCase()
-        return ["jpg","jpeg","png","gif","bmp","webp","svg"].indexOf(ext) >= 0
-    }
-    readonly property bool isText: {
-        if (!info || !info.path || info.isDir) return false
-        let ext = info.path.split('.').pop().toLowerCase()
-        return ["txt","md","markdown","sh","bash","py","js","ts","cpp","c","h",
-                "hpp","rs","go","java","html","css","xml","json","yaml","yml",
-                "toml","ini","cfg","conf","log","csv","sql"].indexOf(ext) >= 0
-    }
-
-    // ── Nothing selected ──
-    Text {
-        anchors.centerIn: parent
-        text: "Sin selección"
-        font.family: Win7Theme.fontFamily
-        font.pixelSize: Win7Theme.fontSizeNormal + 1
-        color: Win7Theme.itemTextSecondary
-        visible: !info || !info.name
-    }
-
-    // ── Image preview ──
-    ScrollView {
-        anchors.fill: parent
-        anchors.margins: 8
-        visible: previewPanel.isImage && info && info.name
-        clip: true
-        background: null
-
-        Image {
-            source: (previewPanel.isImage && info && info.path) ? "file://" + info.path : ""
-            fillMode: Image.PreserveAspectFit
-            width: previewPanel.width - 16
-            height: previewPanel.height - 16
-            asynchronous: true
-
-            // Loading indicator
-            BusyIndicator {
-                anchors.centerIn: parent
-                running: parent.status === Image.Loading
-            }
-        }
-    }
-
-    // ── Text preview ──
-    ScrollView {
-        anchors.fill: parent
-        anchors.margins: 6
-        visible: previewPanel.isText && info && info.name && !previewPanel.isImage
-        clip: true
-        background: null
-
-        TextArea {
-            id: textPreview
-            readOnly: true
-            wrapMode: TextArea.Wrap
-            font.family: "monospace"
-            font.pixelSize: Win7Theme.fontSizeNormal + 1
-            color: Win7Theme.itemText
-            background: null
-            text: {
-                if (!previewPanel.isText || !info || !info.path) return ""
-                return fileSystemBackend.readFilePreview(info.path, 4000) || "[Archivo vacío o no legible]"
-            }
-        }
-    }
-
-    // ── Non-previewable ──
     ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 12
-        visible: info && info.name && !previewPanel.isImage && !previewPanel.isText
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 10
 
-        Image {
-            Layout.alignment: Qt.AlignHCenter
-            width: 64; height: 64
-            sourceSize: Qt.size(64, 64)
-            source: (info && info.path) ? "image://fileicons/" + encodeURIComponent(info.path) : ""
-            fillMode: Image.PreserveAspectFit
+        // Hero icon or placeholder
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 180
+
+            Column {
+                visible: root.previewItem === null
+                anchors.centerIn: parent
+                spacing: 10
+                Canvas {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 48; height: 48
+                    property color fg: root.pal.muted
+                    onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d"); ctx.clearRect(0,0,48,48)
+                        ctx.strokeStyle=fg; ctx.globalAlpha=0.4; ctx.lineWidth=1.2
+                        ctx.strokeRect(8,6,32,36)
+                        ctx.beginPath(); ctx.moveTo(16,16); ctx.lineTo(32,16)
+                        ctx.moveTo(16,22); ctx.lineTo(32,22); ctx.moveTo(16,28); ctx.lineTo(26,28); ctx.stroke()
+                    }
+                }
+                Label {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Selecciona un archivo\npara previsualizar"
+                    color: root.pal.muted; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 12
+                }
+            }
+
+            Image {
+                visible: root.previewItem !== null
+                anchors.centerIn: parent
+                width: 96; height: 96
+                fillMode: Image.PreserveAspectFit
+                source: root.previewItem ? (root.previewItem.iconSrc || "") : ""
+            }
         }
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: "Vista previa no disponible"
-            font.family: Win7Theme.fontFamily
-            font.pixelSize: Win7Theme.fontSizeNormal + 1
-            color: Win7Theme.itemTextSecondary
+        Label {
+            visible: root.previewItem !== null
+            Layout.fillWidth: true
+            text: root.previewItem ? root.previewItem.name : ""
+            color: root.pal.text; font.pixelSize: 12; font.bold: true
+            horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap
         }
+
+        Label {
+            visible: root.previewItem !== null
+            Layout.fillWidth: true
+            text: root.previewItem ? (root.previewItem.typeStr || "") : ""
+            color: root.pal.muted; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter
+        }
+
+        Column {
+            visible: root.previewItem !== null
+            Layout.fillWidth: true
+            spacing: 4
+            Repeater {
+                model: {
+                    var it = root.previewItem; if (!it) return []
+                    var rows = []
+                    if (it.modified) rows.push({ lbl: "Modificado", val: it.modified })
+                    if (it.size)     rows.push({ lbl: "Tamaño",     val: it.size })
+                    if (it.dim)      rows.push({ lbl: "Dimensiones",val: it.dim })
+                    if (it.duration) rows.push({ lbl: "Duración",   val: it.duration })
+                    return rows
+                }
+                delegate: RowLayout {
+                    width: parent.width
+                    Label { text: modelData.lbl+":"; color: root.pal.muted; font.pixelSize: 11; Layout.preferredWidth: 80 }
+                    Label { text: modelData.val;     color: root.pal.text;  font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+            }
+        }
+
+        Item { Layout.fillHeight: true }
     }
 }

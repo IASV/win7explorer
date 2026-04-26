@@ -1,159 +1,59 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles/Win7Theme.js" as Win7Theme
 
-// ═══════════════════════════════════════════════════
-// Details Panel: Shows info about selected file(s)
-// Located at the bottom of the content area
-// ═══════════════════════════════════════════════════
 Rectangle {
-    id: detailsPanel
+    id: root
+    property var pal
+    property var detailItem: null
 
-    gradient: Gradient {
-        GradientStop { position: 0.0; color: Win7Theme.detailsPanelGradientTop }
-        GradientStop { position: 1.0; color: Win7Theme.detailsPanelGradientBottom }
-    }
-
-    property var info: fileSystemBackend.selectedFileInfo
+    color: pal.panel
+    border.color: pal.borderSoft
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
-        anchors.topMargin: 6
-        anchors.bottomMargin: 6
-        spacing: 12
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 10;  anchors.bottomMargin: 10
+        spacing: 14
 
-        // ── File Icon / Thumbnail ──
-        Item {
-            width: 50
-            height: 50
-            visible: info && info.name
-            Layout.alignment: Qt.AlignVCenter
+        Image {
+            visible: root.detailItem !== null
+            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            fillMode: Image.PreserveAspectFit
+        }
 
-            // Image thumbnail for supported image types
-            Image {
-                id: thumbImage
-                anchors.fill: parent
-                source: (info && info.path && detailsPanel.isImageFile(info.path))
-                        ? "file://" + info.path : ""
-                fillMode: Image.PreserveAspectFit
-                clip: true
-                asynchronous: true
-                visible: status === Image.Ready
-            }
-
-            // Fallback: system theme icon (for non-image or while image loads)
-            Image {
-                anchors.fill: parent
-                sourceSize: Qt.size(48, 48)
-                source: (info && info.path) ? "image://fileicons/" + encodeURIComponent(info.path) : ""
-                fillMode: Image.PreserveAspectFit
-                visible: !thumbImage.visible && (info && !!info.path)
+        Canvas {
+            visible: root.detailItem === null
+            width: 48; height: 48
+            property color fg: root.pal.muted
+            onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+            onPaint: {
+                var ctx = getContext("2d"); ctx.clearRect(0,0,48,48)
+                ctx.strokeStyle=fg; ctx.globalAlpha=0.25; ctx.lineWidth=1.2
+                ctx.strokeRect(8,5,28,38)
+                ctx.beginPath(); ctx.moveTo(14,18); ctx.lineTo(30,18)
+                ctx.moveTo(14,24); ctx.lineTo(30,24); ctx.moveTo(14,30); ctx.lineTo(24,30); ctx.stroke()
             }
         }
 
-        // ── File Details ──
         ColumnLayout {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            spacing: 1
-            visible: info && info.name
+            Layout.fillWidth: true; spacing: 4
 
-            // File name (bold, larger)
-            Text {
-                text: info ? (info.name || "") : ""
-                font.family: Win7Theme.fontFamily
-                font.pixelSize: Win7Theme.fontSizeMedium
-                font.bold: true
-                color: Win7Theme.detailsPanelText
-                elide: Text.ElideMiddle
-                Layout.fillWidth: true
+            Label {
+                text: root.detailItem ? root.detailItem.name : "Selecciona un archivo para ver sus detalles"
+                color: root.detailItem ? root.pal.text : root.pal.muted
+                font.pixelSize: 13; font.bold: root.detailItem !== null
+                elide: Text.ElideRight; Layout.fillWidth: true
             }
 
-            // Type
-            Text {
-                text: info ? (info.type || "") : ""
-                font.family: Win7Theme.fontFamily
-                font.pixelSize: Win7Theme.fontSizeNormal + 1
-                color: Win7Theme.detailsPanelLabel
+            RowLayout {
+                visible: root.detailItem !== null
+                spacing: 18
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "")    : ""; color: root.pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && root.detailItem.size;     text: root.detailItem ? (root.detailItem.size     || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && root.detailItem.modified; text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""; color: root.pal.muted; font.pixelSize: 11 }
             }
-        }
-
-        // ── Right side: Date & Size ──
-        ColumnLayout {
-            spacing: 1
-            visible: info && info.name
-            Layout.alignment: Qt.AlignTop
-
-            DetailRow {
-                label: "Fecha de modificación:"
-                value: info ? (info.modified || "") : ""
-            }
-
-            DetailRow {
-                label: "Tamaño:"
-                value: info ? (info.sizeFormatted || "") : ""
-                visible: info && !info.isDir
-            }
-
-            DetailRow {
-                label: "Fecha de creación:"
-                value: info ? (info.created || "") : ""
-            }
-        }
-    }
-
-    // ── Empty state: show item count ──
-    Text {
-        anchors.centerIn: parent
-        text: fileSystemBackend.itemCount + " elementos"
-        font.family: Win7Theme.fontFamily
-        font.pixelSize: Win7Theme.fontSizeNormal + 1
-        color: Win7Theme.detailsPanelLabel
-        visible: !info || !info.name
-    }
-
-    function isImageFile(path) {
-        if (!path) return false
-        let ext = path.split('.').pop().toLowerCase()
-        return ["jpg","jpeg","png","gif","bmp","webp"].indexOf(ext) >= 0
-    }
-
-    function fileEmoji(filename) {
-        let ext = filename.split('.').pop().toLowerCase()
-        switch (ext) {
-            case "jpg": case "jpeg": case "png": case "gif": case "bmp": case "webp": return "🖼"
-            case "mp3": case "wav": case "flac": case "ogg": case "aac": return "🎵"
-            case "mp4": case "avi": case "mkv": case "mov": case "webm": return "🎬"
-            case "pdf": return "📕"
-            case "doc": case "docx": case "odt": return "📝"
-            case "xls": case "xlsx": case "ods": return "📊"
-            case "zip": case "tar": case "gz": case "7z": case "rar": return "📦"
-            case "py": case "js": case "cpp": case "c": case "h": case "rs": case "go": case "sh": return "📜"
-            case "html": case "css": case "xml": case "json": return "🌐"
-            default: return "📄"
-        }
-    }
-
-    // ═══ Detail Row Component ═══
-    component DetailRow: RowLayout {
-        property string label: ""
-        property string value: ""
-        spacing: 6
-
-        Text {
-            text: label
-            font.family: Win7Theme.fontFamily
-            font.pixelSize: Win7Theme.fontSizeSmall + 2
-            color: Win7Theme.detailsPanelLabel
-        }
-        Text {
-            text: value
-            font.family: Win7Theme.fontFamily
-            font.pixelSize: Win7Theme.fontSizeSmall + 2
-            color: Win7Theme.detailsPanelText
         }
     }
 }

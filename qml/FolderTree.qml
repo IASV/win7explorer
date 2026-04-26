@@ -153,7 +153,7 @@ Item {
         } else {
             // Expand: insert immediate children after this item
             var childLevel = item.level + 1
-            var subs = fsBackend.getTreeSubdirectories(path)
+            var subs = fsBackend.getSubdirectories(path)
             for (var j = subs.length - 1; j >= 0; j--) {
                 treeModel.insert(idx + 1, {
                     name:        subs[j].name,

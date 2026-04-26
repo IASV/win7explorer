@@ -1,97 +1,70 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles/Win7Theme.js" as Win7Theme
 
-// ═══════════════════════════════════════════════════
-// Status Bar: Bottom bar with item count info
-// ═══════════════════════════════════════════════════
 Rectangle {
-    id: statusBar
-    color: Win7Theme.statusBarBg
+    id: root
+    property var pal
+    property int selectedCount: 0
+    property int itemCount:     0
+    property var selItem: null
 
-    // Top border
-    Rectangle {
-        anchors.top: parent.top
-        width: parent.width
-        height: 1
-        color: Win7Theme.statusBarBorder
+    border.color: pal.borderSoft
+    gradient: Gradient {
+        GradientStop { position: 0; color: pal.stat1 }
+        GradientStop { position: 1; color: pal.stat2 }
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
-        spacing: 20
+        anchors.leftMargin: 10; anchors.rightMargin: 10
+        anchors.topMargin: 4;   anchors.bottomMargin: 4
+        spacing: 10
 
-        // Item count
-        Text {
-            text: {
-                let count = fileSystemBackend.itemCount
-                let selected = fileSystemBackend.selectedCount
-                let msg = count + " elemento" + (count !== 1 ? "s" : "")
-                if (selected > 0)
-                    msg += "  |  " + selected + " elemento" +
-                           (selected !== 1 ? "s" : "") + " seleccionado" +
-                           (selected !== 1 ? "s" : "")
-                return msg
+        Label {
+            visible: root.selectedCount === 0
+            text: root.itemCount + " elemento" + (root.itemCount === 1 ? "" : "s")
+            color: root.pal.muted; font.pixelSize: 11
+        }
+        Label {
+            visible: root.selectedCount > 1
+            text: root.selectedCount + " elementos seleccionados"
+            color: root.pal.muted; font.pixelSize: 11
+        }
+
+        Image {
+            visible: root.selectedCount === 1
+            source: root.selItem ? (root.selItem.iconSrc || "") : ""
+            Layout.preferredWidth: 32; Layout.preferredHeight: 32
+            fillMode: Image.PreserveAspectFit
+        }
+
+        ColumnLayout {
+            visible: root.selectedCount === 1
+            Layout.fillWidth: true; spacing: 2
+
+            Label {
+                text: root.selItem ? root.selItem.name : ""
+                color: root.pal.text; font.pixelSize: 12; font.bold: true
+                elide: Text.ElideRight; Layout.fillWidth: true
             }
-            font.family: Win7Theme.fontFamily
-            font.pixelSize: Win7Theme.fontSizeNormal + 1
-            color: Win7Theme.statusBarText
-        }
-
-        Item { Layout.fillWidth: true }
-
-        // View mode indicator (right side, like Win7)
-        Row {
-            spacing: 2
-
-            // Details view button
-            StatusViewButton {
-                text: "☰"
-                isActive: false
-                ToolTip.text: "Detalles"
-            }
-
-            // Icons view button
-            StatusViewButton {
-                text: "▦"
-                isActive: true
-                ToolTip.text: "Iconos grandes"
+            RowLayout {
+                spacing: 12
+                Repeater {
+                    model: {
+                        var it = root.selItem; if (!it) return []
+                        var parts = [{ lbl: "Tipo", val: it.typeStr || "" }]
+                        if (it.modified) parts.push({ lbl: "Modificado", val: it.modified })
+                        if (it.size)     parts.push({ lbl: "Tamaño",     val: it.size })
+                        return parts
+                    }
+                    delegate: Row {
+                        spacing: 4
+                        Label { text: modelData.lbl+":"; color: root.pal.muted; font.pixelSize: 11 }
+                        Label { text: modelData.val;     color: root.pal.text;  font.pixelSize: 11 }
+                    }
+                }
             }
         }
-    }
-
-    // ═══ Status View Button Component ═══
-    component StatusViewButton: Rectangle {
-        property alias text: label.text
-        property bool isActive: false
-
-        width: 22
-        height: 18
-        radius: 2
-        color: isActive ? Win7Theme.selectionBg
-             : statusViewMa.containsMouse ? Win7Theme.selectionHoverBg
-             : "transparent"
-        border.color: isActive ? Win7Theme.selectionBorder
-                     : statusViewMa.containsMouse ? Win7Theme.selectionHoverBorder
-                     : "transparent"
-        border.width: 1
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            font.pixelSize: 12
-            color: Win7Theme.statusBarText
-        }
-
-        MouseArea {
-            id: statusViewMa
-            anchors.fill: parent
-            hoverEnabled: true
-        }
-
-        ToolTip.visible: statusViewMa.containsMouse
     }
 }

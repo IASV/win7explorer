@@ -20,11 +20,35 @@ qt_add_qml_module(win7explorer
     URI Win7Explorer
     VERSION 1.0
     QML_FILES
+        qml/main.qml
         qml/Explorer.qml
         qml/FileSystem.qml
+        qml/FolderTree.qml
         qml/SidebarGroup.qml
         qml/SidebarItem.qml
-        qml/FolderTree.qml
+        qml/components/AddressBar.qml
+        qml/components/CommandBar.qml
+        qml/components/ContentArea.qml
+        qml/components/DetailsPanel.qml
+        qml/components/FolderTreeNode.qml
+        qml/components/NavigationBar.qml
+        qml/components/NavigationPanel.qml
+        qml/components/PreviewPanel.qml
+        qml/components/StatusBar.qml
+        qml/components/ToastNotification.qml
+        qml/components/WinMenuBar.qml
+        qml/menus/ContextMenu.qml
+        qml/menus/MenuBarMenus.qml
+        qml/menus/OrganizeMenu.qml
+        qml/views/ContentView.qml
+        qml/views/DetailsView.qml
+        qml/views/FileListView.qml
+        qml/views/GroupedView.qml
+        qml/views/IconsView.qml
+    RESOURCES
+        qml/styles/Palettes.js
+        qml/styles/Win7Theme.js
+        qml/styles/Win7Theme.qml
 )
 
 # Icons from project root icons/ → qrc:/icons/

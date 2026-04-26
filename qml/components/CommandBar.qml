@@ -1,303 +1,206 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "../styles/Win7Theme.js" as Win7Theme
 
-// ═══════════════════════════════════════════════════
-// Command Bar: Organizar ▾ | context buttons... | Views ▾ | ?
-// Changes buttons depending on content context
-// ═══════════════════════════════════════════════════
 Rectangle {
-    id: cmdBar
+    id: root
+    property var    pal
+    property int    selectedCount: 0
+    property bool   showPreview:       false
+    property string viewMode:          "large"
 
-    // ── Signals for cross-component operations ──
-    signal newFolderRequested()
-    signal cutRequested()
-    signal copyRequested()
-    signal pasteRequested()
-    signal deleteRequested()
-    signal renameRequested()
-    signal selectAllRequested()
-    signal navPanelToggled()
-    signal detailsPanelToggled()
-    signal previewPanelToggled()
+    signal organizeClicked
+    signal openClicked
+    signal shareClicked
+    signal printClicked
+    signal emailClicked
+    signal deleteRequested
+    signal newFolderRequested
+    signal previewToggled
+    signal viewModeChangeRequested(string mode)
+    signal helpClicked
 
-    // ── State received from main.qml ──
-    property bool hasClipboard: false
-    property bool hasSelection: fileSystemBackend.selectedCount > 0
-    property bool navPanelVisible: true
-    property bool detailsPanelVisible: true
-    property bool previewPanelVisible: false
-
+    border.color: pal.borderSoft
     gradient: Gradient {
-        GradientStop { position: 0.0; color: Win7Theme.cmdBarGradientTop }
-        GradientStop { position: 1.0; color: Win7Theme.cmdBarGradientBottom }
-    }
-
-    // Top border
-    Rectangle {
-        anchors.top: parent.top
-        width: parent.width
-        height: 1
-        color: Win7Theme.cmdBarBorderTop
-    }
-
-    // ════════════════════════════════════════
-    // Organizar ▾ full dropdown menu (Win7-faithful)
-    // ════════════════════════════════════════
-    Menu {
-        id: organizarMenu
-        y: cmdBar.height
-
-        MenuItem {
-            text: "Cortar"
-            enabled: cmdBar.hasSelection
-            onTriggered: cmdBar.cutRequested()
-        }
-        MenuItem {
-            text: "Copiar"
-            enabled: cmdBar.hasSelection
-            onTriggered: cmdBar.copyRequested()
-        }
-        MenuItem {
-            text: "Pegar"
-            enabled: cmdBar.hasClipboard
-            onTriggered: cmdBar.pasteRequested()
-        }
-        MenuSeparator {}
-        MenuItem {
-            text: "Deshacer"
-            enabled: false  // future
-        }
-        MenuItem {
-            text: "Rehacer"
-            enabled: false
-        }
-        MenuItem {
-            text: "Seleccionar todo"
-            onTriggered: cmdBar.selectAllRequested()
-        }
-        MenuSeparator {}
-
-        // Diseño submenu
-        Menu {
-            title: "Diseño"
-
-            MenuItem {
-                text: "Panel de navegación"
-                checkable: true
-                checked: cmdBar.navPanelVisible
-                onTriggered: cmdBar.navPanelToggled()
-            }
-            MenuItem {
-                text: "Panel de detalles"
-                checkable: true
-                checked: cmdBar.detailsPanelVisible
-                onTriggered: cmdBar.detailsPanelToggled()
-            }
-            MenuItem {
-                text: "Panel de vista previa"
-                checkable: true
-                checked: cmdBar.previewPanelVisible
-                onTriggered: cmdBar.previewPanelToggled()
-            }
-        }
-
-        MenuSeparator {}
-        MenuItem {
-            text: "Eliminar"
-            enabled: cmdBar.hasSelection
-            onTriggered: cmdBar.deleteRequested()
-        }
-        MenuItem {
-            text: "Cambiar nombre"
-            enabled: cmdBar.hasSelection
-            onTriggered: cmdBar.renameRequested()
-        }
-        MenuSeparator {}
-        MenuItem {
-            text: "Propiedades"
-            enabled: false
-        }
+        GradientStop { position: 0; color: pal.tbar1 }
+        GradientStop { position: 1; color: pal.tbar2 }
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 8
-        anchors.rightMargin: 4
-        spacing: 0
+        anchors.leftMargin: 8; anchors.rightMargin: 8
+        anchors.topMargin: 4;  anchors.bottomMargin: 4
+        spacing: 2
 
-        // ── Organizar dropdown ──
-        CmdBarButton {
-            text: "Organizar ▾"
-            isBold: false
-            onClicked: organizarMenu.open()
+        Repeater {
+            model: [
+                { label: "Organizar",     chevron: true,  always: true, bold: true,
+                  action: function(){ root.organizeClicked() } },
+                { sep: true },
+                { label: "Abrir",         chevron: true,  requireSel: true,
+                  action: function(){ root.openClicked() } },
+                { label: "Compartir con", requireSel: true,
+                  action: function(){ root.shareClicked() } },
+                { label: "Imprimir",      requireSel: true,
+                  action: function(){ root.printClicked() } },
+                { label: "Correo",        requireSel: true,
+                  action: function(){ root.emailClicked() } },
+                { label: "Eliminar",      requireSel: true,
+                  action: function(){ root.deleteRequested() } },
+                { label: "Nueva carpeta", always: true,
+                  action: function(){ root.newFolderRequested() } }
+            ]
+            delegate: Loader {
+                sourceComponent: modelData.sep ? sepComp : btnComp
+
+                Component {
+                    id: sepComp
+                    Rectangle { implicitWidth: 1; implicitHeight: 18; color: root.pal.border }
+                }
+                Component {
+                    id: btnComp
+                    Rectangle {
+                        property bool isEnabled: modelData.always || root.selectedCount > 0
+                        implicitWidth:  btnRow.implicitWidth + 16
+                        implicitHeight: 26
+                        color: btnMa.containsMouse && isEnabled ? root.pal.accentSoft : "transparent"
+                        border.color: btnMa.containsMouse && isEnabled ? root.pal.border : "transparent"
+                        radius: 2
+                        opacity: isEnabled ? 1 : 0.4
+
+                        Row {
+                            id: btnRow
+                            anchors.centerIn: parent
+                            spacing: 3
+                            Label {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                color: root.pal.text
+                                font.pixelSize: 12; font.bold: modelData.bold || false
+                            }
+                            Canvas {
+                                visible: modelData.chevron || false
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 8; height: 6
+                                property color fg: root.pal.muted
+                                onFgChanged: requestPaint()
+                                Component.onCompleted: requestPaint()
+                                onPaint: {
+                                    var ctx = getContext("2d")
+                                    ctx.clearRect(0,0,8,6); ctx.strokeStyle=fg; ctx.lineWidth=1.3; ctx.lineCap="round"
+                                    ctx.beginPath(); ctx.moveTo(1,1.5); ctx.lineTo(4,4.5); ctx.lineTo(7,1.5); ctx.stroke()
+                                }
+                            }
+                        }
+                        MouseArea {
+                            id: btnMa; anchors.fill: parent; hoverEnabled: true
+                            enabled: parent.isEnabled
+                            onClicked: modelData.action()
+                        }
+                    }
+                }
+            }
         }
 
-        // ── Separator ──
-        CmdBarSeparator {}
-
-        // ── Context buttons ──
-        CmdBarButton {
-            text: "Incluir en biblioteca ▾"
-            visible: !fileSystemBackend.selectedFileInfo.isDir ||
-                     fileSystemBackend.selectedCount === 0
-        }
-
-        CmdBarButton {
-            text: "Compartir con ▾"
-        }
-
-        CmdBarSeparator {}
-
-        CmdBarButton {
-            text: "Grabar"
-        }
-
-        CmdBarButton {
-            text: "Nueva carpeta"
-            onClicked: cmdBar.newFolderRequested()
-        }
-
-        // Spacer
         Item { Layout.fillWidth: true }
 
-        // ── Right side ──
-        CmdBarSeparator {}
-
-        // Views menu button
+        // Preview panel toggle
         Rectangle {
-            width: 24
-            height: parent.height - 4
+            Layout.preferredWidth: 28; Layout.preferredHeight: 26
+            color: prevMa.containsMouse || root.showPreview ? root.pal.accentSoft : "transparent"
+            border.color: prevMa.containsMouse || root.showPreview ? root.pal.border : "transparent"
             radius: 2
-            color: viewsBtnMa.containsPress ? Win7Theme.cmdBarBtnPressed
-                 : viewsBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover
-                 : "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "☰"
-                font.pixelSize: 14
-                color: Win7Theme.cmdBarText
+            Canvas {
+                anchors.centerIn: parent; width: 18; height: 14
+                property color fg: root.pal.muted
+                onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                onPaint: {
+                    var ctx = getContext("2d"); ctx.clearRect(0,0,18,14); ctx.strokeStyle=fg; ctx.lineWidth=1.2
+                    ctx.strokeRect(0.5,0.5,17,13)
+                    ctx.fillStyle=Qt.rgba(parseInt(fg.toString().slice(1,3),16)/255,
+                                          parseInt(fg.toString().slice(3,5),16)/255,
+                                          parseInt(fg.toString().slice(5,7),16)/255, 0.18)
+                    ctx.fillRect(10,0.5,7.5,13)
+                }
             }
+            MouseArea { id: prevMa; anchors.fill: parent; hoverEnabled: true; onClicked: root.previewToggled() }
+        }
 
-            MouseArea {
-                id: viewsBtnMa
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: viewsMenu.open()
+        // View switcher
+        Row {
+            spacing: 0
+            Rectangle {
+                width: 28; height: 26
+                color: vsIconMa.containsMouse ? root.pal.accentSoft : "transparent"
+                border.color: vsIconMa.containsMouse ? root.pal.border : "transparent"
+                radius: 2
+                Canvas {
+                    anchors.centerIn: parent; width: 16; height: 16
+                    property string vm: root.viewMode
+                    property color fg: root.pal.muted
+                    onVmChanged: requestPaint(); onFgChanged: requestPaint()
+                    Component.onCompleted: requestPaint()
+                    onPaint: {
+                        var ctx = getContext("2d"); ctx.clearRect(0,0,16,16); ctx.fillStyle=fg; var m=vm
+                        if (m==="large"||m==="medium") {
+                            var s=m==="large"?4.5:3.5, xs=[1,8-s/2,15-s], ys=[1,8-s/2]
+                            for (var yi=0;yi<ys.length;yi++) for (var xi=0;xi<xs.length;xi++) ctx.fillRect(xs[xi],ys[yi],s,s)
+                        } else if (m==="list") {
+                            ctx.fillRect(1,2,3,3); ctx.fillRect(5,3,10,1); ctx.fillRect(1,7,3,3); ctx.fillRect(5,8,10,1); ctx.fillRect(1,12,3,3); ctx.fillRect(5,13,10,1)
+                        } else if (m==="details") {
+                            ctx.fillRect(1,2,2,2); ctx.fillRect(4,2.5,11,1); ctx.fillRect(1,6,2,2); ctx.fillRect(4,6.5,11,1); ctx.fillRect(1,10,2,2); ctx.fillRect(4,10.5,11,1)
+                        } else {
+                            ctx.fillRect(1,2,4,4); ctx.fillRect(6,2.5,9,1); ctx.fillRect(6,4.5,7,1); ctx.fillRect(1,8,4,4); ctx.fillRect(6,8.5,9,1); ctx.fillRect(6,10.5,7,1)
+                        }
+                    }
+                }
+                MouseArea { id: vsIconMa; anchors.fill: parent; hoverEnabled: true; onClicked: viewDropdown.popup() }
             }
-
-            ToolTip.text: "Cambiar la vista"
-            ToolTip.visible: viewsBtnMa.containsMouse
-
-            Menu {
-                id: viewsMenu
-                y: parent.height
-
-                MenuItem { text: "Iconos muy grandes" }
-                MenuItem { text: "Iconos grandes" }
-                MenuItem { text: "Iconos medianos"; checkable: true; checked: true }
-                MenuItem { text: "Iconos pequeños" }
-                MenuSeparator {}
-                MenuItem { text: "Lista" }
-                MenuItem { text: "Detalles" }
-                MenuItem { text: "Mosaicos" }
+            Rectangle {
+                width: 16; height: 26
+                color: vsChevMa.containsMouse ? root.pal.accentSoft : "transparent"
+                border.color: vsChevMa.containsMouse ? root.pal.border : "transparent"
+                radius: 2
+                Canvas {
+                    anchors.centerIn: parent; width: 8; height: 6
+                    property color fg: root.pal.muted
+                    onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                    onPaint: {
+                        var ctx=getContext("2d"); ctx.clearRect(0,0,8,6); ctx.strokeStyle=fg; ctx.lineWidth=1.3; ctx.lineCap="round"
+                        ctx.beginPath(); ctx.moveTo(1,1.5); ctx.lineTo(4,4.5); ctx.lineTo(7,1.5); ctx.stroke()
+                    }
+                }
+                MouseArea { id: vsChevMa; anchors.fill: parent; hoverEnabled: true; onClicked: viewDropdown.popup() }
             }
         }
 
-        // Preview pane toggle
-        Rectangle {
-            width: 24
-            height: parent.height - 4
-            radius: 2
-            color: cmdBar.previewPanelVisible
-                   ? Win7Theme.cmdBarBtnPressed
-                   : previewBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover : "transparent"
-            border.color: cmdBar.previewPanelVisible ? Win7Theme.selectionBorder : "transparent"
-            border.width: 1
-
-            Text {
-                anchors.centerIn: parent
-                text: "☐"
-                font.pixelSize: 13
-                color: Win7Theme.cmdBarText
-            }
-
-            MouseArea {
-                id: previewBtnMa
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: cmdBar.previewPanelToggled()
-            }
-
-            ToolTip.text: "Panel de vista previa"
-            ToolTip.visible: previewBtnMa.containsMouse
+        Menu {
+            id: viewDropdown
+            MenuItem { text: "Iconos grandes";  checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
+            MenuItem { text: "Iconos medianos"; checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
+            MenuItem { text: "Lista";           checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
+            MenuItem { text: "Detalles";        checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
+            MenuItem { text: "Contenido";       checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
         }
 
         // Help button
         Rectangle {
-            width: 24
-            height: parent.height - 4
-            radius: 12
-            color: helpBtnMa.containsPress ? Win7Theme.cmdBarBtnPressed
-                 : helpBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover
-                 : "transparent"
-
-            Text {
-                anchors.centerIn: parent
-                text: "?"
-                font.pixelSize: 14
-                font.bold: true
-                color: "#3B72A9"
+            Layout.preferredWidth: 28; Layout.preferredHeight: 26
+            color: helpMa.containsMouse ? root.pal.accentSoft : "transparent"
+            border.color: helpMa.containsMouse ? root.pal.border : "transparent"
+            radius: 2
+            Canvas {
+                anchors.centerIn: parent; width: 16; height: 16
+                property color fg: root.pal.muted
+                onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                onPaint: {
+                    var ctx=getContext("2d"); ctx.clearRect(0,0,16,16); ctx.strokeStyle=fg; ctx.lineWidth=1.4; ctx.lineCap="round"
+                    ctx.beginPath(); ctx.arc(8,8,6.5,0,Math.PI*2); ctx.stroke()
+                    ctx.beginPath(); ctx.moveTo(6,6); ctx.quadraticCurveTo(6,4,8,4); ctx.quadraticCurveTo(10,4,10,6); ctx.quadraticCurveTo(10,7.5,8,8); ctx.lineTo(8,9.5); ctx.stroke()
+                    ctx.fillStyle=fg; ctx.beginPath(); ctx.arc(8,12,0.8,0,Math.PI*2); ctx.fill()
+                }
             }
-
-            MouseArea {
-                id: helpBtnMa
-                anchors.fill: parent
-                hoverEnabled: true
-            }
+            MouseArea { id: helpMa; anchors.fill: parent; hoverEnabled: true; onClicked: root.helpClicked() }
         }
-    }
-
-    // ═══ Reusable Command Bar Button ═══
-    component CmdBarButton: Rectangle {
-        property alias text: label.text
-        property bool isBold: false
-        signal clicked
-
-        implicitWidth: label.implicitWidth + 16
-        height: parent.height - 4
-        Layout.alignment: Qt.AlignVCenter
-        radius: 2
-        color: cmdBtnMa.containsPress ? Win7Theme.cmdBarBtnPressed
-             : cmdBtnMa.containsMouse ? Win7Theme.cmdBarBtnHover
-             : "transparent"
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            font.family: Win7Theme.fontFamily
-            font.pixelSize: Win7Theme.fontSizeNormal + 2
-            font.bold: isBold
-            color: Win7Theme.cmdBarText
-        }
-
-        MouseArea {
-            id: cmdBtnMa
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: parent.clicked()
-        }
-    }
-
-    // ═══ Separator ═══
-    component CmdBarSeparator: Rectangle {
-        width: 1
-        height: parent.height - 8
-        Layout.alignment: Qt.AlignVCenter
-        Layout.leftMargin: 4
-        Layout.rightMargin: 4
-        color: Win7Theme.cmdBarSeparator
     }
 }

@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     // Register custom icon provider
     engine.addImageProvider("fileicons", new IconProvider);
 
-    const QUrl url(u"qrc:/Win7Explorer/qml/Explorer.qml"_s);
+    const QUrl url(u"qrc:/Win7Explorer/qml/main.qml"_s);
     engine.load(url);
 
     return app.exec();
