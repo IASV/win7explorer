@@ -10,7 +10,13 @@ ApplicationWindow {
     width: 1180
     height: 760
     visible: true
-    title: currentNode ? currentNode.name : "Explorador"
+    title: {
+        if (isRealPath) {
+            var parts = currentId.split("/").filter(Boolean)
+            return parts.length ? parts[parts.length - 1] : "/"
+        }
+        return currentNode ? currentNode.name : "Explorador"
+    }
     flags: Qt.Window
 
 // ---------- Modelo ----------
@@ -20,8 +26,20 @@ FileSystem { id: fs }
 property var historyStack: [["libraries"]]
 property int historyIndex: 0
 property string currentId: historyStack[historyIndex][historyStack[historyIndex].length - 1]
-property var currentNode: fs.findNode(currentId)
-property var pathToCurrent: fs.pathTo(currentId) || []
+
+// Modo híbrido: rutas reales (empiezan con /) vs IDs mock
+readonly property bool isRealPath: currentId.startsWith("/")
+readonly property var currentNode: isRealPath ? null : fs.findNode(currentId)
+readonly property var pathToCurrent: {
+    if (isRealPath) {
+        var segs = fsBackend.pathSegments
+        return segs.map(function(s){ return { name: s.name, id: s.path } })
+    }
+    return fs.pathTo(currentId) || []
+}
+
+// Archivos reales del sistema — se actualizan por Connections
+property var realFiles: []
 
 property string viewMode: "large"
 property var selectedIds: ({})
@@ -37,12 +55,41 @@ property bool showPreview: true
 property bool showMenuBar: false
 property bool showDetailsPanel: false
 
-// Nuevas propiedades para vistas especiales
 property var storageDevices: []
 property var libraries: []
-property string currentSpecialView: "" // "computer", "libraries", "", etc.
 
-// Cargar datos del sistema
+// Al cambiar de directorio, sincronizar con el backend real
+onCurrentIdChanged: {
+    if (isRealPath) {
+        fsBackend.navigateTo(currentId)
+    } else {
+        realFiles = []
+    }
+}
+
+// Sincronizar lista de archivos reales cuando el backend la actualiza
+Connections {
+    target: fsBackend
+    function onCurrentFilesChanged() {
+        if (!win.isRealPath) return
+        win.realFiles = fsBackend.currentFiles.map(function(f) {
+            return {
+                id:       f.path,
+                name:     f.name,
+                path:     f.path,
+                type:     f.isDir ? "folder" : "file",
+                isDir:    f.isDir,
+                size:     f.sizeFormatted || "",
+                modified: f.modified || "",
+                mimeType: f.type || "",
+                mimeIcon: f.mimeIcon || "",
+                isReal:   true
+            }
+        })
+    }
+}
+
+// Cargar datos del sistema al iniciar
 Component.onCompleted: {
     storageDevices = fsBackend.getStorageDevices()
     libraries = fsBackend.getLibraries()
@@ -111,11 +158,18 @@ Component.onCompleted: {
 
     // ---------- Derivados ----------
     readonly property var rawItems: {
+        if (isRealPath) {
+            if (searchQuery.trim().length > 0) {
+                var q = searchQuery.toLowerCase()
+                return realFiles.filter(function(f){ return f.name.toLowerCase().indexOf(q) >= 0 })
+            }
+            return realFiles
+        }
         if (!currentNode) return []
         if (searchQuery.trim().length > 0) {
-            var q = searchQuery.toLowerCase()
+            var q2 = searchQuery.toLowerCase()
             return fs.flattenFiles(currentNode).filter(function(f){
-                return f.name.toLowerCase().indexOf(q) >= 0
+                return f.name.toLowerCase().indexOf(q2) >= 0
             })
         }
         return currentNode.children || []
@@ -149,22 +203,18 @@ Component.onCompleted: {
 
     // ---------- Navegación ----------
     function navigate(id) {
-        if (id === currentId) return
+        if (!id || id === currentId) return
         var next = historyStack.slice(0, historyIndex + 1)
         next.push([id])
         historyStack = next
         historyIndex = next.length - 1
         selectedIds = ({}); selectedCount = 0; searchQuery = ""
-        currentId = id
-        currentNode = fs.findNode(id)
-        pathToCurrent = fs.pathTo(id) || []
+        currentId = id   // dispara onCurrentIdChanged → fsBackend.navigateTo si es ruta real
     }
     function goBack() {
         if (historyIndex > 0) {
             historyIndex--
             currentId = historyStack[historyIndex][historyStack[historyIndex].length - 1]
-            currentNode = fs.findNode(currentId)
-            pathToCurrent = fs.pathTo(currentId) || []
             selectedIds = ({}); selectedCount = 0; searchQuery = ""
         }
     }
@@ -172,13 +222,17 @@ Component.onCompleted: {
         if (historyIndex < historyStack.length - 1) {
             historyIndex++
             currentId = historyStack[historyIndex][historyStack[historyIndex].length - 1]
-            currentNode = fs.findNode(currentId)
-            pathToCurrent = fs.pathTo(currentId) || []
             selectedIds = ({}); selectedCount = 0; searchQuery = ""
         }
     }
     function goUp() {
-        if (pathToCurrent.length > 1) navigate(pathToCurrent[pathToCurrent.length - 2].id)
+        if (isRealPath) {
+            var dir = currentId.endsWith("/") ? currentId.slice(0, -1) : currentId
+            var parent = dir.substring(0, dir.lastIndexOf("/")) || "/"
+            navigate(parent)
+        } else if (pathToCurrent.length > 1) {
+            navigate(pathToCurrent[pathToCurrent.length - 2].id)
+        }
     }
 
     function toggleSelect(id, ctrl, shift) {
@@ -195,21 +249,28 @@ Component.onCompleted: {
 
     function doubleClickItem(item) {
         if (item.type === "folder" || item.type === "group" || item.type === "drive")
-            navigate(item.id)
+            navigate(item.id || item.path || "")
         else showToast("Abriendo \"" + item.name + "\"...")
     }
 
     function handleDelete() {
         if (selectedCount === 0) return
-        fs.deleteItems(Object.keys(selectedIds))
+        if (isRealPath) {
+            var ids = Object.keys(selectedIds)
+            for (var i = 0; i < ids.length; i++) fsBackend.removeItem(ids[i])
+        } else {
+            fs.deleteItems(Object.keys(selectedIds))
+        }
         showToast("Eliminado" + (selectedCount > 1 ? "s" : "") + " " + selectedCount + " elemento(s)")
         selectedIds = ({}); selectedCount = 0
-        currentNode = fs.findNode(currentId)
     }
     function handleNewFolder() {
-        var id = fs.addFolder(currentId, "Nueva carpeta")
-        currentNode = fs.findNode(currentId)
-        if (id) { selectedIds = {}; selectedIds[id] = true; selectedCount = 1 }
+        if (isRealPath) {
+            fsBackend.createFolder(currentId, "Nueva carpeta")
+        } else {
+            var id = fs.addFolder(currentId, "Nueva carpeta")
+            if (id) { selectedIds = {}; selectedIds[id] = true; selectedCount = 1 }
+        }
         showToast("Carpeta creada")
     }
     function handleCopy() {
@@ -219,6 +280,40 @@ Component.onCompleted: {
     function setSort(col) {
         if (sortBy === col) sortDir = sortDir === "asc" ? "desc" : "asc"
         else { sortBy = col; sortDir = "asc" }
+    }
+
+    // ---------- Iconos e info — unifica items mock y reales ----------
+    function itemIconSrc(item) {
+        if (!item) return ""
+        if (!item.isReal) return win.itemIconSrc(item)
+        if (item.isDir) return "qrc:/icons/folder-closed.png"
+        var n = (item.name || "").toLowerCase()
+        var dot = n.lastIndexOf(".")
+        var ext = dot >= 0 ? n.slice(dot + 1) : ""
+        var audioExts = ["mp3","wav","ogg","flac","aac","m4a","wma"]
+        var videoExts = ["mp4","avi","mkv","mov","wmv","flv","webm","m4v"]
+        var imgExts   = ["jpg","jpeg","png","gif","bmp","svg","webp","ico","tiff"]
+        var docExts   = ["pdf","doc","docx","odt","txt","rtf","md","csv","xls","xlsx","ppt","pptx"]
+        var archExts  = ["zip","tar","gz","bz2","rar","7z","xz"]
+        if (audioExts.indexOf(ext) >= 0) return "qrc:/icons/music.png"
+        if (videoExts.indexOf(ext) >= 0) return "qrc:/icons/video.png"
+        if (imgExts.indexOf(ext)   >= 0) return "qrc:/icons/picture.png"
+        if (docExts.indexOf(ext)   >= 0) return "qrc:/icons/document.png"
+        if (archExts.indexOf(ext)  >= 0) return "qrc:/icons/file-generic.png"
+        var mime = (item.mimeIcon || "").toLowerCase()
+        if (mime.indexOf("audio")   >= 0) return "qrc:/icons/music.png"
+        if (mime.indexOf("video")   >= 0) return "qrc:/icons/video.png"
+        if (mime.indexOf("image")   >= 0) return "qrc:/icons/picture.png"
+        if (mime.indexOf("pdf")     >= 0 || mime.indexOf("document") >= 0) return "qrc:/icons/document.png"
+        if (mime.indexOf("text")    >= 0) return "qrc:/icons/document.png"
+        return "qrc:/icons/file-generic.png"
+    }
+
+    function itemTypeLabel(item) {
+        if (!item) return ""
+        if (!item.isReal) return win.itemTypeLabel(item)
+        if (item.isDir) return "Carpeta de archivos"
+        return item.mimeType || "Archivo"
     }
 
     // ---------- Toast ----------
@@ -395,7 +490,7 @@ Component.onCompleted: {
                                             id: crumbHov
                                             anchors.fill: parent
                                             hoverEnabled: true
-                                            onClicked: win.navigate(modelData.id)
+                                            onClicked: win.navigate(modelData.path || modelData.id)
                                         }
                                     }
                                 }
@@ -795,285 +890,18 @@ Component.onCompleted: {
 
 // SIDEBAR
     Rectangle {
-      visible: win.showSidebar
-      Layout.preferredWidth: 200
-      Layout.fillHeight: true
-      border.color: win.pal.borderSoft
-      gradient: Gradient {
-        GradientStop { position: 0; color: win.pal.sidebar }
-        GradientStop { position: 1; color: win.pal.sidebar }
-      }
+        visible: win.showSidebar
+        Layout.preferredWidth: 210
+        Layout.fillHeight: true
+        color: win.pal.sidebar
+        border.color: win.pal.borderSoft
 
-      ScrollView {
-        anchors.fill: parent
-        clip: true
-        Column {
-          width: 200
-          topPadding: 6
-          bottomPadding: 6
-          spacing: 2
-          
-          // Favorites section
-          Rectangle {
-            width: parent.width
-            height: 24
-            color: "transparent"
-            RowLayout {
-              anchors.fill: parent
-              anchors.leftMargin: 8
-              anchors.rightMargin: 8
-              spacing: 6
-              
-              Image {
-                source: "qrc:/icons/favorites.png"
-                Layout.preferredWidth: 14
-                Layout.preferredHeight: 14
-                fillMode: Image.PreserveAspectFit
-              }
-              Label {
-                text: "Favoritos"
-                color: win.pal.sbText
-                font.pixelSize: 12
-                font.bold: true
-                Layout.fillWidth: true
-              }
-            }
-          }
-          
-          // Desktop
-          Rectangle {
-            width: parent.width
-            height: 22
-            color: win.currentId === "desktop" ? win.pal.sbCurrent : (desktopHov.containsMouse ? win.pal.sbHover : "transparent")
-            Rectangle {
-              anchors.left: parent.left
-              anchors.top: parent.top
-              anchors.bottom: parent.bottom
-              width: 2
-              color: win.currentId === "desktop" ? win.pal.selectionBorder : "transparent"
-            }
-            RowLayout {
-              anchors.fill: parent
-              anchors.leftMargin: 22
-              anchors.rightMargin: 6
-              spacing: 6
-              Image {
-                source: "qrc:/icons/desktop.png"
-                Layout.preferredWidth: 16
-                Layout.preferredHeight: 16
-                fillMode: Image.PreserveAspectFit
-              }
-              Label {
-                text: "Escritorio"
-                color: win.currentId === "desktop" ? win.pal.selText : win.pal.sbText
-                font.pixelSize: 12
-                font.bold: win.currentId === "desktop"
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-              }
-            }
-            MouseArea {
-              id: desktopHov
-              anchors.fill: parent
-              hoverEnabled: true
-              onClicked: win.navigate("desktop")
-            }
-          }
-          
-          // Downloads
-          Rectangle {
-            width: parent.width
-            height: 22
-            color: win.currentId === "downloads" ? win.pal.sbCurrent : (downloadsHov.containsMouse ? win.pal.sbHover : "transparent")
-            Rectangle {
-              anchors.left: parent.left
-              anchors.top: parent.top
-              anchors.bottom: parent.bottom
-              width: 2
-              color: win.currentId === "downloads" ? win.pal.selectionBorder : "transparent"
-            }
-            RowLayout {
-              anchors.fill: parent
-              anchors.leftMargin: 22
-              anchors.rightMargin: 6
-              spacing: 6
-              Image {
-                source: "qrc:/icons/downloads.png"
-                Layout.preferredWidth: 16
-                Layout.preferredHeight: 16
-                fillMode: Image.PreserveAspectFit
-              }
-              Label {
-                text: "Descargas"
-                color: win.currentId === "downloads" ? win.pal.selText : win.pal.sbText
-                font.pixelSize: 12
-                font.bold: win.currentId === "downloads"
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-              }
-            }
-            MouseArea {
-              id: downloadsHov
-              anchors.fill: parent
-              hoverEnabled: true
-              onClicked: win.navigate("downloads")
-            }
-          }
-          
-          // Libraries section
-          Rectangle {
-            width: parent.width
-            height: 24
-            color: "transparent"
-            RowLayout {
-              anchors.fill: parent
-              anchors.leftMargin: 8
-              anchors.rightMargin: 8
-              spacing: 6
-              
-              Image {
-                source: "qrc:/icons/libraries.png"
-                Layout.preferredWidth: 14
-                Layout.preferredHeight: 14
-                fillMode: Image.PreserveAspectFit
-              }
-              Label {
-                text: "Bibliotecas"
-                color: win.pal.sbText
-                font.pixelSize: 12
-                font.bold: true
-                Layout.fillWidth: true
-              }
-            }
-          }
-          
-          // Libraries items
-          Repeater {
-            model: win.libraries
-            delegate: Rectangle {
-              width: parent.width
-              height: 22
-              color: win.currentId === modelData.path ? win.pal.sbCurrent : (libHov.containsMouse ? win.pal.sbHover : "transparent")
-              Rectangle {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 2
-                color: win.currentId === modelData.path ? win.pal.selectionBorder : "transparent"
-              }
-              RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 22
-                anchors.rightMargin: 6
-                spacing: 6
-                Image {
-                  source: "qrc:/icons/" + modelData.icon + ".png"
-                  Layout.preferredWidth: 16
-                  Layout.preferredHeight: 16
-                  fillMode: Image.PreserveAspectFit
-                }
-                Label {
-                  text: modelData.name
-                  color: win.currentId === modelData.path ? win.pal.selText : win.pal.sbText
-                  font.pixelSize: 12
-                  font.bold: win.currentId === modelData.path
-                  Layout.fillWidth: true
-                  elide: Text.ElideRight
-                }
-              }
-              MouseArea {
-                id: libHov
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: win.navigate(modelData.path)
-              }
-            }
-          }
-          
-          // Computer section
-          Rectangle {
-            width: parent.width
-            height: 24
-            color: "transparent"
-            RowLayout {
-              anchors.fill: parent
-              anchors.leftMargin: 8
-              anchors.rightMargin: 8
-              spacing: 6
-              
-              Image {
-                source: "qrc:/icons/computer.png"
-                Layout.preferredWidth: 14
-                Layout.preferredHeight: 14
-                fillMode: Image.PreserveAspectFit
-              }
-              Label {
-                text: "Equipo"
-                color: win.pal.sbText
-                font.pixelSize: 12
-                font.bold: true
-                Layout.fillWidth: true
-              }
-            }
-          }
-          
-          // Computer - drives
-          Repeater {
-            model: win.storageDevices
-            delegate: Rectangle {
-              width: parent.width
-              height: 22
-              color: win.currentId === modelData.path ? win.pal.sbCurrent : (driveHov.containsMouse ? win.pal.sbHover : "transparent")
-              Rectangle {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 2
-                color: win.currentId === modelData.path ? win.pal.selectionBorder : "transparent"
-              }
-              RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 22
-                anchors.rightMargin: 6
-                spacing: 6
-                Image {
-                  source: "qrc:/icons/drive-" + modelData.kind + ".png"
-                  Layout.preferredWidth: 16
-                  Layout.preferredHeight: 16
-                  fillMode: Image.PreserveAspectFit
-                }
-                Label {
-                  text: modelData.label
-                  color: win.currentId === modelData.path ? win.pal.selText : win.pal.sbText
-                  font.pixelSize: 12
-                  font.bold: win.currentId === modelData.path
-                  Layout.fillWidth: true
-                  elide: Text.ElideRight
-                }
-              }
-              MouseArea {
-                id: driveHov
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: win.navigate(modelData.path)
-              }
-            }
-          }
-          
-          // Original folder tree (for compatibility)
-          Repeater {
-            model: fs.root.children
-            delegate: SidebarGroup {
-              group: modelData
-              width: parent.width
-              pal: win.pal
-              fs: fs
-              currentId: win.currentId
-              navigateFn: win.navigate
-            }
-          }
+        FolderTree {
+            anchors.fill: parent
+            pal: win.pal
+            currentPath: win.currentId
+            onFolderActivated: function(path) { win.navigate(path) }
         }
-      }
     }
 
                 // MAIN CONTENT AREA
@@ -1092,7 +920,7 @@ Component.onCompleted: {
                             anchors.margins: 8
                             sourceComponent: {
                                 if (win.items.length === 0) return emptyView
-                                if (win.currentNode && win.currentNode.type === "group") return groupedView
+                                if (!win.isRealPath && win.currentNode && win.currentNode.type === "group") return groupedView
                                 if (win.viewMode === "details") return detailsView
                                 if (win.viewMode === "list") return listView
                                 if (win.viewMode === "content") return contentView
@@ -1180,7 +1008,7 @@ Component.onCompleted: {
                                 anchors.centerIn: parent
                                 width: 96; height: 96
                                 fillMode: Image.PreserveAspectFit
-                                source: previewPanel.previewItem ? fs.iconFor(previewPanel.previewItem) : ""
+                                source: previewPanel.previewItem ? win.itemIconSrc(previewPanel.previewItem) : ""
                             }
                         }
 
@@ -1199,7 +1027,7 @@ Component.onCompleted: {
                         Label {
                             visible: previewPanel.previewItem !== null
                             Layout.fillWidth: true
-                            text: previewPanel.previewItem ? fs.typeLabel(previewPanel.previewItem) : ""
+                            text: previewPanel.previewItem ? win.itemTypeLabel(previewPanel.previewItem) : ""
                             color: win.pal.muted
                             font.pixelSize: 11
                             horizontalAlignment: Text.AlignHCenter
@@ -1271,7 +1099,7 @@ Component.onCompleted: {
 
                     Image {
                         visible: detailsPanel.detailItem !== null
-                        source: detailsPanel.detailItem ? fs.iconFor(detailsPanel.detailItem) : ""
+                        source: detailsPanel.detailItem ? win.itemIconSrc(detailsPanel.detailItem) : ""
                         Layout.preferredWidth: 48
                         Layout.preferredHeight: 48
                         fillMode: Image.PreserveAspectFit
@@ -1313,7 +1141,7 @@ Component.onCompleted: {
                         RowLayout {
                             visible: detailsPanel.detailItem !== null
                             spacing: 18
-                            Label { text: detailsPanel.detailItem ? fs.typeLabel(detailsPanel.detailItem) : ""; color: win.pal.muted; font.pixelSize: 11 }
+                            Label { text: detailsPanel.detailItem ? win.itemTypeLabel(detailsPanel.detailItem) : ""; color: win.pal.muted; font.pixelSize: 11 }
                             Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.size;     text: detailsPanel.detailItem ? (detailsPanel.detailItem.size || "") : ""; color: win.pal.muted; font.pixelSize: 11 }
                             Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.modified; text: detailsPanel.detailItem ? ("Modificado: " + (detailsPanel.detailItem.modified || "")) : ""; color: win.pal.muted; font.pixelSize: 11 }
                             Label { visible: detailsPanel.detailItem && detailsPanel.detailItem.dim;      text: detailsPanel.detailItem ? (detailsPanel.detailItem.dim || "") : ""; color: win.pal.muted; font.pixelSize: 11 }
@@ -1364,7 +1192,7 @@ Component.onCompleted: {
                             if (win.selectedCount !== 1) return ""
                             var id = Object.keys(win.selectedIds)[0]
                             var it = win.items.find(function(i){ return i.id === id })
-                            return it ? fs.iconFor(it) : ""
+                            return it ? win.itemIconSrc(it) : ""
                         }
                         Layout.preferredWidth: 32
                         Layout.preferredHeight: 32
@@ -1397,7 +1225,7 @@ Component.onCompleted: {
                                 model: {
                                     var it = parent.parent.selItem
                                     if (!it) return []
-                                    var parts = [{ lbl: "Tipo", val: fs.typeLabel(it) }]
+                                    var parts = [{ lbl: "Tipo", val: win.itemTypeLabel(it) }]
                                     if (it.modified) parts.push({ lbl: "Modificado", val: it.modified })
                                     if (it.size)     parts.push({ lbl: "Tamaño",     val: it.size })
                                     if (it.dim)      parts.push({ lbl: "Dim",        val: it.dim })
@@ -1554,7 +1382,7 @@ Component.onCompleted: {
                     spacing: 4
                     Image {
                         Layout.alignment: Qt.AlignHCenter
-                        source: fs.iconFor(modelData)
+                        source: win.itemIconSrc(modelData)
                         sourceSize.width: win.viewMode === "large" ? 64 : 40
                         sourceSize.height: win.viewMode === "large" ? 64 : 40
                         Layout.preferredWidth: win.viewMode === "large" ? 64 : 40
@@ -1600,7 +1428,7 @@ Component.onCompleted: {
                     anchors.fill: parent
                     anchors.leftMargin: 8
                     spacing: 6
-                    Image { source: fs.iconFor(modelData); Layout.preferredWidth: 16; Layout.preferredHeight: 16; fillMode: Image.PreserveAspectFit }
+                    Image { source: win.itemIconSrc(modelData); Layout.preferredWidth: 16; Layout.preferredHeight: 16; fillMode: Image.PreserveAspectFit }
                     Label { text: modelData.name; color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.text; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
                 }
                 MouseArea {
@@ -1677,11 +1505,11 @@ Component.onCompleted: {
                         RowLayout {
                             Layout.fillWidth: true; Layout.preferredWidth: 300
                             Layout.leftMargin: 8; spacing: 6
-                            Image { source: fs.iconFor(modelData); Layout.preferredWidth: 16; Layout.preferredHeight: 16; fillMode: Image.PreserveAspectFit }
+                            Image { source: win.itemIconSrc(modelData); Layout.preferredWidth: 16; Layout.preferredHeight: 16; fillMode: Image.PreserveAspectFit }
                             Label { text: modelData.name; color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.text; font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight }
                         }
                         Label { Layout.fillWidth: true; Layout.preferredWidth: 200; Layout.leftMargin: 8; text: modelData.modified || "—"; color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.muted; font.pixelSize: 11 }
-                        Label { Layout.fillWidth: true; Layout.preferredWidth: 100; Layout.leftMargin: 8; text: fs.typeLabel(modelData); color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.muted; font.pixelSize: 11 }
+                        Label { Layout.fillWidth: true; Layout.preferredWidth: 100; Layout.leftMargin: 8; text: win.itemTypeLabel(modelData); color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.muted; font.pixelSize: 11 }
                         Label { Layout.fillWidth: true; Layout.preferredWidth: 100; Layout.leftMargin: 8; Layout.rightMargin: 8; text: modelData.size || (modelData.type === "folder" ? "" : "—"); color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.muted; font.pixelSize: 11 }
                     }
                     MouseArea {
@@ -1719,14 +1547,14 @@ Component.onCompleted: {
                     anchors.fill: parent
                     anchors.margins: 10
                     spacing: 14
-                    Image { source: fs.iconFor(modelData); Layout.preferredWidth: 44; Layout.preferredHeight: 44; fillMode: Image.PreserveAspectFit }
+                    Image { source: win.itemIconSrc(modelData); Layout.preferredWidth: 44; Layout.preferredHeight: 44; fillMode: Image.PreserveAspectFit }
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 3
                         Label { text: modelData.name; color: win.isSelected(modelData.id) ? win.pal.selText : win.pal.text; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
                         Label {
                             text: {
-                                var parts = [fs.typeLabel(modelData)]
+                                var parts = [win.itemTypeLabel(modelData)]
                                 if (modelData.size) parts.push(modelData.size)
                                 if (modelData.modified) parts.push("Modificado: " + modelData.modified)
                                 return parts.join("  ·  ")
@@ -1925,7 +1753,7 @@ Component.onCompleted: {
                                         anchors.fill: parent
                                         anchors.margins: 10
                                         spacing: 10
-                                        Image { source: fs.iconFor(modelData); Layout.preferredWidth: 52; Layout.preferredHeight: 52; fillMode: Image.PreserveAspectFit }
+                                        Image { source: win.itemIconSrc(modelData); Layout.preferredWidth: 52; Layout.preferredHeight: 52; fillMode: Image.PreserveAspectFit }
                                         ColumnLayout {
                                             Layout.fillWidth: true; spacing: 3
                                             Label { text: modelData.name; color: win.pal.text; font.pixelSize: 12; font.bold: true }

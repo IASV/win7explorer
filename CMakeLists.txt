@@ -24,6 +24,7 @@ qt_add_qml_module(win7explorer
         qml/FileSystem.qml
         qml/SidebarGroup.qml
         qml/SidebarItem.qml
+        qml/FolderTree.qml
 )
 
 # Icons from project root icons/ → qrc:/icons/
