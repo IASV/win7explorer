@@ -14,6 +14,7 @@ Rectangle {
     signal forwardRequested
     signal upRequested
     signal segmentClicked(string pathOrId)
+    property string currentFolderName: ""
     signal searchChanged(string text)
 
     border.color: pal.borderSoft
@@ -168,7 +169,7 @@ Rectangle {
             TextField {
                 id: searchFld
                 anchors.fill: parent; anchors.rightMargin: 26
-                placeholderText: "Buscar"
+                placeholderText: root.currentFolderName ? "Buscar en " + root.currentFolderName : "Buscar"
                 background: Item {}
                 color: root.pal.text; font.pixelSize: 12; leftPadding: 8
                 onTextChanged: root.searchChanged(text)

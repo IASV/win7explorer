@@ -76,6 +76,14 @@ ApplicationWindow {
         return null
     }
 
+    readonly property string currentFolderName: {
+        if (isRealPath && fsBackend.pathSegments.length > 0)
+            return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
+        if (currentNode) return currentNode.name
+        return ""
+    }
+    readonly property int currentItemCount: useGroupedView ? groupedItems.length : items.length
+
     readonly property string selectedItemType: {
         var item = selectedItem
         if (!item) return "none"
@@ -319,6 +327,7 @@ ApplicationWindow {
     // ── Keyboard shortcuts ─────────────────────────────────────────────────
     Shortcut { sequence: "F5";          onActivated: { if (isRealPath) fsBackend.refresh() } }
     Shortcut { sequence: "F10";         onActivated: win.showMenuBar = !win.showMenuBar }
+    Shortcut { sequence: "Alt+F10";    onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+Left";    onActivated: win.goBack() }
     Shortcut { sequence: "Alt+Right";   onActivated: win.goForward() }
     Shortcut { sequence: "Alt+Up";      onActivated: win.goUp() }
@@ -579,7 +588,8 @@ ApplicationWindow {
             canGoBack:     win.canGoBack
             canGoForward:  win.canGoForward
             canGoUp:       win.canGoUp
-            pathToCurrent: win.pathToCurrent
+            pathToCurrent:     win.pathToCurrent
+            currentFolderName: win.currentFolderName
             onBackRequested:    win.goBack()
             onForwardRequested: win.goForward()
             onUpRequested:      win.goUp()
@@ -730,8 +740,11 @@ ApplicationWindow {
             Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 72 : 0
             clip: true
             pal:            win.pal
-            detailItem:     win.selectedItem
-            selectedCount:  win.selectedCount
+            detailItem:          win.selectedItem
+            selectedCount:       win.selectedCount
+            currentFolderName:   win.currentFolderName
+            currentItemCount:    win.currentItemCount
+            totalSelectedSize:   win.selectedCount > 1 ? (win.selectedCount + " elementos seleccionados") : ""
             useGroupedView: win.useGroupedView
             currentKind:    win.currentNode ? (win.currentNode.kind || "") : ""
             systemInfo:     (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")
@@ -741,7 +754,7 @@ ApplicationWindow {
         // Status bar
         StatusBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 42
+            Layout.preferredHeight: 24
             pal:           win.pal
             itemCount:     win.useGroupedView ? win.groupedItems.length : win.items.length
             selectedCount: win.selectedCount

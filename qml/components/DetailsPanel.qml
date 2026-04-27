@@ -5,11 +5,14 @@ import QtQuick.Layouts
 Rectangle {
     id: root
     property var    pal
-    property var    detailItem:     null
-    property int    selectedCount:  0
-    property bool   useGroupedView: false
-    property string currentKind:   ""
-    property var    systemInfo:     null
+    property var    detailItem:        null
+    property int    selectedCount:     0
+    property bool   useGroupedView:    false
+    property string currentKind:       ""
+    property var    systemInfo:        null
+    property string currentFolderName: ""
+    property int    currentItemCount:  0
+    property string totalSelectedSize: ""
 
     readonly property bool computerMode:
         root.useGroupedView && root.currentKind === "computer" && root.selectedCount === 0
@@ -82,13 +85,13 @@ Rectangle {
         anchors.topMargin: 10;  anchors.bottomMargin: 10
         spacing: 14
 
+        // Icon: file icon when 1 item, generic canvas otherwise
         Image {
             visible: root.detailItem !== null
             source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
             Layout.preferredWidth: 48; Layout.preferredHeight: 48
             fillMode: Image.PreserveAspectFit
         }
-
         Canvas {
             visible: root.detailItem === null
             width: 48; height: 48
@@ -106,19 +109,45 @@ Rectangle {
         ColumnLayout {
             Layout.fillWidth: true; spacing: 4
 
+            // No selection → current folder name + item count
             Label {
-                text: root.detailItem ? root.detailItem.name : "Selecciona un archivo para ver sus detalles"
-                color: root.detailItem ? root.pal.text : root.pal.muted
-                font.pixelSize: 13; font.bold: root.detailItem !== null
+                visible: root.detailItem === null && root.selectedCount === 0
+                text: root.currentFolderName
+                color: root.pal.text; font.pixelSize: 13; font.bold: true
                 elide: Text.ElideRight; Layout.fillWidth: true
             }
+            Label {
+                visible: root.detailItem === null && root.selectedCount === 0
+                text: root.currentItemCount + " elemento" + (root.currentItemCount === 1 ? "" : "s")
+                color: root.pal.muted; font.pixelSize: 11
+            }
 
+            // Multi-selection
+            Label {
+                visible: root.selectedCount > 1
+                text: root.selectedCount + " elementos seleccionados"
+                color: root.pal.text; font.pixelSize: 13; font.bold: true
+                elide: Text.ElideRight; Layout.fillWidth: true
+            }
+            Label {
+                visible: root.selectedCount > 1 && root.totalSelectedSize !== ""
+                text: root.totalSelectedSize
+                color: root.pal.muted; font.pixelSize: 11
+            }
+
+            // Single selection
+            Label {
+                visible: root.detailItem !== null
+                text: root.detailItem ? root.detailItem.name : ""
+                color: root.pal.text; font.pixelSize: 13; font.bold: true
+                elide: Text.ElideRight; Layout.fillWidth: true
+            }
             RowLayout {
                 visible: root.detailItem !== null
                 spacing: 18
-                Label { text: root.detailItem ? (root.detailItem.typeStr || "")    : ""; color: root.pal.muted; font.pixelSize: 11 }
-                Label { visible: root.detailItem && root.detailItem.size;     text: root.detailItem ? (root.detailItem.size     || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
-                Label { visible: root.detailItem && root.detailItem.modified; text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""; color: root.pal.muted; font.pixelSize: 11 }
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.size;     text: root.detailItem ? (root.detailItem.size || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.modified; text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""; color: root.pal.muted; font.pixelSize: 11 }
             }
         }
     }
