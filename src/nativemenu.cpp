@@ -1,9 +1,14 @@
 #include "nativemenu.h"
 #include <QMenu>
 #include <QAction>
+#include <QActionGroup>
 #include <QIcon>
 #include <QCursor>
 #include <QKeySequence>
+#include <QPixmap>
+#include <QPainter>
+#include <QApplication>
+#include <QPalette>
 
 using namespace Qt::StringLiterals;
 
@@ -281,6 +286,49 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
 }
 
 // ── View-mode dropdown ────────────────────────────────────────────────────────
+
+static QIcon makeViewIcon(const QString &mode)
+{
+    const int S = 16;
+    QPixmap px(S, S);
+    px.fill(Qt::transparent);
+    QPainter p(&px);
+    p.setRenderHint(QPainter::Antialiasing, false);
+
+    QColor fg = QApplication::palette().color(QPalette::Text);
+    p.setBrush(fg);
+    p.setPen(Qt::NoPen);
+
+    auto fr = [&](qreal x, qreal y, qreal w, qreal h) {
+        p.fillRect(QRectF(x, y, w, h), fg);
+    };
+
+    if (mode == u"xlarge"_s) {
+        fr(1,1,6,6); fr(9,1,6,6); fr(1,9,6,6); fr(9,9,6,6);
+    } else if (mode == u"large"_s) {
+        qreal s=4.5;
+        qreal xs[]={1.0, 8-s/2, 15-s}; qreal ys[]={1.0, 8-s/2};
+        for (auto y : ys) for (auto x : xs) fr(x,y,s,s);
+    } else if (mode == u"medium"_s) {
+        qreal s=3.5;
+        qreal xs[]={1.0, 8-s/2, 15-s}; qreal ys[]={1.0, 6.0, 11.0};
+        for (auto y : ys) for (auto x : xs) fr(x,y,s,s);
+    } else if (mode == u"small"_s) {
+        for (int r=0;r<4;r++) { fr(1,1+r*4,2,2); fr(4,1.5+r*4,8,1); fr(9,1+r*4,2,2); fr(12,1.5+r*4,3,1); }
+    } else if (mode == u"list"_s) {
+        fr(1,2,3,3); fr(5,3,10,1); fr(1,7,3,3); fr(5,8,10,1); fr(1,12,3,3); fr(5,13,10,1);
+    } else if (mode == u"details"_s) {
+        fr(1,2,2,2); fr(4,2.5,11,1); fr(1,6,2,2); fr(4,6.5,11,1); fr(1,10,2,2); fr(4,10.5,11,1);
+    } else if (mode == u"tiles"_s) {
+        fr(1,1,6,7); fr(8,2,7,1); fr(8,4,5,1); fr(1,9,6,7); fr(8,10,7,1); fr(8,12,5,1);
+    } else { // content
+        fr(1,2,4,4); fr(6,2.5,9,1); fr(6,4.5,7,1); fr(1,8,4,4); fr(6,8.5,9,1); fr(6,10.5,7,1);
+    }
+
+    p.end();
+    return QIcon(px);
+}
+
 QString NativeMenu::showViewDropdown(const QString &currentMode)
 {
     QMenu menu;
@@ -297,10 +345,15 @@ QString NativeMenu::showViewDropdown(const QString &currentMode)
         { u"Contenido"_s,          u"content"_s },
     };
 
+    QActionGroup *group = new QActionGroup(&menu);
+    group->setExclusive(true);
+
     for (const auto &[label, mode] : modes) {
-        QAction *a = menu.addAction(label, [&result, mode]{ result = mode; });
+        QAction *a = new QAction(makeViewIcon(mode), label, group);
         a->setCheckable(true);
         a->setChecked(currentMode == mode);
+        menu.addAction(a);
+        QObject::connect(a, &QAction::triggered, [&result, mode]{ result = mode; });
     }
 
     menu.exec(QCursor::pos());
