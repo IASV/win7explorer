@@ -37,6 +37,8 @@ Item {
     signal copyToFolderRequested
     signal moveToFolderRequested
     signal themeChangeRequested(string name)
+    signal connectDriveRequested
+    signal disconnectDriveRequested
     signal terminalRequested
     signal helpRequested
     signal aboutRequested
@@ -123,6 +125,9 @@ Item {
         id: _herramientasMenu
         palette.window: root.pal.panel; palette.windowText: root.pal.text
         palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+        MenuItem { text: "Conectar a unidad de red…";     onTriggered: root.connectDriveRequested() }
+        MenuItem { text: "Desconectar de unidad de red…"; onTriggered: root.disconnectDriveRequested() }
+        MenuSeparator {}
         MenuItem { text: "Abrir símbolo del sistema"; onTriggered: root.terminalRequested() }
         MenuSeparator {}
         Menu {

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 
 ColumnLayout {
     id: root
+    property string groupBy: "none"
     property var pal
     property var model:       []
     property var selectedIds: ({})
@@ -23,32 +24,63 @@ ColumnLayout {
         var filters = root.columnFilters
         var hasAny = false
         for (var k in filters) { if (filters[k] && filters[k].length > 0) { hasAny = true; break } }
-        if (!hasAny) return root.model
-        var fm = []
-        for (var i = 0; i < root.model.length; ++i) {
-            var item = root.model[i]
-            var ok = true
-            for (var col in filters) {
-                var arr = filters[col]
-                if (!arr || arr.length === 0) continue
-                var val
-                if (col === "name")     val = item.name
-                else if (col === "modified") val = item.modified
-                else if (col === "type")     val = item.typeStr
-                else if (col === "size")     val = item.size
-                if (arr.indexOf(val) < 0) { ok = false; break }
+        var fm
+        if (!hasAny) {
+            fm = root.model.slice()
+        } else {
+            fm = []
+            for (var i = 0; i < root.model.length; ++i) {
+                var item = root.model[i]
+                var ok = true
+                for (var col in filters) {
+                    var arr = filters[col]
+                    if (!arr || arr.length === 0) continue
+                    var val
+                    if (col === "name")          val = item.name
+                    else if (col === "modified") val = item.modified
+                    else if (col === "type")     val = item.typeStr
+                    else if (col === "tags")     val = item.tags || ""
+                    else if (col === "rating")   val = item.rating !== undefined ? String(item.rating) : "0"
+                    else if (col === "size")     val = item.size
+                    if (arr.indexOf(val) < 0) { ok = false; break }
+                }
+                if (ok) fm.push(item)
             }
-            if (ok) fm.push(item)
         }
-        return fm
+        if (root.groupBy === "none") return fm
+        return fm.map(function(it) {
+            var copy = Object.assign({}, it)
+            var gk
+            if (root.groupBy === "name")
+                gk = copy.name ? copy.name[0].toUpperCase() : "#"
+            else if (root.groupBy === "type")
+                gk = copy.typeStr || "Desconocido"
+            else if (root.groupBy === "modified")
+                gk = copy.modified ? copy.modified.split(" ")[0] : "Sin fecha"
+            else if (root.groupBy === "size") {
+                if (!copy.size || copy.type === "folder") gk = "Carpetas"
+                else { var s = copy.size; gk = s.indexOf("KB") >= 0 ? "Pequeño" : s.indexOf("MB") >= 0 ? "Mediano" : "Grande" }
+            } else gk = ""
+            copy.groupKey = gk
+            return copy
+        }).sort(function(a, b) {
+            var ak = a.groupKey || "", bk = b.groupKey || ""
+            if (a.type==="folder" && b.type!=="folder") return -1
+            if (a.type!=="folder" && b.type==="folder") return 1
+            return ak < bk ? -1 : ak > bk ? 1 : 0
+        })
     }
 
     function uniqueValues(colId) {
         var seen = {}, arr = []
         for (var i = 0; i < root.model.length; ++i) {
             var it = root.model[i]
-            var v = colId === "name" ? it.name : colId === "modified" ? it.modified
-                  : colId === "type" ? it.typeStr : it.size
+            var v = colId === "name" ? it.name
+                  : colId === "modified" ? it.modified
+                  : colId === "type" ? it.typeStr
+                  : colId === "tags" ? (it.tags || "")
+                  : colId === "rating" ? (it.rating !== undefined ? String(it.rating) : "0")
+                  : it.size
             if (v !== undefined && v !== null && v !== "" && !seen[v]) { seen[v] = true; arr.push(v) }
         }
         return arr.sort()
@@ -94,7 +126,9 @@ ColumnLayout {
                     { id: "name",     label: "Nombre",                stretch: 3 },
                     { id: "modified", label: "Fecha de modificación", stretch: 2 },
                     { id: "type",     label: "Tipo",                  stretch: 1 },
-                    { id: "size",     label: "Tamaño",                stretch: 1 }
+                    { id: "size",     label: "Tamaño",                stretch: 1 },
+                    { id: "tags",     label: "Etiquetas",             stretch: 1 },
+                    { id: "rating",   label: "Clasificación",         stretch: 1 }
                 ]
                 delegate: Rectangle {
                     id: headerCell
@@ -191,6 +225,18 @@ ColumnLayout {
         Layout.fillHeight: true
         clip: true
         model: root.filteredModel
+        section.property: root.groupBy !== "none" ? "groupKey" : ""
+        section.criteria: ViewSection.FullString
+        section.delegate: Rectangle {
+            width: ListView.view.width
+            height: 22
+            color: root.pal.tbar2
+            RowLayout {
+                anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10; spacing: 6
+                Label { text: section; color: root.pal.accent; font.pixelSize: 11; font.bold: true }
+                Rectangle { Layout.fillWidth: true; height: 1; color: root.pal.border; Layout.alignment: Qt.AlignVCenter }
+            }
+        }
 
         delegate: Rectangle {
             width:  ListView.view.width
@@ -225,10 +271,26 @@ ColumnLayout {
                     color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
                     font.pixelSize: 11 }
                 Label { Layout.fillWidth: true; Layout.preferredWidth: 100
-                    Layout.leftMargin: 8; Layout.rightMargin: 8
+                    Layout.leftMargin: 8
                     text: modelData.size || (modelData.type === "folder" ? "" : "—")
                     color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
                     font.pixelSize: 11 }
+                Label { Layout.fillWidth: true; Layout.preferredWidth: 100; Layout.leftMargin: 8
+                    text: modelData.tags || "—"
+                    color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
+                    font.pixelSize: 11; elide: Text.ElideRight }
+                Row {
+                    Layout.preferredWidth: 100; Layout.leftMargin: 8; Layout.rightMargin: 8
+                    spacing: 0
+                    Repeater {
+                        model: 5
+                        Label {
+                            text: index < (modelData.rating || 0) ? "★" : "☆"
+                            color: index < (modelData.rating || 0) ? "#e8a000" : root.pal.muted
+                            font.pixelSize: 11
+                        }
+                    }
+                }
             }
 
             MouseArea {

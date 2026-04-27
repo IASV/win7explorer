@@ -54,6 +54,18 @@ Menu {
         onTriggered: {}
     }
 
+    Menu {
+        title: "Incluir en biblioteca"
+        visible: root.isFolder; enabled: root.isFolder
+        palette: root.palette
+        MenuItem { text: "Documentos" }
+        MenuItem { text: "Imágenes" }
+        MenuItem { text: "Música" }
+        MenuItem { text: "Vídeos" }
+        MenuSeparator {}
+        MenuItem { text: "Nueva biblioteca…" }
+    }
+
     // "Abrir con ▶" submenu — only for files
     Menu {
         title: "Abrir con"
@@ -66,6 +78,15 @@ Menu {
     }
 
     MenuSeparator { visible: !root.isEmpty }
+
+    Menu {
+        title: "Enviar a"
+        visible: !root.isEmpty; enabled: !root.isEmpty
+        palette: root.palette
+        MenuItem { text: "Escritorio (crear acceso directo)" }
+        MenuItem { text: "Destinatario de correo" }
+        MenuItem { text: "Documentos" }
+    }
 
     MenuItem { text: "Cortar";   enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.cutRequested() }
     MenuItem { text: "Copiar";   enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.copyRequested() }
@@ -166,11 +187,8 @@ Menu {
     }
 
     MenuSeparator { visible: root.isEmpty }
-    MenuItem {
-        text: "Pegar"
-        visible: root.isEmpty
-        onTriggered: root.pasteRequested()
-    }
+    MenuItem { text: "Pegar";                  visible: root.isEmpty; onTriggered: root.pasteRequested() }
+    MenuItem { text: "Pegar acceso directo";   visible: root.isEmpty; onTriggered: {} }
     MenuSeparator { visible: root.isEmpty }
     Menu {
         title: "Nuevo"
@@ -179,4 +197,6 @@ Menu {
         MenuItem { text: "Carpeta";         onTriggered: root.newFolderRequested() }
         MenuItem { text: "Acceso directo";  onTriggered: {} }
     }
+    MenuSeparator { visible: root.isEmpty }
+    MenuItem { text: "Propiedades";            visible: root.isEmpty; onTriggered: root.refreshRequested() }
 }

@@ -328,6 +328,7 @@ ApplicationWindow {
     // ── Keyboard shortcuts ─────────────────────────────────────────────────
     Shortcut { sequence: "F5";          onActivated: { if (isRealPath) fsBackend.refresh() } }
     Shortcut { sequence: "F10";         onActivated: win.showMenuBar = !win.showMenuBar }
+    Shortcut { sequence: "Alt+Return";  onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+F10";    onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+Left";    onActivated: win.goBack() }
     Shortcut { sequence: "Alt+Right";   onActivated: win.goForward() }
@@ -390,6 +391,8 @@ ApplicationWindow {
         onRefreshRequested:          { if (win.isRealPath) fsBackend.refresh() }
         onThemeChangeRequested:      function(t) { win.themeName = t }
         onStatusBarToggled:          win.showStatusBar = !win.showStatusBar
+        onConnectDriveRequested:     win.showToast("Conectar a unidad de red: no disponible")
+        onDisconnectDriveRequested:  win.showToast("Desconectar unidad de red: no disponible")
         onTerminalRequested:         win.showToast("Abriendo terminal…")
         onHelpRequested:             win.showToast("Ayuda no disponible")
         onAboutRequested:            aboutDialog.open()
@@ -520,6 +523,7 @@ ApplicationWindow {
             selectedIds: win.selectedIds
             sortBy: win.sortBy
             sortDir: win.sortDir
+            groupBy: win.groupBy
             onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {

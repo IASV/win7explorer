@@ -49,9 +49,9 @@
 - **[✓ HECHO ]** Modo **"Iconos pequeños"** (16 px, icono izq + texto der) — `IconsView.qml` modo `small`
 - **[✓ HECHO ]** Modo **"Mosaicos"** (icon 40 px + nombre + tipo + tamaño, flow grid) — `TilesView.qml`
 - **[✓ HECHO ]** Modo `list` — reescrito como multi-columna vertical con `GridView.FlowTopToBottom`
-- **[ MAL ]** `DetailsView` — faltan columnas **Etiquetas** y **Clasificación** (rating ★★★★☆)
+- **[✓ HECHO]** `DetailsView` — columnas **Etiquetas** y **Clasificación** (rating ★★★★☆) añadidas
 - **[✓ HECHO ]** `IconsView` ya tiene 4 tamaños: xlarge (128), large (64), medium (40), small (16)
-- **[ MAL ]** Ningún modo muestra miniaturas reales de imágenes (requiere `QQuickImageProvider` con thumbnails)
+- **[✓ HECHO]** Miniaturas reales de imágenes en `iconprovider.cpp`
 - **[✓ HECHO ]** El switcher de vista en `CommandBar` incluye los 8 modos
 
 ---
@@ -100,7 +100,7 @@
 ### Problemas identificados
 - **[✓ HECHO]** La barra de comandos cambia botones según el tipo de elemento seleccionado
 - **[✓ HECHO]** Botones contextuales: `Presentación` (imágenes), `Reproducir` (audio/vídeo), `Incluir en biblioteca`
-- **[ FALTA ]** Split-button visual: zona de texto + zona de flecha con separación visual
+- **[✓ HECHO]** Split-button visual: separador fino entre texto y chevron en `CommandBar.qml`
 
 ---
 
@@ -282,13 +282,13 @@ Propiedades
 
 ### Problemas identificados
 - **[✓ HECHO]** Submenu **"Agrupar por"** en zona vacía (Ninguno/Nombre/Fecha/Tipo/Tamaño)
-- **[ FALTA ]** **"Personalizar esta carpeta..."** en zona vacía
-- **[ FALTA ]** **"Pegar acceso directo"** en zona vacía
-- **[ FALTA ]** **"Compartir con ▶"** en zona vacía y en selección
-- **[ FALTA ]** Submenu **"Nuevo ▶"** (Carpeta, Acceso directo, tipos de archivo)
-- **[ FALTA ]** **"Propiedades"** en zona vacía (abre propiedades de la carpeta)
-- **[ FALTA ]** **"Incluir en biblioteca ▶"** en archivos/carpetas
-- **[ FALTA ]** **"Enviar a ▶"** en archivos/carpetas
+- **[✓ HECHO]** **"Personalizar esta carpeta..."** en selección de carpeta
+- **[✓ HECHO]** **"Pegar acceso directo"** en zona vacía
+- **[✓ HECHO]** **"Compartir con ▶"** en selección de carpeta
+- **[✓ HECHO]** Submenu **"Nuevo ▶"** (Carpeta, Acceso directo)
+- **[✓ HECHO]** **"Propiedades"** en zona vacía
+- **[✓ HECHO]** **"Incluir en biblioteca ▶"** para carpetas
+- **[✓ HECHO]** **"Enviar a ▶"** para archivos/carpetas
 - **[✓ HECHO]** El submenu "Ordenar por" incluye **Ascendente/Descendente**
 - **[ FALTA ]** **"Más..."** en Ordenar por para criterios adicionales
 
@@ -313,7 +313,7 @@ Propiedades
 
 ### Problemas identificados
 - **[✓ HECHO]** **Filtrado por columna** en DetailsView: hover → `▾` dropdown con checkboxes por valor único
-- **[ FALTA ]** **Agrupación visual** de archivos (sub-cabeceras en el área de contenidos)
+- **[✓ HECHO]** **Agrupación visual** en DetailsView con section.delegate (sub-cabeceras por grupo)
 - **[ FALTA ]** **"Organizar por"** en el encabezado de bibliotecas
 - **[✓ HECHO]** Opciones **Ascendente/Descendente** en el submenu "Ordenar por" del context menu
 - **[ FALTA ]** **"Más..."** en Ordenar por para criterios adicionales (Etiquetas, Clasificación, etc.)
@@ -335,11 +335,10 @@ Propiedades
 - Menús implementados (verificar contenido completo)
 
 ### Problemas identificados
-- **[ MEJORA ]** La barra de menús debe estar **oculta por defecto**, mostrarse con `Alt` (temporal) y `F10` (permanente)
-- **[ FALTA ]** En **Edición**: "Copiar a la carpeta...", "Mover a la carpeta...", "Invertir selección"
-- **[ FALTA ]** En **Ver**: todos los modos correctos, Agrupar por, Personalizar esta carpeta, **Organizar → Diseño** (toggle de paneles)
-- **[ FALTA ]** En **Herramientas**: "Conectar a unidad de red", "Opciones de carpeta"
-- **[ FALTA ]** El submenu **Ver → Organizar → Diseño** debe hacer toggle de: Barra de menús, Panel de detalles, Panel de vista previa, Panel de navegación
+- **[✓ HECHO]** La barra de menús está **oculta por defecto** — toggle con `F10` / `Alt+F10`
+- **[✓ HECHO]** En **Edición**: "Copiar a la carpeta…", "Mover a la carpeta…"
+- **[✓ HECHO]** En **Ver → Organizar → Diseño**: toggle de Barra de menús, Panel de detalles, Vista previa, Navegación, Barra de estado
+- **[✓ HECHO]** En **Herramientas**: "Conectar a unidad de red…", "Desconectar de unidad de red…"
 
 ---
 
@@ -360,7 +359,7 @@ Propiedades
 ### Problemas identificados
 - **[ MEJORA ]** Placeholder debe ser dinámico: `"Buscar en [carpeta actual]"`
 - **[ FALTA ]** La búsqueda debería estar integrada visualmente en la AddressBar como en Win7 (ya lo está) pero el placeholder debe ser dinámico
-- **[ FALTA ]** Búsqueda recursiva en subcarpetas (no sólo la carpeta actual)
+- **[✓ HECHO]** Búsqueda recursiva en subcarpetas — `searchFiles()` con `QDirIterator::Subdirectories`
 
 ---
 
@@ -430,17 +429,17 @@ Propiedades
 
 | # | Problema | Archivo(s) |
 |---|---------|-----------|
-| I1 | ~~Breadcrumb sin **flecha dropdown `►`** por segmento | `AddressBar.qml` |
-| I2 | Sin modo texto editable en la barra de direcciones | `AddressBar.qml` |
+| I1 | ~~Breadcrumb sin **flecha dropdown `►`** por segmento~~ **[✓ HECHO]** | `AddressBar.qml` |
+| I2 | ~~Sin modo texto editable en la barra de direcciones~~ **[✓ HECHO]** | `AddressBar.qml` |
 | I3 | ~~Panel de detalles sin **conteo de elementos**~~ **[✓ HECHO]** en carpetas | `DetailsPanel.qml`, `filesystembackend.cpp` |
 | I4 | ~~Panel de detalles sin **tamaño total**~~ **[✓ HECHO]** en multi-selección | `DetailsPanel.qml`, `main.qml` |
-| I5 | Panel de detalles sin **filesystem** para drives (ext4, ntfs...) | `DetailsPanel.qml`, `filesystembackend.cpp` |
+| I5 | ~~Panel de detalles sin **filesystem** para drives (ext4, ntfs...)~~ **[✓ HECHO]** | `DetailsPanel.qml` |
 | I6 | ~~Panel de detalles sin info cuando no hay selección~~ **[✓ HECHO]** (mostrar carpeta actual + N elementos) | `DetailsPanel.qml` |
 | I7 | ~~Barra de estado demasiado alta~~ **[✓ HECHO]** (42 px vs ~22 px de Win7) y siempre visible | `StatusBar.qml`, `main.qml` |
 | I8 | ~~Barra de menús visible por defecto~~ **[✓ HECHO]** — debe ocultarse hasta pulsar `Alt` | `WinMenuBar.qml`, `main.qml` |
 | I9 | ~~Opciones **Ascendente/Descendente** ausentes en "Ordenar por" del context menu~~ **[✓ HECHO]** | `ContextMenu.qml` |
 | I10 | ~~Falta **"Panel de control"**~~ **[✓ HECHO]** y **"Papelera de reciclaje"** en el árbol de navegación | `FolderTree.qml` |
-| I11 | DetailsView sin columnas **Etiquetas** y **Clasificación** | `DetailsView.qml` |
+| I11 | ~~DetailsView sin columnas **Etiquetas** y **Clasificación**~~ **[✓ HECHO]** | `DetailsView.qml` |
 | I12 | ~~Vista "Equipo": sección "Carpetas"~~ **[✓ HECHO]** no existe en Win7 (solo 3 secciones: HDD, Extraíble, Otros) | `GroupedView.qml` |
 
 ### 🟡 MEJORA — Detalles visuales y de UX

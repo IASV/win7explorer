@@ -159,8 +159,32 @@ Rectangle {
                 color: root.pal.text; font.pixelSize: 13; font.bold: true
                 elide: Text.ElideRight; Layout.fillWidth: true
             }
+            // Drive info (filesystem + free space)
             RowLayout {
-                visible: root.detailItem !== null
+                visible: root.detailItem !== null && root.detailItem.type === "drive"
+                spacing: 12
+                Label {
+                    text: root.detailItem ? (root.detailItem.typeStr || "Unidad local") : ""
+                    color: root.pal.muted; font.pixelSize: 11
+                }
+                Label {
+                    visible: root.detailItem && root.detailItem.free !== undefined && root.detailItem.free > 0
+                    text: root.detailItem && root.detailItem.free !== undefined
+                          ? "Espacio disponible: " + (root.detailItem.free || 0).toFixed(1) + " GB"
+                          : ""
+                    color: root.pal.muted; font.pixelSize: 11
+                }
+                Label {
+                    visible: root.detailItem && root.detailItem.total !== undefined && root.detailItem.total > 0
+                    text: root.detailItem && root.detailItem.total !== undefined
+                          ? "Total: " + (root.detailItem.total || 0).toFixed(1) + " GB"
+                          : ""
+                    color: root.pal.muted; font.pixelSize: 11
+                }
+            }
+            // File / folder info
+            RowLayout {
+                visible: root.detailItem !== null && root.detailItem.type !== "drive"
                 spacing: 18
                 Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
                 Label { visible: root.detailItem && !!root.detailItem.size;     text: root.detailItem ? (root.detailItem.size || "") : ""; color: root.pal.muted; font.pixelSize: 11 }

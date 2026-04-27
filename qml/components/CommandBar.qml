@@ -94,6 +94,12 @@ Rectangle {
                                 color: root.pal.text
                                 font.pixelSize: 12; font.bold: modelData.bold || false
                             }
+                            Rectangle {
+                                visible: modelData.chevron || false
+                                width: 1; height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: root.pal.border
+                            }
                             Canvas {
                                 visible: modelData.chevron || false
                                 anchors.verticalCenter: parent.verticalCenter
