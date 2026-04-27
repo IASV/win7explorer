@@ -45,14 +45,14 @@
 | `content` | ListView con icono 44 px + nombre + tipo/tamaño | Correcto para "Contenido" |
 
 ### Problemas identificados
-- **[ FALTA ]** Modo **"Iconos muy grandes"** (128 px con miniaturas reales de imágenes)
-- **[ FALTA ]** Modo **"Iconos pequeños"** (16 px, multi-columna izquierda-a-derecha)
-- **[ FALTA ]** Modo **"Mosaicos"** (icon 48 px + nombre + tipo + tamaño, en flow grid)
-- **[ MAL ]** Modo `list` — debe ser multi-columna columnar, no single ListView
+- **[✓ HECHO ]** Modo **"Iconos muy grandes"** (128 px) — `IconsView.qml` modo `xlarge`
+- **[✓ HECHO ]** Modo **"Iconos pequeños"** (16 px, icono izq + texto der) — `IconsView.qml` modo `small`
+- **[✓ HECHO ]** Modo **"Mosaicos"** (icon 40 px + nombre + tipo + tamaño, flow grid) — `TilesView.qml`
+- **[✓ HECHO ]** Modo `list` — reescrito como multi-columna vertical con `GridView.FlowTopToBottom`
 - **[ MAL ]** `DetailsView` — faltan columnas **Etiquetas** y **Clasificación** (rating ★★★★☆)
-- **[ MAL ]** `IconsView` sólo tiene dos tamaños; debería tener tres (muy grande, grande, mediano)
+- **[✓ HECHO ]** `IconsView` ya tiene 4 tamaños: xlarge (128), large (64), medium (40), small (16)
 - **[ MAL ]** Ningún modo muestra miniaturas reales de imágenes (requiere `QQuickImageProvider` con thumbnails)
-- **[ MAL ]** El switcher de vista en `CommandBar` no incluye los 8 modos, sólo 5
+- **[✓ HECHO ]** El switcher de vista en `CommandBar` incluye los 8 modos
 
 ---
 
@@ -142,7 +142,7 @@
 - Sin "Panel de control" ni "Papelera de reciclaje" ✗
 - Carpeta seleccionada no cambia a icono de carpeta abierta ✗
 - Triángulos son flechas sólidas de color (no el estilo hueco blanco / sólido negro de Win7) ✗
-- Expandir "Equipo" en el árbol no muestra las unidades como hijos directos ✗
+- Expandir "Equipo" en el árbol muestra las unidades como hijos directos ✓
 
 ### Problemas identificados
 - **[ FALTA ]** Nodos **"Panel de control"** y **"Papelera de reciclaje"** al final del árbol
@@ -417,12 +417,12 @@ Propiedades
 
 | # | Problema | Archivo(s) |
 |---|---------|-----------|
-| C1 | Modos de vista: faltan **Iconos muy grandes**, **Iconos pequeños**, **Mosaicos** | `CommandBar.qml`, `IconsView.qml`, nuevo `TilesView.qml` |
-| C2 | Modo **Lista** es single-column, debe ser multi-columna vertical | `FileListView.qml` |
+| C1 | ~~Modos de vista: faltan **Iconos muy grandes**, **Iconos pequeños**, **Mosaicos**~~ **[✓ HECHO]** | `CommandBar.qml`, `IconsView.qml`, `TilesView.qml` |
+| C2 | ~~Modo **Lista** es single-column, debe ser multi-columna vertical~~ **[✓ HECHO]** | `FileListView.qml` |
 | C3 | Barra de comandos **no es context-sensitive** según tipo de selección | `CommandBar.qml` |
-| C4 | Árbol no expande **unidades de disco** como hijos de "Equipo" | `FolderTree.qml` |
+| C4 | ~~Árbol no expande **unidades de disco** como hijos de "Equipo"~~ **[✓ HECHO]** | `FolderTree.qml` |
 | C5 | **Filtrado por columna** en DetailsView (dropdown con checkboxes) | `DetailsView.qml` |
-| C6 | Submenu **"Agrupar por"** ausente en context menu de zona vacía | `ContextMenu.qml` |
+| C6 | ~~Submenu **"Agrupar por"** ausente en context menu de zona vacía~~ **[✓ HECHO]** | `ContextMenu.qml` |
 
 ### 🟠 IMPORTANTE — UI/UX incorrecta o incompleta
 
@@ -436,7 +436,7 @@ Propiedades
 | I6 | Panel de detalles sin info cuando no hay selección (mostrar carpeta actual + N elementos) | `DetailsPanel.qml` |
 | I7 | Barra de estado demasiado alta (42 px vs ~22 px de Win7) y siempre visible | `StatusBar.qml`, `main.qml` |
 | I8 | Barra de menús visible por defecto — debe ocultarse hasta pulsar `Alt` | `WinMenuBar.qml`, `main.qml` |
-| I9 | Opciones **Ascendente/Descendente** ausentes en "Ordenar por" del context menu | `ContextMenu.qml` |
+| I9 | ~~Opciones **Ascendente/Descendente** ausentes en "Ordenar por" del context menu~~ **[✓ HECHO]** | `ContextMenu.qml` |
 | I10 | Falta **"Panel de control"** y **"Papelera de reciclaje"** en el árbol de navegación | `FolderTree.qml` |
 | I11 | DetailsView sin columnas **Etiquetas** y **Clasificación** | `DetailsView.qml` |
 | I12 | Vista "Equipo": sección "Carpetas" no existe en Win7 (solo 3 secciones: HDD, Extraíble, Otros) | `GroupedView.qml` |

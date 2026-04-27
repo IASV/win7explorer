@@ -142,11 +142,19 @@ Rectangle {
                     Component.onCompleted: requestPaint()
                     onPaint: {
                         var ctx = getContext("2d"); ctx.clearRect(0,0,16,16); ctx.fillStyle=fg; var m=vm
-                        if (m==="large"||m==="medium") {
+                        if (m==="xlarge") {
+                            ctx.fillRect(1,1,6,6); ctx.fillRect(9,1,6,6)
+                            ctx.fillRect(1,9,6,6); ctx.fillRect(9,9,6,6)
+                        } else if (m==="large"||m==="medium") {
                             var s=m==="large"?4.5:3.5, xs=[1,8-s/2,15-s], ys=[1,8-s/2]
                             for (var yi=0;yi<ys.length;yi++) for (var xi=0;xi<xs.length;xi++) ctx.fillRect(xs[xi],ys[yi],s,s)
+                        } else if (m==="small") {
+                            for (var r=0;r<4;r++) { ctx.fillRect(1,1+r*4,2,2); ctx.fillRect(4,1.5+r*4,8,1); ctx.fillRect(9,1+r*4,2,2); ctx.fillRect(12,1.5+r*4,3,1) }
                         } else if (m==="list") {
                             ctx.fillRect(1,2,3,3); ctx.fillRect(5,3,10,1); ctx.fillRect(1,7,3,3); ctx.fillRect(5,8,10,1); ctx.fillRect(1,12,3,3); ctx.fillRect(5,13,10,1)
+                        } else if (m==="tiles") {
+                            ctx.fillRect(1,1,6,7); ctx.fillRect(8,2,7,1); ctx.fillRect(8,4,5,1)
+                            ctx.fillRect(1,9,6,7); ctx.fillRect(8,10,7,1); ctx.fillRect(8,12,5,1)
                         } else if (m==="details") {
                             ctx.fillRect(1,2,2,2); ctx.fillRect(4,2.5,11,1); ctx.fillRect(1,6,2,2); ctx.fillRect(4,6.5,11,1); ctx.fillRect(1,10,2,2); ctx.fillRect(4,10.5,11,1)
                         } else {
@@ -176,11 +184,14 @@ Rectangle {
 
         Menu {
             id: viewDropdown
-            MenuItem { text: "Iconos grandes";  checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
-            MenuItem { text: "Iconos medianos"; checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
-            MenuItem { text: "Lista";           checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
-            MenuItem { text: "Detalles";        checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
-            MenuItem { text: "Contenido";       checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
+            MenuItem { text: "Iconos muy grandes"; checkable: true; checked: root.viewMode==="xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
+            MenuItem { text: "Iconos grandes";     checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
+            MenuItem { text: "Iconos medianos";    checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
+            MenuItem { text: "Iconos pequeños";    checkable: true; checked: root.viewMode==="small";   onTriggered: root.viewModeChangeRequested("small") }
+            MenuItem { text: "Lista";              checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
+            MenuItem { text: "Detalles";           checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
+            MenuItem { text: "Mosaicos";           checkable: true; checked: root.viewMode==="tiles";   onTriggered: root.viewModeChangeRequested("tiles") }
+            MenuItem { text: "Contenido";          checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
         }
 
         // Help button

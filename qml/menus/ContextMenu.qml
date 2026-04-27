@@ -8,6 +8,8 @@ Menu {
     property int    selectedCount: 0
     property string viewMode:      "large"
     property string sortBy:        "name"
+    property string sortDir:       "asc"
+    property string groupBy:       "none"
 
     property bool hasSelection: selectedCount > 0
     property bool isFolder:     targetItem !== null && (targetItem.type === "folder" || targetItem.type === "drive")
@@ -33,6 +35,8 @@ Menu {
     signal addToFavoritesRequested
     signal viewModeChangeRequested(string mode)
     signal sortRequested(string column)
+    signal sortDirRequested(string dir)
+    signal groupRequested(string column)
     signal refreshRequested
 
     // ── File / folder selected ────────────────────────────────────────────
@@ -103,31 +107,14 @@ Menu {
         visible: root.isEmpty
         enabled: root.isEmpty
         palette: root.palette
-        MenuItem {
-            text: "Iconos grandes"
-            checkable: true; checked: root.viewMode === "large"
-            onTriggered: root.viewModeChangeRequested("large")
-        }
-        MenuItem {
-            text: "Iconos medianos"
-            checkable: true; checked: root.viewMode === "medium"
-            onTriggered: root.viewModeChangeRequested("medium")
-        }
-        MenuItem {
-            text: "Lista"
-            checkable: true; checked: root.viewMode === "list"
-            onTriggered: root.viewModeChangeRequested("list")
-        }
-        MenuItem {
-            text: "Detalles"
-            checkable: true; checked: root.viewMode === "details"
-            onTriggered: root.viewModeChangeRequested("details")
-        }
-        MenuItem {
-            text: "Contenido"
-            checkable: true; checked: root.viewMode === "content"
-            onTriggered: root.viewModeChangeRequested("content")
-        }
+        MenuItem { text: "Iconos muy grandes"; checkable: true; checked: root.viewMode === "xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
+        MenuItem { text: "Iconos grandes";     checkable: true; checked: root.viewMode === "large";   onTriggered: root.viewModeChangeRequested("large") }
+        MenuItem { text: "Iconos medianos";    checkable: true; checked: root.viewMode === "medium";  onTriggered: root.viewModeChangeRequested("medium") }
+        MenuItem { text: "Iconos pequeños";    checkable: true; checked: root.viewMode === "small";   onTriggered: root.viewModeChangeRequested("small") }
+        MenuItem { text: "Lista";              checkable: true; checked: root.viewMode === "list";    onTriggered: root.viewModeChangeRequested("list") }
+        MenuItem { text: "Detalles";           checkable: true; checked: root.viewMode === "details"; onTriggered: root.viewModeChangeRequested("details") }
+        MenuItem { text: "Mosaicos";           checkable: true; checked: root.viewMode === "tiles";   onTriggered: root.viewModeChangeRequested("tiles") }
+        MenuItem { text: "Contenido";          checkable: true; checked: root.viewMode === "content"; onTriggered: root.viewModeChangeRequested("content") }
     }
 
     Menu {
@@ -135,26 +122,26 @@ Menu {
         visible: root.isEmpty
         enabled: root.isEmpty
         palette: root.palette
-        MenuItem {
-            text: "Nombre"
-            checkable: true; checked: root.sortBy === "name"
-            onTriggered: root.sortRequested("name")
-        }
-        MenuItem {
-            text: "Fecha de modificación"
-            checkable: true; checked: root.sortBy === "modified"
-            onTriggered: root.sortRequested("modified")
-        }
-        MenuItem {
-            text: "Tipo"
-            checkable: true; checked: root.sortBy === "type"
-            onTriggered: root.sortRequested("type")
-        }
-        MenuItem {
-            text: "Tamaño"
-            checkable: true; checked: root.sortBy === "size"
-            onTriggered: root.sortRequested("size")
-        }
+        MenuItem { text: "Nombre";               checkable: true; checked: root.sortBy === "name";     onTriggered: root.sortRequested("name") }
+        MenuItem { text: "Fecha de modificación"; checkable: true; checked: root.sortBy === "modified"; onTriggered: root.sortRequested("modified") }
+        MenuItem { text: "Tipo";                 checkable: true; checked: root.sortBy === "type";     onTriggered: root.sortRequested("type") }
+        MenuItem { text: "Tamaño";               checkable: true; checked: root.sortBy === "size";     onTriggered: root.sortRequested("size") }
+        MenuSeparator {}
+        MenuItem { text: "Ascendente";  checkable: true; checked: root.sortDir === "asc";  onTriggered: root.sortDirRequested("asc") }
+        MenuItem { text: "Descendente"; checkable: true; checked: root.sortDir === "desc"; onTriggered: root.sortDirRequested("desc") }
+    }
+
+    Menu {
+        title: "Agrupar por"
+        visible: root.isEmpty
+        enabled: root.isEmpty
+        palette: root.palette
+        MenuItem { text: "(Ninguno)";            checkable: true; checked: root.groupBy === "none";     onTriggered: root.groupRequested("none") }
+        MenuSeparator {}
+        MenuItem { text: "Nombre";               checkable: true; checked: root.groupBy === "name";     onTriggered: root.groupRequested("name") }
+        MenuItem { text: "Fecha de modificación"; checkable: true; checked: root.groupBy === "modified"; onTriggered: root.groupRequested("modified") }
+        MenuItem { text: "Tipo";                 checkable: true; checked: root.groupBy === "type";     onTriggered: root.groupRequested("type") }
+        MenuItem { text: "Tamaño";               checkable: true; checked: root.groupBy === "size";     onTriggered: root.groupRequested("size") }
     }
 
     MenuItem {

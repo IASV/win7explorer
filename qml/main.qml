@@ -80,6 +80,7 @@ ApplicationWindow {
     property string viewMode:         "large"
     property string sortBy:           "name"
     property string sortDir:          "asc"
+    property string groupBy:          "none"
     property bool   showMenuBar:      false
     property bool   showSidebar:      true
     property bool   showPreview:      false
@@ -371,6 +372,8 @@ ApplicationWindow {
         selectedCount: win.selectedCount
         viewMode:      win.viewMode
         sortBy:        win.sortBy
+        sortDir:       win.sortDir
+        groupBy:       win.groupBy
         onOpenRequested:           function(item) { win.handleOpen(item) }
         onCutRequested:            { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
         onCopyRequested:           { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
@@ -382,6 +385,8 @@ ApplicationWindow {
         onAddToFavoritesRequested: win.addToFavorites(win.selectedItem)
         onViewModeChangeRequested: function(m) { win.viewMode = m }
         onSortRequested:           function(col) { if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" } }
+        onSortDirRequested:        function(dir) { win.sortDir = dir }
+        onGroupRequested:          function(col) { win.groupBy = col }
         onRefreshRequested:        { if (win.isRealPath) fsBackend.refresh() }
     }
 
@@ -515,6 +520,21 @@ ApplicationWindow {
     }
 
     Component {
+        id: tilesComp
+        TilesView {
+            pal: win.pal
+            model: win.items
+            selectedIds: win.selectedIds
+            onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
+            onItemDoubleClicked: function(item) { win.handleOpen(item) }
+            onContextMenuRequested: function(item) {
+                if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
+                ctxMenu.targetItem = item; ctxMenu.popup()
+            }
+        }
+    }
+
+    Component {
         id: groupedComp
         GroupedView {
             pal: win.pal
@@ -629,9 +649,11 @@ ApplicationWindow {
                         if (win.useGroupedView && win.groupedItems.length === 0) return networkEmptyComp
                         if (win.useGroupedView)        return groupedComp
                         if (win.items.length === 0)    return emptyComp
-                        if (win.viewMode === "large" || win.viewMode === "medium") return iconsComp
+                        if (win.viewMode === "xlarge" || win.viewMode === "large" ||
+                            win.viewMode === "medium" || win.viewMode === "small") return iconsComp
                         if (win.viewMode === "list")    return listComp
                         if (win.viewMode === "details") return detailsComp
+                        if (win.viewMode === "tiles")   return tilesComp
                         if (win.viewMode === "content") return contentComp
                         return iconsComp
                     }

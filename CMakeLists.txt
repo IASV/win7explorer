@@ -39,6 +39,7 @@ qt_add_qml_module(win7explorer
         qml/views/FileListView.qml
         qml/views/GroupedView.qml
         qml/views/IconsView.qml
+        qml/views/TilesView.qml
     RESOURCES
         qml/styles/Palettes.js
 )
