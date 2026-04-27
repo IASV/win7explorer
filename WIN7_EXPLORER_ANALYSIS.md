@@ -430,18 +430,18 @@ Propiedades
 
 | # | Problema | Archivo(s) |
 |---|---------|-----------|
-| I1 | Breadcrumb sin **flecha dropdown `►`** por segmento | `AddressBar.qml` |
+| I1 | ~~Breadcrumb sin **flecha dropdown `►`** por segmento | `AddressBar.qml` |
 | I2 | Sin modo texto editable en la barra de direcciones | `AddressBar.qml` |
-| I3 | Panel de detalles sin **conteo de elementos** en carpetas | `DetailsPanel.qml`, `filesystembackend.cpp` |
-| I4 | Panel de detalles sin **tamaño total** en multi-selección | `DetailsPanel.qml`, `main.qml` |
+| I3 | ~~Panel de detalles sin **conteo de elementos**~~ **[✓ HECHO]** en carpetas | `DetailsPanel.qml`, `filesystembackend.cpp` |
+| I4 | ~~Panel de detalles sin **tamaño total**~~ **[✓ HECHO]** en multi-selección | `DetailsPanel.qml`, `main.qml` |
 | I5 | Panel de detalles sin **filesystem** para drives (ext4, ntfs...) | `DetailsPanel.qml`, `filesystembackend.cpp` |
-| I6 | Panel de detalles sin info cuando no hay selección (mostrar carpeta actual + N elementos) | `DetailsPanel.qml` |
-| I7 | Barra de estado demasiado alta (42 px vs ~22 px de Win7) y siempre visible | `StatusBar.qml`, `main.qml` |
-| I8 | Barra de menús visible por defecto — debe ocultarse hasta pulsar `Alt` | `WinMenuBar.qml`, `main.qml` |
+| I6 | ~~Panel de detalles sin info cuando no hay selección~~ **[✓ HECHO]** (mostrar carpeta actual + N elementos) | `DetailsPanel.qml` |
+| I7 | ~~Barra de estado demasiado alta~~ **[✓ HECHO]** (42 px vs ~22 px de Win7) y siempre visible | `StatusBar.qml`, `main.qml` |
+| I8 | ~~Barra de menús visible por defecto~~ **[✓ HECHO]** — debe ocultarse hasta pulsar `Alt` | `WinMenuBar.qml`, `main.qml` |
 | I9 | ~~Opciones **Ascendente/Descendente** ausentes en "Ordenar por" del context menu~~ **[✓ HECHO]** | `ContextMenu.qml` |
-| I10 | Falta **"Panel de control"** y **"Papelera de reciclaje"** en el árbol de navegación | `FolderTree.qml` |
+| I10 | ~~Falta **"Panel de control"**~~ **[✓ HECHO]** y **"Papelera de reciclaje"** en el árbol de navegación | `FolderTree.qml` |
 | I11 | DetailsView sin columnas **Etiquetas** y **Clasificación** | `DetailsView.qml` |
-| I12 | Vista "Equipo": sección "Carpetas" no existe en Win7 (solo 3 secciones: HDD, Extraíble, Otros) | `GroupedView.qml` |
+| I12 | ~~Vista "Equipo": sección "Carpetas"~~ **[✓ HECHO]** no existe en Win7 (solo 3 secciones: HDD, Extraíble, Otros) | `GroupedView.qml` |
 
 ### 🟡 MEJORA — Detalles visuales y de UX
 
@@ -449,7 +449,7 @@ Propiedades
 |---|---------|-----------|
 | M1 | Triángulos del árbol deben ser estilo Win7 (hueco/sólido, gris/negro) | `FolderTree.qml` |
 | M2 | Nodo seleccionado en árbol debe mostrar **icono de carpeta abierta** | `FolderTree.qml` |
-| M3 | Placeholder de búsqueda debe ser dinámico `"Buscar en [carpeta]"` | `AddressBar.qml`, `main.qml` |
+| M3 | ~~Placeholder de búsqueda debe ser dinámico~~ **[✓ HECHO]** `"Buscar en [carpeta]"` | `AddressBar.qml`, `main.qml` |
 | M4 | Context menu: añadir **"Personalizar esta carpeta..."**, **"Compartir con ▶"**, **"Nuevo ▶"** | `ContextMenu.qml` |
 | M5 | Panel de detalles: menú contextual para **resize** (Pequeño/Mediano/Grande) | `DetailsPanel.qml` |
 | M6 | Panel de detalles debería ser **redimensionable** (drag en borde superior) | `main.qml` |

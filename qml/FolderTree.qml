@@ -251,6 +251,17 @@ Item {
             name: "Red", type: "header", level: 0, icon: "network",
             path: "network", hasChildren: false, expanded: false, sectionType: ""
         })
+
+        // Panel de control
+        treeModel.append({
+            name: "Panel de control", type: "header", level: 0, icon: "control-panel",
+            path: "control-panel", hasChildren: false, expanded: false, sectionType: ""
+        })
+        // Papelera de reciclaje
+        treeModel.append({
+            name: "Papelera de reciclaje", type: "special", level: 0, icon: "folder-empty",
+            path: "trash", hasChildren: false, expanded: false, sectionType: ""
+        })
     }
 
     Component.onCompleted: loadTree()

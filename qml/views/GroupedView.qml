@@ -27,10 +27,8 @@ ScrollView {
                   filter: function(i){ return i.type === "drive" && i.kind !== "disc" && i.kind !== "removable" && i.kind !== "mtp" } },
                 { title: "Dispositivos con almacenamiento extraíble",
                   filter: function(i){ return i.type === "drive" && (i.kind === "disc" || i.kind === "removable" || i.kind === "mtp") } },
-                { title: "Ubicaciones de red",
-                  filter: function(i){ return i.kind === "pc" || i.kind === "printer" || i.type === "network" } },
-                { title: "Carpetas",
-                  filter: function(i){ return i.type === "folder" && i.kind !== "pc" && i.kind !== "printer" } }
+                { title: "Otros",
+                  filter: function(i){ return i.kind === "pc" || i.kind === "printer" || i.type === "network" } }
             ]
 
             delegate: Column {
