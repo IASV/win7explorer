@@ -78,6 +78,21 @@ Menu {
         enabled: root.isFolder; visible: root.isFolder
         onTriggered: root.addToFavoritesRequested()
     }
+    Menu {
+        title: "Compartir con"
+        visible: root.isFolder; enabled: root.isFolder
+        palette: root.palette
+        MenuItem { text: "Grupo en el hogar (Ver y modificar)" }
+        MenuItem { text: "Grupo en el hogar (Ver)" }
+        MenuItem { text: "Usuarios específicos…" }
+        MenuSeparator {}
+        MenuItem { text: "Sin conexión disponible"; enabled: false }
+    }
+    MenuItem {
+        text: "Personalizar esta carpeta…"
+        visible: root.isFolder; enabled: root.isFolder
+        onTriggered: {}
+    }
     MenuItem {
         text: "Crear acceso directo"
         enabled: root.targetItem !== null; visible: !root.isEmpty
@@ -157,9 +172,11 @@ Menu {
         onTriggered: root.pasteRequested()
     }
     MenuSeparator { visible: root.isEmpty }
-    MenuItem {
-        text: "Nueva carpeta"
-        visible: root.isEmpty
-        onTriggered: root.newFolderRequested()
+    Menu {
+        title: "Nuevo"
+        visible: root.isEmpty; enabled: root.isEmpty
+        palette: root.palette
+        MenuItem { text: "Carpeta";         onTriggered: root.newFolderRequested() }
+        MenuItem { text: "Acceso directo";  onTriggered: {} }
     }
 }

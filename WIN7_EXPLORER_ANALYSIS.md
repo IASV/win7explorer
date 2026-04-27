@@ -447,18 +447,18 @@ Propiedades
 
 | # | Problema | Archivo(s) |
 |---|---------|-----------|
-| M1 | Triángulos del árbol deben ser estilo Win7 (hueco/sólido, gris/negro) | `FolderTree.qml` |
-| M2 | Nodo seleccionado en árbol debe mostrar **icono de carpeta abierta** | `FolderTree.qml` |
+| M1 | ~~Triángulos del árbol deben ser estilo Win7 (hueco/sólido, gris/negro)~~ **[✓ HECHO]** | `FolderTree.qml` |
+| M2 | ~~Nodo seleccionado en árbol debe mostrar **icono de carpeta abierta**~~ **[✓ HECHO]** | `FolderTree.qml` |
 | M3 | ~~Placeholder de búsqueda debe ser dinámico~~ **[✓ HECHO]** `"Buscar en [carpeta]"` | `AddressBar.qml`, `main.qml` |
-| M4 | Context menu: añadir **"Personalizar esta carpeta..."**, **"Compartir con ▶"**, **"Nuevo ▶"** | `ContextMenu.qml` |
-| M5 | Panel de detalles: menú contextual para **resize** (Pequeño/Mediano/Grande) | `DetailsPanel.qml` |
-| M6 | Panel de detalles debería ser **redimensionable** (drag en borde superior) | `main.qml` |
+| M4 | ~~Context menu: añadir **"Personalizar esta carpeta..."**, **"Compartir con ▶"**, **"Nuevo ▶"**~~ **[✓ HECHO]** | `ContextMenu.qml` |
+| M5 | ~~Panel de detalles: menú contextual para **resize** (Pequeño/Mediano/Grande)~~ **[✓ HECHO]** | `DetailsPanel.qml` |
+| M6 | ~~Panel de detalles debería ser **redimensionable** (drag en borde superior)~~ **[✓ HECHO]** | `main.qml` |
 | M7 | ~~Menú de vista en CommandBar: añadir los 3 modos faltantes~~ **[✓ HECHO]** | `CommandBar.qml` |
-| M8 | Edición → añadir **"Copiar a la carpeta"**, **"Mover a la carpeta"**, **"Invertir selección"** | `MenuBarMenus.qml` |
-| M9 | Ver → **"Organizar → Diseño"** para toggle de paneles | `MenuBarMenus.qml`, `main.qml` |
-| M10 | Imágenes: mostrar **miniaturas reales** en modos de iconos (no icono genérico) | `iconprovider.cpp` |
-| M11 | Búsqueda recursiva en subcarpetas | `filesystembackend.cpp` |
-| M12 | Barra de estado: debe ocultarse con toggle desde Ver menu | `StatusBar.qml`, `main.qml` |
+| M8 | ~~Edición → añadir **"Copiar a la carpeta"**, **"Mover a la carpeta"**~~ **[✓ HECHO]** | `MenuBarMenus.qml` |
+| M9 | ~~Ver → **"Organizar → Diseño"** para toggle de paneles~~ **[✓ HECHO]** | `MenuBarMenus.qml`, `main.qml` |
+| M10 | ~~Imágenes: mostrar **miniaturas reales** en modos de iconos (no icono genérico)~~ **[✓ HECHO]** | `iconprovider.cpp` |
+| M11 | ~~Búsqueda recursiva en subcarpetas~~ **[✓ HECHO]** | `filesystembackend.cpp` |
+| M12 | ~~Barra de estado: debe ocultarse con toggle desde Ver menu~~ **[✓ HECHO]** | `StatusBar.qml`, `main.qml` |
 
 ---
 

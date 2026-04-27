@@ -13,6 +13,7 @@ Item {
     property bool   showDetailsPanel: false
     property bool   showPreview:      false
     property bool   showSidebar:      true
+    property bool   showStatusBar:    true
     property string themeName:        "glass"
 
     signal newFolderRequested
@@ -32,6 +33,9 @@ Item {
     signal previewToggled
     signal sidebarToggled
     signal refreshRequested
+    signal statusBarToggled
+    signal copyToFolderRequested
+    signal moveToFolderRequested
     signal themeChangeRequested(string name)
     signal terminalRequested
     signal helpRequested
@@ -68,6 +72,9 @@ Item {
         MenuItem { text: "Copiar"; enabled: root.selectedCount > 0; onTriggered: root.copyRequested() }
         MenuItem { text: "Pegar"; onTriggered: root.pasteRequested() }
         MenuSeparator {}
+        MenuItem { text: "Copiar a la carpeta…"; enabled: root.selectedCount > 0; onTriggered: root.copyToFolderRequested() }
+        MenuItem { text: "Mover a la carpeta…";  enabled: root.selectedCount > 0; onTriggered: root.moveToFolderRequested() }
+        MenuSeparator {}
         MenuItem { text: "Seleccionar todo";    onTriggered: root.selectAllRequested() }
         MenuItem { text: "Invertir selección";  onTriggered: root.invertSelectionRequested() }
     }
@@ -92,10 +99,22 @@ Item {
             MenuItem { text: "Tamaño";                onTriggered: root.sortRequested("size") }
         }
         MenuSeparator {}
-        MenuItem { text: "Barra de menús";        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
-        MenuItem { text: "Panel de detalles";     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
-        MenuItem { text: "Panel de vista previa"; checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
-        MenuItem { text: "Panel de navegación";   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
+        Menu {
+            title: "Organizar"
+            palette.window: root.pal.panel; palette.windowText: root.pal.text
+            palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+            Menu {
+                title: "Diseño"
+                palette.window: root.pal.panel; palette.windowText: root.pal.text
+                palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+                MenuItem { text: "Barra de menús";        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
+                MenuItem { text: "Panel de detalles";     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
+                MenuItem { text: "Panel de vista previa"; checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
+                MenuItem { text: "Panel de navegación";   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
+                MenuSeparator {}
+                MenuItem { text: "Barra de estado";       checkable: true; checked: root.showStatusBar;    onTriggered: root.statusBarToggled() }
+            }
+        }
         MenuSeparator {}
         MenuItem { text: "Actualizar"; onTriggered: root.refreshRequested() }
     }

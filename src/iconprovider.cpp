@@ -69,6 +69,19 @@ QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize 
         return px;
     };
 
+    // M10: Image thumbnail — load actual pixel data for local image files
+    static const QSet<QString> imgExts = {
+        u"jpg"_s, u"jpeg"_s, u"png"_s, u"bmp"_s, u"gif"_s,
+        u"webp"_s, u"tiff"_s, u"tif"_s
+    };
+    if (decoded.startsWith(u'/')) {
+        QFileInfo fi(decoded);
+        if (fi.exists() && fi.isFile() && imgExts.contains(fi.suffix().toLower())) {
+            QPixmap px(decoded);
+            if (!px.isNull()) return scaled(px);
+        }
+    }
+
     // 1. Well-known QRC bundled icons
     const QString qrcPath = qrcIconPath(decoded);
     if (!qrcPath.isEmpty()) {

@@ -69,6 +69,7 @@ public:
     Q_INVOKABLE QString getMimeIcon(const QString &filePath) const;
     Q_INVOKABLE QVariantList getSubdirectories(const QString &path) const;
     Q_INVOKABLE QString readFilePreview(const QString &path, int maxChars = 3000) const;
+    Q_INVOKABLE QVariantList searchFiles(const QString &rootPath, const QString &query, int maxResults = 200) const;
 
     // Storage & libraries
     Q_INVOKABLE QVariantList getStorageDevices() const;

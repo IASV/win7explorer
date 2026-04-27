@@ -70,30 +70,39 @@ Item {
                     Layout.preferredWidth: 12; Layout.preferredHeight: 12
                     Layout.alignment: Qt.AlignVCenter
                     opacity: itemHasChildren ? 1 : 0
-                    rotation: itemExpanded ? 90 : 0
-                    Behavior on rotation { NumberAnimation { duration: 120 } }
 
                     Canvas {
                         anchors.fill: parent
                         property color fg: pal ? pal.muted : "#888"
+                        property bool expanded: itemExpanded
                         onFgChanged: requestPaint()
+                        onExpandedChanged: requestPaint()
                         Component.onCompleted: requestPaint()
                         onPaint: {
                             var ctx = getContext("2d")
                             ctx.clearRect(0, 0, 12, 12)
-                            ctx.fillStyle = fg
-                            ctx.beginPath()
-                            // Filled right-pointing triangle ▶ (rotates to ▼ at 90°)
-                            ctx.moveTo(3, 2); ctx.lineTo(10, 6); ctx.lineTo(3, 10)
-                            ctx.closePath()
-                            ctx.fill()
+                            if (expanded) {
+                                ctx.fillStyle = "#555"
+                                ctx.beginPath()
+                                ctx.moveTo(2, 3); ctx.lineTo(10, 3); ctx.lineTo(6, 9)
+                                ctx.closePath(); ctx.fill()
+                            } else {
+                                ctx.strokeStyle = fg
+                                ctx.lineWidth = 1.2
+                                ctx.beginPath()
+                                ctx.moveTo(3, 2); ctx.lineTo(9, 6); ctx.lineTo(3, 10)
+                                ctx.closePath(); ctx.stroke()
+                            }
                         }
                     }
                 }
 
                 Image {
                     visible: itemType !== "header" || itemPath !== ""
-                    source: "qrc:/icons/" + itemIcon + ".png"
+                    source: (itemPath !== "" && currentPath === itemPath &&
+                             (itemIcon === "folder-closed" || itemIcon === "folder-blue"))
+                            ? "qrc:/icons/folder-semi.png"
+                            : "qrc:/icons/" + itemIcon + ".png"
                     Layout.preferredWidth: 16; Layout.preferredHeight: 16
                     Layout.alignment: Qt.AlignVCenter
                     fillMode: Image.PreserveAspectFit

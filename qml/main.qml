@@ -110,6 +110,7 @@ ApplicationWindow {
     property bool   showSidebar:      true
     property bool   showPreview:      false
     property bool   showDetailsPanel: false
+    property bool   showStatusBar:    true
     property int    sidebarWidth:     220
     property int    previewWidth:     260
 
@@ -368,6 +369,7 @@ ApplicationWindow {
         showDetailsPanel:win.showDetailsPanel
         showPreview:     win.showPreview
         showSidebar:     win.showSidebar
+        showStatusBar:   win.showStatusBar
         themeName:       win.themeName
         onNewFolderRequested:        win.handleNewFolder()
         onDeleteRequested:           win.handleDelete()
@@ -387,6 +389,7 @@ ApplicationWindow {
         onSidebarToggled:            win.showSidebar      = !win.showSidebar
         onRefreshRequested:          { if (win.isRealPath) fsBackend.refresh() }
         onThemeChangeRequested:      function(t) { win.themeName = t }
+        onStatusBarToggled:          win.showStatusBar = !win.showStatusBar
         onTerminalRequested:         win.showToast("Abriendo terminal…")
         onHelpRequested:             win.showToast("Ayuda no disponible")
         onAboutRequested:            aboutDialog.open()
@@ -727,17 +730,29 @@ ApplicationWindow {
             }
         }
 
-        // Details panel
+        // Details panel drag handle + separator
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 1 : 0
-            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 1 : 0
+            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 4 : 0
+            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 4 : 0
             color: win.pal.borderSoft
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SplitVCursor
+                property int startY: 0
+                property int startH: 0
+                onPressed:         function(mouse) { startY = mouse.y; startH = detailsPanel.panelHeight }
+                onPositionChanged: function(mouse) {
+                    if (pressed)
+                        detailsPanel.panelHeight = Math.max(40, Math.min(200, startH + (startY - mouse.y)))
+                }
+            }
         }
         DetailsPanel {
+            id: detailsPanel
             Layout.fillWidth: true
-            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 72 : 0
-            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 72 : 0
+            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? detailsPanel.panelHeight : 0
+            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 200 : 0
             clip: true
             pal:            win.pal
             detailItem:          win.selectedItem
@@ -754,7 +769,9 @@ ApplicationWindow {
         // Status bar
         StatusBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 24
+            Layout.preferredHeight: win.showStatusBar ? 24 : 0
+            Layout.maximumHeight:   win.showStatusBar ? 24 : 0
+            visible: win.showStatusBar
             pal:           win.pal
             itemCount:     win.useGroupedView ? win.groupedItems.length : win.items.length
             selectedCount: win.selectedCount

@@ -14,6 +14,23 @@ Rectangle {
     property int    currentItemCount:  0
     property string totalSelectedSize: ""
 
+    property int panelHeight: 72
+
+    Menu {
+        id: sizeMenu
+        palette.window: root.pal.panel; palette.windowText: root.pal.text
+        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+        MenuItem { text: "Pequeño"; onTriggered: root.panelHeight = 56 }
+        MenuItem { text: "Mediano"; onTriggered: root.panelHeight = 72 }
+        MenuItem { text: "Grande";  onTriggered: root.panelHeight = 100 }
+    }
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        propagateComposedEvents: true
+        onClicked: function(mouse) { if (mouse.button === Qt.RightButton) sizeMenu.popup() }
+    }
+
     readonly property bool computerMode:
         root.useGroupedView && root.currentKind === "computer" && root.selectedCount === 0
 

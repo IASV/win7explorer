@@ -430,6 +430,36 @@ QVariantMap FileSystemBackend::getSystemInfo() const
     return info;
 }
 
+QVariantList FileSystemBackend::searchFiles(const QString &rootPath, const QString &query, int maxResults) const
+{
+    QVariantList result;
+    if (query.trimmed().isEmpty()) return result;
+
+    QDirIterator it(rootPath,
+                    QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden,
+                    QDirIterator::Subdirectories);
+    const QString lq = query.toLower();
+    while (it.hasNext() && result.size() < maxResults) {
+        it.next();
+        const QFileInfo fi = it.fileInfo();
+        if (!fi.fileName().toLower().contains(lq)) continue;
+
+        QVariantMap item;
+        item["name"]          = fi.fileName();
+        item["path"]          = fi.absoluteFilePath();
+        item["isDir"]         = fi.isDir();
+        item["isHidden"]      = fi.isHidden();
+        item["size"]          = fi.size();
+        item["sizeFormatted"] = fi.isDir() ? QString() : formatFileSize(fi.size());
+        item["modified"]      = fi.lastModified().toString("dd/MM/yyyy hh:mm");
+        item["type"]          = fi.isDir() ? QStringLiteral("Carpeta de archivos")
+                                           : m_mimeDb.mimeTypeForFile(fi).comment();
+        item["mimeIcon"]      = getMimeIcon(fi.absoluteFilePath());
+        result.append(item);
+    }
+    return result;
+}
+
 QString FileSystemBackend::homePath() const { return QDir::homePath(); }
 QString FileSystemBackend::desktopPath() const { return QStandardPaths::writableLocation(QStandardPaths::DesktopLocation); }
 QString FileSystemBackend::documentsPath() const { return QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation); }
