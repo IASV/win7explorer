@@ -243,25 +243,8 @@ Rectangle {
                                         var parentPath = parts.length > 0 ? "/" + parts.join("/") : "/"
                                         segRow.siblings = fsBackend.getSubdirectories(parentPath)
                                     }
-                                    sibMenu.popup()
-                                }
-
-                                Menu {
-                                    id: sibMenu
-                                    palette.window:     root.pal.panel
-                                    palette.windowText: root.pal.text
-                                    Repeater {
-                                        model: segRow.siblings
-                                        MenuItem {
-                                            text: modelData.name
-                                            onTriggered: root.segmentClicked(modelData.path)
-                                        }
-                                    }
-                                    MenuItem {
-                                        visible: segRow.siblings.length === 0
-                                        enabled: false
-                                        text: "—"
-                                    }
+                                    var chosen = nativeMenu.showSiblingsMenu(segRow.siblings)
+                                    if (chosen) root.segmentClicked(chosen)
                                 }
                             }
                         }

@@ -170,29 +170,11 @@ ColumnLayout {
                                 hoverEnabled: true
                                 onClicked: function(mouse) {
                                     mouse.accepted = true
-                                    filterMenu.popup()
-                                }
-                            }
-
-                            Menu {
-                                id: filterMenu
-
-                                MenuItem {
-                                    text: "Seleccionar todo"
-                                    onTriggered: root.clearFilter(headerCell.colId)
-                                }
-                                MenuSeparator {}
-                                Repeater {
-                                    model: root.uniqueValues(headerCell.colId)
-                                    MenuItem {
-                                        text: modelData
-                                        checkable: true
-                                        checked: {
-                                            var f = root.columnFilters[headerCell.colId]
-                                            return !f || f.length === 0 || f.indexOf(modelData) >= 0
-                                        }
-                                        onTriggered: root.toggleFilter(headerCell.colId, modelData)
-                                    }
+                                    var colId  = headerCell.colId
+                                    var active = root.columnFilters[colId] || []
+                                    var r = nativeMenu.showFilterMenu(colId, root.uniqueValues(colId), active)
+                                    if (r === "clear") root.clearFilter(colId)
+                                    else if (r) root.toggleFilter(colId, r)
                                 }
                             }
                         }

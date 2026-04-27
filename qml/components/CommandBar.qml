@@ -184,7 +184,10 @@ Rectangle {
                         }
                     }
                 }
-                MouseArea { id: vsIconMa; anchors.fill: parent; hoverEnabled: true; onClicked: viewDropdown.popup() }
+                MouseArea {
+                    id: vsIconMa; anchors.fill: parent; hoverEnabled: true
+                    onClicked: { var m = nativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
+                }
             }
             Rectangle {
                 width: 16; height: 26
@@ -200,20 +203,11 @@ Rectangle {
                         ctx.beginPath(); ctx.moveTo(1,1.5); ctx.lineTo(4,4.5); ctx.lineTo(7,1.5); ctx.stroke()
                     }
                 }
-                MouseArea { id: vsChevMa; anchors.fill: parent; hoverEnabled: true; onClicked: viewDropdown.popup() }
+                MouseArea {
+                    id: vsChevMa; anchors.fill: parent; hoverEnabled: true
+                    onClicked: { var m = nativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
+                }
             }
-        }
-
-        Menu {
-            id: viewDropdown
-            MenuItem { text: "Iconos muy grandes"; checkable: true; checked: root.viewMode==="xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
-            MenuItem { text: "Iconos grandes";     checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
-            MenuItem { text: "Iconos medianos";    checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
-            MenuItem { text: "Iconos pequeños";    checkable: true; checked: root.viewMode==="small";   onTriggered: root.viewModeChangeRequested("small") }
-            MenuItem { text: "Lista";              checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
-            MenuItem { text: "Detalles";           checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
-            MenuItem { text: "Mosaicos";           checkable: true; checked: root.viewMode==="tiles";   onTriggered: root.viewModeChangeRequested("tiles") }
-            MenuItem { text: "Contenido";          checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
         }
 
         // Help button

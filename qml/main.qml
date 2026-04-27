@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "styles/Palettes.js" as Palettes
 import "components"
-import "menus"
 import "views"
 
 ApplicationWindow {
@@ -341,63 +340,58 @@ ApplicationWindow {
     Shortcut { sequence: "Ctrl+X";      onActivated: { if (selectedItem) { clipboardPath = selectedItem.id; clipboardMode = "cut"  } } }
     Shortcut { sequence: "Ctrl+V";      onActivated: win.handlePaste() }
 
-    // ── Menus ──────────────────────────────────────────────────────────────
-    OrganizeMenu {
-        id: organizeMenu
-        pal:             win.pal
-        selectedCount:   win.selectedCount
-        showMenuBar:     win.showMenuBar
-        showDetailsPanel:win.showDetailsPanel
-        showPreview:     win.showPreview
-        showSidebar:     win.showSidebar
-        onCutRequested:         { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
-        onCopyRequested:        { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
-        onPasteRequested:       win.handlePaste()
-        onSelectAllRequested:   win.selectAll()
-        onMenuBarToggled:       win.showMenuBar      = !win.showMenuBar
-        onDetailsPanelToggled:  win.showDetailsPanel = !win.showDetailsPanel
-        onPreviewToggled:       win.showPreview      = !win.showPreview
-        onSidebarToggled:       win.showSidebar      = !win.showSidebar
-        onDeleteRequested:      win.handleDelete()
-        onPropertiesRequested:  win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onCloseRequested:       Qt.quit()
+    // ── Unified menu action handler ────────────────────────────────────────
+    function handleMenuAction(action) {
+        if (!action) return
+        if (action === "cut")              { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  }; return }
+        if (action === "copy")             { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" }; return }
+        if (action === "paste")            { win.handlePaste(); return }
+        if (action === "delete")           { win.handleDelete(); return }
+        if (action === "rename")           { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "properties")       { win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "new-folder")       { win.handleNewFolder(); return }
+        if (action === "open")             { win.handleOpen(win.selectedItem); return }
+        if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
+        if (action === "refresh")          { if (win.isRealPath) fsBackend.refresh(); return }
+        if (action === "select-all")       { win.selectAll(); return }
+        if (action === "invert-selection") { win.invertSelection(); return }
+        if (action === "close")            { Qt.quit(); return }
+        if (action === "about")            { aboutDialog.open(); return }
+        if (action === "help")             { win.showToast("Ayuda no disponible"); return }
+        if (action === "copy-to-folder")   { win.showToast("Copiar a la carpeta: no disponible"); return }
+        if (action === "move-to-folder")   { win.showToast("Mover a la carpeta: no disponible"); return }
+        if (action === "connect-drive")    { win.showToast("Conectar a unidad de red: no disponible"); return }
+        if (action === "disconnect-drive") { win.showToast("Desconectar unidad de red: no disponible"); return }
+        if (action === "terminal")         { win.showToast("Abriendo terminal…"); return }
+        if (action === "folder-options")   { win.showToast("Opciones de carpeta: no disponible"); return }
+        if (action.startsWith("view:"))    { win.viewMode = action.substring(5); return }
+        if (action.startsWith("sort:"))    { var col = action.substring(5); if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" }; return }
+        if (action.startsWith("sortdir:")) { win.sortDir = action.substring(8); return }
+        if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
+        if (action.startsWith("theme:"))   { win.themeName = action.substring(6); return }
+        if (action.startsWith("layout:"))  {
+            var layout = action.substring(7)
+            if (layout === "menu-bar")      { win.showMenuBar      = !win.showMenuBar;      return }
+            if (layout === "details-panel") { win.showDetailsPanel = !win.showDetailsPanel; return }
+            if (layout === "preview")       { win.showPreview      = !win.showPreview;      return }
+            if (layout === "sidebar")       { win.showSidebar      = !win.showSidebar;      return }
+            if (layout === "status-bar")    { win.showStatusBar    = !win.showStatusBar;    return }
+        }
     }
 
-    MenuBarMenus {
-        id: mbMenus
-        pal:             win.pal
-        selectedCount:   win.selectedCount
-        viewMode:        win.viewMode
-        showMenuBar:     win.showMenuBar
-        showDetailsPanel:win.showDetailsPanel
-        showPreview:     win.showPreview
-        showSidebar:     win.showSidebar
-        showStatusBar:   win.showStatusBar
-        themeName:       win.themeName
-        onNewFolderRequested:        win.handleNewFolder()
-        onDeleteRequested:           win.handleDelete()
-        onRenameRequested:           win.showToast("Cambiar nombre: selecciona un archivo")
-        onPropertiesRequested:       win.showToast("Propiedades")
-        onCloseRequested:            Qt.quit()
-        onCutRequested:              { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
-        onCopyRequested:             { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
-        onPasteRequested:            win.handlePaste()
-        onSelectAllRequested:        win.selectAll()
-        onInvertSelectionRequested:  win.invertSelection()
-        onViewModeChangeRequested:   function(m) { win.viewMode = m }
-        onSortRequested:             function(col) { if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" } }
-        onMenuBarToggled:            win.showMenuBar      = !win.showMenuBar
-        onDetailsPanelToggled:       win.showDetailsPanel = !win.showDetailsPanel
-        onPreviewToggled:            win.showPreview      = !win.showPreview
-        onSidebarToggled:            win.showSidebar      = !win.showSidebar
-        onRefreshRequested:          { if (win.isRealPath) fsBackend.refresh() }
-        onThemeChangeRequested:      function(t) { win.themeName = t }
-        onStatusBarToggled:          win.showStatusBar = !win.showStatusBar
-        onConnectDriveRequested:     win.showToast("Conectar a unidad de red: no disponible")
-        onDisconnectDriveRequested:  win.showToast("Desconectar unidad de red: no disponible")
-        onTerminalRequested:         win.showToast("Abriendo terminal…")
-        onHelpRequested:             win.showToast("Ayuda no disponible")
-        onAboutRequested:            aboutDialog.open()
+    function menuBarParams() {
+        return {
+            selectedCount:    win.selectedCount,
+            viewMode:         win.viewMode,
+            sortBy:           win.sortBy,
+            sortDir:          win.sortDir,
+            showMenuBar:      win.showMenuBar,
+            showDetailsPanel: win.showDetailsPanel,
+            showPreview:      win.showPreview,
+            showSidebar:      win.showSidebar,
+            showStatusBar:    win.showStatusBar,
+            themeName:        win.themeName
+        }
     }
 
     function showContextMenu(item) {
@@ -411,25 +405,8 @@ ApplicationWindow {
             sortDir:       win.sortDir,
             groupBy:       win.groupBy
         })
-        win.handleContextAction(action, item)
-    }
-
-    function handleContextAction(action, item) {
-        if (!action) return
-        if (action === "open")        { win.handleOpen(item); return }
-        if (action === "cut")         { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  }; return }
-        if (action === "copy")        { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" }; return }
-        if (action === "paste")       { win.handlePaste(); return }
-        if (action === "delete")      { win.handleDelete(); return }
-        if (action === "rename")      { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
-        if (action === "properties")  { win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : "")); return }
-        if (action === "new-folder")  { win.handleNewFolder(); return }
-        if (action === "favorites")   { win.addToFavorites(win.selectedItem); return }
-        if (action === "refresh")     { if (win.isRealPath) fsBackend.refresh(); return }
-        if (action.startsWith("view:"))    { win.viewMode = action.substring(5); return }
-        if (action.startsWith("sort:"))    { var col = action.substring(5); if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" }; return }
-        if (action.startsWith("sortdir:")) { win.sortDir = action.substring(8); return }
-        if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
+        if (action === "open" && item) { win.handleOpen(item); return }
+        win.handleMenuAction(action)
     }
 
     // ── About dialog ───────────────────────────────────────────────────────
@@ -622,11 +599,11 @@ ApplicationWindow {
             clip: true
             visible: win.showMenuBar
             pal: win.pal
-            onArchivoClicked:     mbMenus.archivoMenu.popup()
-            onEdicionClicked:     mbMenus.edicionMenu.popup()
-            onVerClicked:         mbMenus.verMenu.popup()
-            onHerramientasClicked:mbMenus.herramientasMenu.popup()
-            onAyudaClicked:       mbMenus.ayudaMenu.popup()
+            onArchivoClicked:     win.handleMenuAction(nativeMenu.showMenuBarMenu("archivo",     win.menuBarParams()))
+            onEdicionClicked:     win.handleMenuAction(nativeMenu.showMenuBarMenu("edicion",     win.menuBarParams()))
+            onVerClicked:         win.handleMenuAction(nativeMenu.showMenuBarMenu("ver",         win.menuBarParams()))
+            onHerramientasClicked:win.handleMenuAction(nativeMenu.showMenuBarMenu("herramientas",win.menuBarParams()))
+            onAyudaClicked:       win.handleMenuAction(nativeMenu.showMenuBarMenu("ayuda",       win.menuBarParams()))
         }
 
         // Command bar
@@ -638,7 +615,7 @@ ApplicationWindow {
             showPreview:      win.showPreview
             viewMode:         win.viewMode
             selectedItemType: win.selectedItemType
-            onOrganizeClicked:          organizeMenu.popup()
+            onOrganizeClicked:          win.handleMenuAction(nativeMenu.showOrganizeMenu({ selectedCount: win.selectedCount, showMenuBar: win.showMenuBar, showDetailsPanel: win.showDetailsPanel, showPreview: win.showPreview, showSidebar: win.showSidebar }))
             onDeleteRequested:          win.handleDelete()
             onNewFolderRequested:       win.handleNewFolder()
             onPreviewToggled:           win.showPreview = !win.showPreview

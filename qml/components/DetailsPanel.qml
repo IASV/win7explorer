@@ -16,17 +16,16 @@ Rectangle {
 
     property int panelHeight: 80
 
-    Menu {
-        id: sizeMenu
-        MenuItem { text: "Pequeño"; onTriggered: root.panelHeight = 56 }
-        MenuItem { text: "Mediano"; onTriggered: root.panelHeight = 72 }
-        MenuItem { text: "Grande";  onTriggered: root.panelHeight = 100 }
-    }
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
         propagateComposedEvents: true
-        onClicked: function(mouse) { if (mouse.button === Qt.RightButton) sizeMenu.popup() }
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.RightButton) {
+                var h = nativeMenu.showDetailsPanelSizeMenu()
+                if (h > 0) root.panelHeight = h
+            }
+        }
     }
 
     readonly property bool computerMode:
