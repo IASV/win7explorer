@@ -4,10 +4,16 @@ import QtQuick.Layouts
 
 Item {
     id: folderTree
-    property var pal
+    property var    pal
     property string currentPath: ""
+    property var    favorites: [
+        { name: "Escritorio", path: fsBackend.desktopPath(),  icon: "folder-closed" },
+        { name: "Descargas",  path: fsBackend.downloadsPath(), icon: "folder-blue" }
+    ]
 
     signal folderActivated(string path)
+
+    onFavoritesChanged: loadTree()
 
     ListView {
         id: treeView
@@ -17,9 +23,7 @@ Item {
         delegate: treeDelegate
     }
 
-    ListModel {
-        id: treeModel
-    }
+    ListModel { id: treeModel }
 
     Component {
         id: treeDelegate
@@ -28,7 +32,6 @@ Item {
             width: treeView.width
             height: 22
 
-            // Capture ListModel roles into properties so nested items can access them
             readonly property string itemType:        type
             readonly property string itemName:        name
             readonly property string itemPath:        path
@@ -37,21 +40,19 @@ Item {
             readonly property bool   itemHasChildren: hasChildren
             readonly property bool   itemExpanded:    expanded
             readonly property int    itemIndex:       index
+            readonly property string itemSection:     sectionType
 
             color: {
                 if (itemType === "header" && itemPath === "") return "transparent"
-                if (currentPath === itemPath) return pal.sbCurrent
+                if (currentPath === itemPath && itemPath !== "") return pal.sbCurrent
                 return rowMouse.containsMouse ? pal.sbHover : "transparent"
             }
 
-            // Left selection indicator
+            // Left selection bar
             Rectangle {
                 visible: itemPath !== "" && currentPath === itemPath
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 2
-                color: pal.selectionBorder
+                anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
+                width: 2; color: pal.selectionBorder
             }
 
             RowLayout {
@@ -60,11 +61,11 @@ Item {
                 anchors.rightMargin: 4
                 spacing: 4
 
-                // Animated chevron for expandable folders
+                // Collapse/expand triangle
                 Item {
                     Layout.preferredWidth: 12
                     Layout.preferredHeight: 12
-                    opacity: (itemType === "folder" || itemType === "special") && itemHasChildren ? 1 : 0
+                    opacity: itemHasChildren ? 1 : 0
                     rotation: itemExpanded ? 90 : 0
                     Behavior on rotation { NumberAnimation { duration: 120 } }
 
@@ -76,33 +77,34 @@ Item {
                         onPaint: {
                             var ctx = getContext("2d")
                             ctx.clearRect(0, 0, 12, 12)
-                            ctx.strokeStyle = fg
-                            ctx.lineWidth = 1.4
-                            ctx.lineCap = "round"
-                            ctx.lineJoin = "round"
+                            ctx.fillStyle = fg
                             ctx.beginPath()
-                            ctx.moveTo(3, 1.5)
-                            ctx.lineTo(9, 6)
-                            ctx.lineTo(3, 10.5)
-                            ctx.stroke()
+                            // Filled right-pointing triangle ▶ (rotates to ▼ when expanded)
+                            ctx.moveTo(3, 2); ctx.lineTo(10, 6); ctx.lineTo(3, 10)
+                            ctx.closePath()
+                            ctx.fill()
                         }
                     }
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: {
+                        onClicked: function(mouse) {
                             mouse.accepted = true
-                            toggleNode(row.itemPath, row.itemIndex)
+                            toggleNode(row.itemPath, row.itemIndex, row.itemSection)
                         }
                     }
                 }
 
                 Image {
-                    visible: itemType !== "header"
+                    visible: itemType !== "header" || itemPath !== ""
                     source: "qrc:/icons/" + itemIcon + ".png"
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
+                    Layout.preferredWidth: 16; Layout.preferredHeight: 16
                     fillMode: Image.PreserveAspectFit
+                }
+                // spacer for plain headers (no icon)
+                Item {
+                    visible: itemType === "header" && itemPath === ""
+                    Layout.preferredWidth: 16; Layout.preferredHeight: 16
                 }
 
                 Label {
@@ -128,15 +130,14 @@ Item {
         }
     }
 
-    // Expand or collapse a node at the given model index
-    function toggleNode(path, idx) {
+    // ── Toggle collapse/expand ─────────────────────────────────────────────
+    function toggleNode(path, idx, sectionType) {
         if (idx < 0 || idx >= treeModel.count) return
         var item = treeModel.get(idx)
         if (!item) return
 
         if (item.expanded) {
-            // Collapse: remove all descendants (everything with level > item.level
-            // up until the next item at same or lower level)
+            // Collapse: remove all descendants
             var parentLevel = item.level
             var start = idx + 1
             var count = 0
@@ -148,52 +149,95 @@ Item {
                 treeModel.remove(start)
             treeModel.setProperty(idx, "expanded", false)
         } else {
-            // Expand: insert immediate children after this item
+            // Expand
             var childLevel = item.level + 1
-            var subs = fsBackend.getSubdirectories(path)
-            for (var j = subs.length - 1; j >= 0; j--) {
-                treeModel.insert(idx + 1, {
-                    name:        subs[j].name,
-                    type:        "folder",
-                    level:       childLevel,
-                    icon:        "folder-closed",
-                    path:        subs[j].path,
-                    hasChildren: subs[j].hasChildren,
-                    expanded:    false
-                })
+            var sType = sectionType || ""
+
+            if (sType === "favorites") {
+                var favs = folderTree.favorites
+                for (var a = favs.length - 1; a >= 0; a--)
+                    treeModel.insert(idx + 1, {
+                        name: favs[a].name, type: "special", level: childLevel,
+                        icon: favs[a].icon || "folder-closed", path: favs[a].path,
+                        hasChildren: false, expanded: false, sectionType: ""
+                    })
+            } else if (sType === "libraries") {
+                var libs = fsBackend.getLibraries()
+                for (var b = libs.length - 1; b >= 0; b--)
+                    treeModel.insert(idx + 1, {
+                        name: libs[b].name, type: "special", level: childLevel,
+                        icon: libs[b].icon, path: libs[b].path,
+                        hasChildren: false, expanded: false, sectionType: ""
+                    })
+            } else if (sType === "equipo") {
+                var drives = fsBackend.getStorageDevices()
+                for (var c = drives.length - 1; c >= 0; c--)
+                    treeModel.insert(idx + 1, {
+                        name: drives[c].displayName, type: "special", level: childLevel,
+                        icon: "drive-" + drives[c].kind, path: drives[c].path,
+                        hasChildren: drives[c].path !== "", expanded: false, sectionType: ""
+                    })
+            } else {
+                // Real filesystem folder
+                var subs = fsBackend.getSubdirectories(path)
+                for (var d = subs.length - 1; d >= 0; d--)
+                    treeModel.insert(idx + 1, {
+                        name: subs[d].name, type: "folder", level: childLevel,
+                        icon: "folder-closed", path: subs[d].path,
+                        hasChildren: subs[d].hasChildren, expanded: false, sectionType: ""
+                    })
             }
             treeModel.setProperty(idx, "expanded", true)
         }
     }
 
+    // ── Build tree ─────────────────────────────────────────────────────────
     function loadTree() {
         treeModel.clear()
 
-        // Favorites
-        treeModel.append({ name: "Favoritos",     type: "header",  level: 0, icon: "folder-closed", path: "",                              hasChildren: false, expanded: false })
-        treeModel.append({ name: "Escritorio",    type: "special", level: 1, icon: "folder-closed", path: fsBackend.desktopPath(),         hasChildren: false, expanded: false })
-        treeModel.append({ name: "Descargas",     type: "special", level: 1, icon: "folder-blue",   path: fsBackend.downloadsPath(),       hasChildren: false, expanded: false })
-        treeModel.append({ name: "Sitios recientes", type: "special", level: 1, icon: "folder-search", path: "",                          hasChildren: false, expanded: false })
+        // Favoritos (user-managed)
+        treeModel.append({
+            name: "Favoritos", type: "header", level: 0, icon: "folder-closed",
+            path: "", hasChildren: favorites.length > 0, expanded: true, sectionType: "favorites"
+        })
+        for (var i = 0; i < favorites.length; i++)
+            treeModel.append({
+                name: favorites[i].name, type: "special", level: 1,
+                icon: favorites[i].icon || "folder-closed",
+                path: favorites[i].path, hasChildren: false, expanded: false, sectionType: ""
+            })
 
-        // Libraries
-        treeModel.append({ name: "Bibliotecas",   type: "header",  level: 0, icon: "document",      path: "",                              hasChildren: false, expanded: false })
+        // Bibliotecas
         var libs = fsBackend.getLibraries()
-        for (var i = 0; i < libs.length; i++)
-            treeModel.append({ name: libs[i].name, type: "special", level: 1, icon: libs[i].icon, path: libs[i].path, hasChildren: false, expanded: false })
+        treeModel.append({
+            name: "Bibliotecas", type: "header", level: 0, icon: "document",
+            path: "", hasChildren: libs.length > 0, expanded: true, sectionType: "libraries"
+        })
+        for (var j = 0; j < libs.length; j++)
+            treeModel.append({
+                name: libs[j].name, type: "special", level: 1, icon: libs[j].icon,
+                path: libs[j].path, hasChildren: false, expanded: false, sectionType: ""
+            })
 
-        // Computer / drives
-        treeModel.append({ name: "Equipo", type: "header", level: 0, icon: "window", path: "computer", hasChildren: false, expanded: false })
+        // Equipo
         var drives = fsBackend.getStorageDevices()
-        for (var j = 0; j < drives.length; j++)
-            treeModel.append({ name: drives[j].displayName, type: "special", level: 1, icon: "drive-" + drives[j].kind, path: drives[j].path, hasChildren: drives[j].path !== "", expanded: false })
+        treeModel.append({
+            name: "Equipo", type: "header", level: 0, icon: "window",
+            path: "computer", hasChildren: drives.length > 0, expanded: true, sectionType: "equipo"
+        })
+        for (var k = 0; k < drives.length; k++)
+            treeModel.append({
+                name: drives[k].displayName, type: "special", level: 1,
+                icon: "drive-" + drives[k].kind,
+                path: drives[k].path, hasChildren: drives[k].path !== "",
+                expanded: false, sectionType: ""
+            })
 
-        // Network
-        treeModel.append({ name: "Red", type: "header", level: 0, icon: "network", path: "network", hasChildren: false, expanded: false })
-
-        // Home folder tree
-        treeModel.append({ name: "Inicio",        type: "header",  level: 0, icon: "folder-closed", path: "",                              hasChildren: false, expanded: false })
-        var home = fsBackend.homePath()
-        treeModel.append({ name: "Inicio",        type: "folder",  level: 1, icon: "folder-closed", path: home,                            hasChildren: true,  expanded: false })
+        // Red
+        treeModel.append({
+            name: "Red", type: "header", level: 0, icon: "network",
+            path: "network", hasChildren: false, expanded: false, sectionType: ""
+        })
     }
 
     Component.onCompleted: loadTree()

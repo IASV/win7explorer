@@ -34,6 +34,21 @@ ApplicationWindow {
     property var    historyStack:   [currentId]
     property int    historyIndex:   0
 
+    // ── Favorites ──────────────────────────────────────────────────────────
+    property var favorites: [
+        { name: "Escritorio", path: fsBackend.desktopPath(),   icon: "folder-closed" },
+        { name: "Descargas",  path: fsBackend.downloadsPath(), icon: "folder-blue" }
+    ]
+    function addToFavorites(item) {
+        if (!item || item.type !== "folder") return
+        for (var i = 0; i < favorites.length; i++)
+            if (favorites[i].path === item.id) { showToast("Ya está en Favoritos"); return }
+        var copy = favorites.slice()
+        copy.push({ name: item.name, path: item.id, icon: "folder-closed" })
+        favorites = copy
+        showToast("'" + item.name + "' agregado a Favoritos")
+    }
+
     readonly property bool isRealPath: currentId.startsWith("/")
     readonly property var  currentNode: isRealPath ? null : fs.findNode(currentId)
     readonly property var  pathToCurrent: {
@@ -346,7 +361,8 @@ ApplicationWindow {
         onDeleteRequested:     win.handleDelete()
         onRenameRequested:     win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : ""))
         onPropertiesRequested: win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onNewFolderRequested:  win.handleNewFolder()
+        onNewFolderRequested:       win.handleNewFolder()
+        onAddToFavoritesRequested:  win.addToFavorites(win.selectedItem)
     }
 
     // ── About dialog ───────────────────────────────────────────────────────
@@ -363,6 +379,31 @@ ApplicationWindow {
     }
 
     // ── View components ────────────────────────────────────────────────────
+    Component {
+        id: networkEmptyComp
+        Item {
+            Column {
+                anchors.centerIn: parent; spacing: 14
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    source: "qrc:/icons/network.png"
+                    width: 64; height: 64; opacity: 0.25
+                    fillMode: Image.PreserveAspectFit
+                }
+                Label {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "No se detectaron dispositivos de red"
+                    color: win.pal.muted; font.pixelSize: 13
+                }
+                Label {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Comprueba que estés conectado a una red local"
+                    color: win.pal.muted; font.pixelSize: 11; opacity: 0.7
+                }
+            }
+        }
+    }
+
     Component {
         id: emptyComp
         Item {
@@ -535,8 +576,9 @@ ApplicationWindow {
                 Layout.minimumWidth:   0
                 Layout.fillHeight: true
                 clip: true
-                pal: win.pal
+                pal:         win.pal
                 currentPath: win.currentId
+                favorites:   win.favorites
                 onFolderActivated: function(path) { win.navigate(path) }
             }
 
@@ -564,6 +606,7 @@ ApplicationWindow {
                     id: viewLoader
                     anchors.fill: parent
                     sourceComponent: {
+                        if (win.useGroupedView && win.groupedItems.length === 0) return networkEmptyComp
                         if (win.useGroupedView)        return groupedComp
                         if (win.items.length === 0)    return emptyComp
                         if (win.viewMode === "large" || win.viewMode === "medium") return iconsComp

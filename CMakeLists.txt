@@ -79,6 +79,36 @@ qt_add_resources(win7explorer "winicons"
         icons/shield.png
         icons/video.png
         icons/window.png
+        icons/nav-back-normal.png
+        icons/nav-back-hover.png
+        icons/nav-back-pressed.png
+        icons/nav-back-disabled.png
+        icons/nav-forward-normal.png
+        icons/nav-forward-hover.png
+        icons/nav-forward-pressed.png
+        icons/nav-forward-disabled.png
+        icons/nav-up-normal.png
+        icons/nav-up-hover.png
+        icons/nav-up-pressed.png
+        icons/nav-up-disabled.png
+        icons/addressbar-normal.png
+        icons/addressbar-hover.png
+        icons/addressbar-disabled.png
+        icons/item-hover.png
+        icons/item-selected.png
+        icons/item-selected-hover.png
+        icons/header-bg.png
+        icons/header-item-normal.png
+        icons/header-item-first.png
+        icons/header-item-selected.png
+        icons/cmdbar-btn-hover.png
+        icons/cmdbar-btn-pressed.png
+        icons/cmdbar-shine.png
+        icons/sqbtn-normal.png
+        icons/sqbtn-hover.png
+        icons/sqbtn-pressed.png
+        icons/sqbtn-disabled.png
+        icons/details-shadow.png
 )
 
 target_link_libraries(win7explorer PRIVATE

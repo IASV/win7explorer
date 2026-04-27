@@ -24,63 +24,85 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 10; anchors.rightMargin: 10
-        anchors.topMargin: 6;   anchors.bottomMargin: 6
-        spacing: 6
+        anchors.leftMargin: 8; anchors.rightMargin: 10
+        anchors.topMargin: 6;  anchors.bottomMargin: 6
+        spacing: 2
 
-        // Nav buttons: back · forward · up
-        RowLayout {
-            spacing: 2
-            Repeater {
-                model: [
-                    { pts: [[9,2],[4,7],[9,12]], clr: "accent",
-                      get enabled() { return root.canGoBack },
-                      action: function(){ root.backRequested() } },
-                    { pts: [[5,2],[10,7],[5,12]], clr: "accent",
-                      get enabled() { return root.canGoForward },
-                      action: function(){ root.forwardRequested() } },
-                    { pts: [[2,9],[7,4],[12,9]], clr: "muted",
-                      get enabled() { return root.canGoUp },
-                      action: function(){ root.upRequested() } }
-                ]
-                delegate: Rectangle {
-                    Layout.preferredWidth: 26; Layout.preferredHeight: 26
-                    radius: 13
-                    color: btnMa.containsMouse && modelData.enabled ? root.pal.accentSoft : "transparent"
-                    border.color: btnMa.containsMouse && modelData.enabled ? root.pal.border : "transparent"
-                    opacity: modelData.enabled ? 1.0 : 0.35
+        // ── Back button ──────────────────────────────────────────────────
+        Item {
+            Layout.preferredWidth: 29; Layout.preferredHeight: 27
 
-                    Canvas {
-                        anchors.centerIn: parent
-                        width: 14; height: 14
-                        property var pts: modelData.pts
-                        property color fg: modelData.clr === "accent" ? root.pal.accent : root.pal.muted
-                        onFgChanged: requestPaint()
-                        Component.onCompleted: requestPaint()
-                        onPaint: {
-                            var ctx = getContext("2d")
-                            ctx.clearRect(0, 0, 14, 14)
-                            ctx.strokeStyle = fg; ctx.lineWidth = 1.8
-                            ctx.lineCap = "round"; ctx.lineJoin = "round"
-                            ctx.beginPath()
-                            ctx.moveTo(pts[0][0], pts[0][1])
-                            ctx.lineTo(pts[1][0], pts[1][1])
-                            ctx.lineTo(pts[2][0], pts[2][1])
-                            ctx.stroke()
-                        }
-                    }
-                    MouseArea {
-                        id: btnMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: modelData.enabled
-                        onClicked: modelData.action()
-                    }
+            Image {
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: {
+                    if (!root.canGoBack)   return "qrc:/icons/nav-back-disabled.png"
+                    if (backMa.pressed)    return "qrc:/icons/nav-back-pressed.png"
+                    if (backMa.containsMouse) return "qrc:/icons/nav-back-hover.png"
+                    return "qrc:/icons/nav-back-normal.png"
                 }
+            }
+            MouseArea {
+                id: backMa
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: root.canGoBack
+                cursorShape: root.canGoBack ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.backRequested()
             }
         }
 
-        // Breadcrumb bar
+        // ── Forward button ───────────────────────────────────────────────
+        Item {
+            Layout.preferredWidth: 29; Layout.preferredHeight: 27
+
+            Image {
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: {
+                    if (!root.canGoForward)      return "qrc:/icons/nav-forward-disabled.png"
+                    if (fwdMa.pressed)           return "qrc:/icons/nav-forward-pressed.png"
+                    if (fwdMa.containsMouse)     return "qrc:/icons/nav-forward-hover.png"
+                    return "qrc:/icons/nav-forward-normal.png"
+                }
+            }
+            MouseArea {
+                id: fwdMa
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: root.canGoForward
+                cursorShape: root.canGoForward ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.forwardRequested()
+            }
+        }
+
+        Item { Layout.preferredWidth: 4 }
+
+        // ── Up button (wider image) ──────────────────────────────────────
+        Item {
+            Layout.preferredWidth: 36; Layout.preferredHeight: 27
+
+            Image {
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: {
+                    if (!root.canGoUp)       return "qrc:/icons/nav-up-disabled.png"
+                    if (upMa.pressed)        return "qrc:/icons/nav-up-pressed.png"
+                    if (upMa.containsMouse)  return "qrc:/icons/nav-up-hover.png"
+                    return "qrc:/icons/nav-up-normal.png"
+                }
+            }
+            MouseArea {
+                id: upMa
+                anchors.fill: parent
+                hoverEnabled: true
+                enabled: root.canGoUp
+                cursorShape: root.canGoUp ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.upRequested()
+            }
+        }
+
+        // ── Breadcrumb bar ───────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.preferredHeight: 26
             color: root.pal.content; border.color: root.pal.borderSoft; radius: 3; clip: true
@@ -95,6 +117,7 @@ Rectangle {
                     delegate: RowLayout {
                         spacing: 0
 
+                        // Separator chevron between segments
                         Canvas {
                             visible: index > 0
                             Layout.preferredWidth: 8; Layout.preferredHeight: 10
@@ -135,7 +158,7 @@ Rectangle {
             }
         }
 
-        // Search box
+        // ── Search box ───────────────────────────────────────────────────
         Rectangle {
             Layout.preferredWidth: 200; Layout.preferredHeight: 26
             color: root.pal.content
