@@ -39,8 +39,6 @@ ColumnLayout {
                     if (col === "name")          val = item.name
                     else if (col === "modified") val = item.modified
                     else if (col === "type")     val = item.typeStr
-                    else if (col === "tags")     val = item.tags || ""
-                    else if (col === "rating")   val = item.rating !== undefined ? String(item.rating) : "0"
                     else if (col === "size")     val = item.size
                     if (arr.indexOf(val) < 0) { ok = false; break }
                 }
@@ -78,8 +76,6 @@ ColumnLayout {
             var v = colId === "name" ? it.name
                   : colId === "modified" ? it.modified
                   : colId === "type" ? it.typeStr
-                  : colId === "tags" ? (it.tags || "")
-                  : colId === "rating" ? (it.rating !== undefined ? String(it.rating) : "0")
                   : it.size
             if (v !== undefined && v !== null && v !== "" && !seen[v]) { seen[v] = true; arr.push(v) }
         }
@@ -126,9 +122,7 @@ ColumnLayout {
                     { id: "name",     label: "Nombre",                stretch: 3 },
                     { id: "modified", label: "Fecha de modificación", stretch: 2 },
                     { id: "type",     label: "Tipo",                  stretch: 1 },
-                    { id: "size",     label: "Tamaño",                stretch: 1 },
-                    { id: "tags",     label: "Etiquetas",             stretch: 1 },
-                    { id: "rating",   label: "Clasificación",         stretch: 1 }
+                    { id: "size",     label: "Tamaño",                stretch: 1 }
                 ]
                 delegate: Rectangle {
                     id: headerCell
@@ -182,11 +176,6 @@ ColumnLayout {
 
                             Menu {
                                 id: filterMenu
-                                palette.window:          root.pal.panel
-                                palette.windowText:      root.pal.text
-                                palette.base:            root.pal.content
-                                palette.highlight:       root.pal.accentSoft
-                                palette.highlightedText: root.pal.accent
 
                                 MenuItem {
                                     text: "Seleccionar todo"
@@ -275,22 +264,6 @@ ColumnLayout {
                     text: modelData.size || (modelData.type === "folder" ? "" : "—")
                     color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
                     font.pixelSize: 11 }
-                Label { Layout.fillWidth: true; Layout.preferredWidth: 100; Layout.leftMargin: 8
-                    text: modelData.tags || "—"
-                    color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
-                    font.pixelSize: 11; elide: Text.ElideRight }
-                Row {
-                    Layout.preferredWidth: 100; Layout.leftMargin: 8; Layout.rightMargin: 8
-                    spacing: 0
-                    Repeater {
-                        model: 5
-                        Label {
-                            text: index < (modelData.rating || 0) ? "★" : "☆"
-                            color: index < (modelData.rating || 0) ? "#e8a000" : root.pal.muted
-                            font.pixelSize: 11
-                        }
-                    }
-                }
             }
 
             MouseArea {

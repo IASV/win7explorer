@@ -52,8 +52,7 @@ Item {
 
     Menu {
         id: _archivoMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+
         MenuItem { text: "Nueva carpeta";  onTriggered: root.newFolderRequested() }
         MenuSeparator {}
         MenuItem { text: "Eliminar";       enabled: root.selectedCount > 0;   onTriggered: root.deleteRequested() }
@@ -65,8 +64,7 @@ Item {
 
     Menu {
         id: _edicionMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+
         MenuItem { text: "Deshacer"; enabled: false }
         MenuItem { text: "Rehacer"; enabled: false }
         MenuSeparator {}
@@ -83,8 +81,7 @@ Item {
 
     Menu {
         id: _verMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+
         Menu {
             title: "Vista"
             MenuItem { text: "Iconos grandes";  checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
@@ -103,12 +100,8 @@ Item {
         MenuSeparator {}
         Menu {
             title: "Organizar"
-            palette.window: root.pal.panel; palette.windowText: root.pal.text
-            palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
             Menu {
                 title: "Diseño"
-                palette.window: root.pal.panel; palette.windowText: root.pal.text
-                palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
                 MenuItem { text: "Barra de menús";        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
                 MenuItem { text: "Panel de detalles";     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
                 MenuItem { text: "Panel de vista previa"; checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
@@ -123,8 +116,7 @@ Item {
 
     Menu {
         id: _herramientasMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+
         MenuItem { text: "Conectar a unidad de red…";     onTriggered: root.connectDriveRequested() }
         MenuItem { text: "Desconectar de unidad de red…"; onTriggered: root.disconnectDriveRequested() }
         MenuSeparator {}
@@ -144,8 +136,7 @@ Item {
 
     Menu {
         id: _ayudaMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
+
         MenuItem { text: "Ver ayuda"; onTriggered: root.helpRequested() }
         MenuSeparator {}
         MenuItem { text: "Acerca de Win7 Explorer"; onTriggered: root.aboutRequested() }

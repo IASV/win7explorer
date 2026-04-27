@@ -77,24 +77,22 @@ Rectangle {
             }
         }
 
-        Item { Layout.preferredWidth: 4 }
-
-        // ── Up button (wider image) ──────────────────────────────────────
+        // ── Down chevron (navigate up) ──────────────────────────────────
         Item {
-            Layout.preferredWidth: 36; Layout.preferredHeight: 27
-
-            Image {
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                source: {
-                    if (!root.canGoUp)       return "qrc:/icons/nav-up-disabled.png"
-                    if (upMa.pressed)        return "qrc:/icons/nav-up-pressed.png"
-                    if (upMa.containsMouse)  return "qrc:/icons/nav-up-hover.png"
-                    return "qrc:/icons/nav-up-normal.png"
+            Layout.preferredWidth: 16; Layout.preferredHeight: 27
+            opacity: root.canGoUp ? 1.0 : 0.35
+            Canvas {
+                anchors.centerIn: parent; width: 9; height: 6
+                property color fg: root.pal.text
+                onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                onPaint: {
+                    var ctx = getContext("2d"); ctx.clearRect(0, 0, 9, 6)
+                    ctx.fillStyle = fg
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(9, 0); ctx.lineTo(4.5, 6)
+                    ctx.closePath(); ctx.fill()
                 }
             }
             MouseArea {
-                id: upMa
                 anchors.fill: parent
                 hoverEnabled: true
                 enabled: root.canGoUp

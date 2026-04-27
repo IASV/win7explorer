@@ -82,14 +82,29 @@ QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize 
         }
     }
 
-    // 1. Well-known QRC bundled icons
+    const bool isFolderOrDrive = decoded.contains(u"folder", Qt::CaseInsensitive) ||
+                                  decoded.contains(u"drive",  Qt::CaseInsensitive);
+
+    // 1. For non-folder/non-drive: prefer system theme (Win7 Aero icon theme)
+    if (!isFolderOrDrive && !decoded.startsWith(u'/') && !decoded.isEmpty()) {
+        QIcon icon = QIcon::fromTheme(decoded);
+        if (!icon.isNull()) {
+            QPixmap px = icon.pixmap(sz, sz);
+            if (!px.isNull() && px.width() > 0) {
+                if (size) *size = px.size();
+                return px;
+            }
+        }
+    }
+
+    // 2. QRC bundled icons (folders/drives use custom art; others as fallback)
     const QString qrcPath = qrcIconPath(decoded);
     if (!qrcPath.isEmpty()) {
         QPixmap px(qrcPath);
         if (!px.isNull()) return scaled(px);
     }
 
-    // 2. System theme icon (covers .desktop app icons, MIME types, etc.)
+    // 3. System theme fallback for anything not matched above
     if (!decoded.startsWith(u'/') && !decoded.isEmpty()) {
         QIcon icon = QIcon::fromTheme(decoded);
         if (!icon.isNull()) {
@@ -101,6 +116,6 @@ QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize 
         }
     }
 
-    // 3. Fallback: generic file icon
+    // 4. Fallback: generic file icon
     return scaled(QPixmap(u":/icons/file-generic.png"_s));
 }

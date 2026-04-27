@@ -18,8 +18,6 @@ Rectangle {
 
     Menu {
         id: sizeMenu
-        palette.window: root.pal.panel; palette.windowText: root.pal.text
-        palette.highlight: root.pal.accentSoft; palette.highlightedText: root.pal.accent
         MenuItem { text: "Pequeño"; onTriggered: root.panelHeight = 56 }
         MenuItem { text: "Mediano"; onTriggered: root.panelHeight = 72 }
         MenuItem { text: "Grande";  onTriggered: root.panelHeight = 100 }
@@ -102,10 +100,12 @@ Rectangle {
         anchors.topMargin: 10;  anchors.bottomMargin: 10
         spacing: 14
 
-        // Icon: file icon when 1 item, generic canvas otherwise
+        // Icon: thumbnail for images, file icon for others
         Image {
             visible: root.detailItem !== null
-            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            source: root.detailItem
+                    ? (root.detailItem.previewSrc || root.detailItem.iconSrc || "")
+                    : ""
             Layout.preferredWidth: 48; Layout.preferredHeight: 48
             fillMode: Image.PreserveAspectFit
         }

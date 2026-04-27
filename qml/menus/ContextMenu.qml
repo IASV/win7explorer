@@ -16,12 +16,6 @@ Menu {
     property bool isFile:       targetItem !== null && targetItem.type === "file"
     property bool isEmpty:      targetItem === null
 
-    palette.window:          pal.panel
-    palette.windowText:      pal.text
-    palette.base:            pal.content
-    palette.text:            pal.text
-    palette.highlight:       pal.accentSoft
-    palette.highlightedText: pal.accent
 
     signal openRequested(var item)
     signal cutRequested
@@ -57,7 +51,7 @@ Menu {
     Menu {
         title: "Incluir en biblioteca"
         visible: root.isFolder; enabled: root.isFolder
-        palette: root.palette
+
         MenuItem { text: "Documentos" }
         MenuItem { text: "Imágenes" }
         MenuItem { text: "Música" }
@@ -71,7 +65,7 @@ Menu {
         title: "Abrir con"
         visible: root.isFile
         enabled: root.isFile
-        palette: root.palette
+
         MenuItem { text: "Aplicación predeterminada"; onTriggered: {} }
         MenuSeparator {}
         MenuItem { text: "Otra aplicación…"; onTriggered: {} }
@@ -82,7 +76,7 @@ Menu {
     Menu {
         title: "Enviar a"
         visible: !root.isEmpty; enabled: !root.isEmpty
-        palette: root.palette
+
         MenuItem { text: "Escritorio (crear acceso directo)" }
         MenuItem { text: "Destinatario de correo" }
         MenuItem { text: "Documentos" }
@@ -102,7 +96,7 @@ Menu {
     Menu {
         title: "Compartir con"
         visible: root.isFolder; enabled: root.isFolder
-        palette: root.palette
+
         MenuItem { text: "Grupo en el hogar (Ver y modificar)" }
         MenuItem { text: "Grupo en el hogar (Ver)" }
         MenuItem { text: "Usuarios específicos…" }
@@ -142,7 +136,7 @@ Menu {
         title: "Ver"
         visible: root.isEmpty
         enabled: root.isEmpty
-        palette: root.palette
+
         MenuItem { text: "Iconos muy grandes"; checkable: true; checked: root.viewMode === "xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
         MenuItem { text: "Iconos grandes";     checkable: true; checked: root.viewMode === "large";   onTriggered: root.viewModeChangeRequested("large") }
         MenuItem { text: "Iconos medianos";    checkable: true; checked: root.viewMode === "medium";  onTriggered: root.viewModeChangeRequested("medium") }
@@ -157,7 +151,7 @@ Menu {
         title: "Ordenar por"
         visible: root.isEmpty
         enabled: root.isEmpty
-        palette: root.palette
+
         MenuItem { text: "Nombre";               checkable: true; checked: root.sortBy === "name";     onTriggered: root.sortRequested("name") }
         MenuItem { text: "Fecha de modificación"; checkable: true; checked: root.sortBy === "modified"; onTriggered: root.sortRequested("modified") }
         MenuItem { text: "Tipo";                 checkable: true; checked: root.sortBy === "type";     onTriggered: root.sortRequested("type") }
@@ -171,7 +165,7 @@ Menu {
         title: "Agrupar por"
         visible: root.isEmpty
         enabled: root.isEmpty
-        palette: root.palette
+
         MenuItem { text: "(Ninguno)";            checkable: true; checked: root.groupBy === "none";     onTriggered: root.groupRequested("none") }
         MenuSeparator {}
         MenuItem { text: "Nombre";               checkable: true; checked: root.groupBy === "name";     onTriggered: root.groupRequested("name") }
@@ -193,7 +187,7 @@ Menu {
     Menu {
         title: "Nuevo"
         visible: root.isEmpty; enabled: root.isEmpty
-        palette: root.palette
+
         MenuItem { text: "Carpeta";         onTriggered: root.newFolderRequested() }
         MenuItem { text: "Acceso directo";  onTriggered: {} }
     }

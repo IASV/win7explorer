@@ -130,14 +130,16 @@ ApplicationWindow {
             var arr = []
             for (var i = 0; i < raw.length; i++) {
                 var f = raw[i]
+                var isImg = !f.isDir && (f.mimeIcon || "").indexOf("image") >= 0
                 arr.push({
-                    id:       f.path,
-                    name:     f.name,
-                    type:     f.isDir ? "folder" : "file",
-                    size:     f.sizeFormatted || "",
-                    modified: f.modified || "",
-                    iconSrc:  "image://fileicons/" + (f.mimeIcon || "file-generic"),
-                    typeStr:  f.type || ""
+                    id:         f.path,
+                    name:       f.name,
+                    type:       f.isDir ? "folder" : "file",
+                    size:       f.sizeFormatted || "",
+                    modified:   f.modified || "",
+                    iconSrc:    "image://fileicons/" + (f.mimeIcon || "file-generic"),
+                    typeStr:    f.type || "",
+                    previewSrc: isImg ? ("image://fileicons/" + encodeURIComponent(f.path)) : ""
                 })
             }
             win.realFiles = arr
