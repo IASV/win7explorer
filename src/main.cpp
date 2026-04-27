@@ -6,6 +6,7 @@
 #include <QLoggingCategory>
 #include "iconprovider.h"
 #include "filesystembackend.h"
+#include "nativemenu.h"
 
 using namespace Qt::StringLiterals;
 
@@ -32,6 +33,9 @@ int main(int argc, char *argv[])
     // Expose real filesystem backend to QML
     FileSystemBackend *fsBackend = new FileSystemBackend(&app);
     engine.rootContext()->setContextProperty("fsBackend", fsBackend);
+
+    NativeMenu *nativeMenu = new NativeMenu(&app);
+    engine.rootContext()->setContextProperty("nativeMenu", nativeMenu);
 
     // Register custom icon provider
     engine.addImageProvider("fileicons", new IconProvider);

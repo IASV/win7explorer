@@ -400,28 +400,36 @@ ApplicationWindow {
         onAboutRequested:            aboutDialog.open()
     }
 
-    ContextMenu {
-        id: ctxMenu
-        pal:           win.pal
-        selectedCount: win.selectedCount
-        viewMode:      win.viewMode
-        sortBy:        win.sortBy
-        sortDir:       win.sortDir
-        groupBy:       win.groupBy
-        onOpenRequested:           function(item) { win.handleOpen(item) }
-        onCutRequested:            { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
-        onCopyRequested:           { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
-        onPasteRequested:          win.handlePaste()
-        onDeleteRequested:         win.handleDelete()
-        onRenameRequested:         win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onPropertiesRequested:     win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onNewFolderRequested:      win.handleNewFolder()
-        onAddToFavoritesRequested: win.addToFavorites(win.selectedItem)
-        onViewModeChangeRequested: function(m) { win.viewMode = m }
-        onSortRequested:           function(col) { if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" } }
-        onSortDirRequested:        function(dir) { win.sortDir = dir }
-        onGroupRequested:          function(col) { win.groupBy = col }
-        onRefreshRequested:        { if (win.isRealPath) fsBackend.refresh() }
+    function showContextMenu(item) {
+        var isEmpty = (item === null || item === undefined)
+        var action = nativeMenu.showMenu({
+            type:          isEmpty ? "empty" : "file",
+            item:          isEmpty ? {} : { id: item.id, name: item.name, type: item.type },
+            selectedCount: win.selectedCount,
+            viewMode:      win.viewMode,
+            sortBy:        win.sortBy,
+            sortDir:       win.sortDir,
+            groupBy:       win.groupBy
+        })
+        win.handleContextAction(action, item)
+    }
+
+    function handleContextAction(action, item) {
+        if (!action) return
+        if (action === "open")        { win.handleOpen(item); return }
+        if (action === "cut")         { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  }; return }
+        if (action === "copy")        { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" }; return }
+        if (action === "paste")       { win.handlePaste(); return }
+        if (action === "delete")      { win.handleDelete(); return }
+        if (action === "rename")      { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "properties")  { win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "new-folder")  { win.handleNewFolder(); return }
+        if (action === "favorites")   { win.addToFavorites(win.selectedItem); return }
+        if (action === "refresh")     { if (win.isRealPath) fsBackend.refresh(); return }
+        if (action.startsWith("view:"))    { win.viewMode = action.substring(5); return }
+        if (action.startsWith("sort:"))    { var col = action.substring(5); if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" }; return }
+        if (action.startsWith("sortdir:")) { win.sortDir = action.substring(8); return }
+        if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
     }
 
     // ── About dialog ───────────────────────────────────────────────────────
@@ -497,7 +505,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
         }
     }
@@ -512,7 +520,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
         }
     }
@@ -530,7 +538,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
             onSortRequested: function(col) {
                 if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc")
@@ -549,7 +557,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
         }
     }
@@ -564,7 +572,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
         }
     }
@@ -579,7 +587,7 @@ ApplicationWindow {
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
-                ctxMenu.targetItem = item; ctxMenu.popup()
+                win.showContextMenu(item)
             }
         }
     }
@@ -703,8 +711,8 @@ ApplicationWindow {
                     propagateComposedEvents: true
                     onClicked: function(mouse) {
                         if (mouse.button === Qt.RightButton) {
-                            ctxMenu.targetItem = null
-                            ctxMenu.popup()
+                            win.selectedIds = {}
+                            win.showContextMenu(null)
                         }
                     }
                 }

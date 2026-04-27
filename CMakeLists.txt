@@ -14,6 +14,8 @@ qt_add_executable(win7explorer
     src/filesystembackend.h
     src/iconprovider.cpp
     src/iconprovider.h
+    src/nativemenu.cpp
+    src/nativemenu.h
 )
 
 qt_add_qml_module(win7explorer
