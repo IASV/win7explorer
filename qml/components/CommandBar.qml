@@ -8,12 +8,16 @@ Rectangle {
     property int    selectedCount: 0
     property bool   showPreview:       false
     property string viewMode:          "large"
+    property string selectedItemType:  "none"
 
     signal organizeClicked
     signal openClicked
     signal shareClicked
     signal printClicked
     signal emailClicked
+    signal slideShowClicked
+    signal playClicked
+    signal libraryClicked
     signal deleteRequested
     signal newFolderRequested
     signal previewToggled
@@ -34,23 +38,35 @@ Rectangle {
 
         Repeater {
             model: [
-                { label: "Organizar",     chevron: true,  always: true, bold: true,
+                { label: "Organizar",             chevron: true, always: true, bold: true, visFor: null,
                   action: function(){ root.organizeClicked() } },
-                { sep: true },
-                { label: "Abrir",         chevron: true,  requireSel: true,
+                { sep: true, visFor: null },
+                { label: "Incluir en biblioteca", chevron: true, visFor: ["folder","drive"],
+                  action: function(){ root.libraryClicked() } },
+                { label: "Abrir",                 chevron: true, visFor: ["document","generic"],
                   action: function(){ root.openClicked() } },
-                { label: "Compartir con", requireSel: true,
+                { label: "Compartir con",         visFor: ["folder","drive","document","generic"],
                   action: function(){ root.shareClicked() } },
-                { label: "Imprimir",      requireSel: true,
+                { label: "Presentación",          visFor: ["image"],
+                  action: function(){ root.slideShowClicked() } },
+                { label: "Reproducir",            visFor: ["audio","video"],
+                  action: function(){ root.playClicked() } },
+                { label: "Imprimir",              visFor: ["image","document"],
                   action: function(){ root.printClicked() } },
-                { label: "Correo",        requireSel: true,
+                { label: "Correo",                visFor: ["image","audio","video","document","generic"],
                   action: function(){ root.emailClicked() } },
-                { label: "Eliminar",      requireSel: true,
+                { label: "Eliminar",              visFor: ["folder","drive","image","audio","video","document","generic"],
                   action: function(){ root.deleteRequested() } },
-                { label: "Nueva carpeta", always: true,
+                { sep: true, visFor: null },
+                { label: "Nueva carpeta",         always: true, visFor: null,
                   action: function(){ root.newFolderRequested() } }
             ]
             delegate: Loader {
+                readonly property bool shouldShow: !modelData.visFor ||
+                    (root.selectedCount > 0 && modelData.visFor.indexOf(root.selectedItemType) >= 0)
+                visible: shouldShow
+                Layout.preferredWidth: shouldShow ? -1 : 0
+                Layout.maximumWidth:   shouldShow ? Number.POSITIVE_INFINITY : 0
                 sourceComponent: modelData.sep ? sepComp : btnComp
 
                 Component {

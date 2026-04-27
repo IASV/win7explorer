@@ -76,6 +76,23 @@ ApplicationWindow {
         return null
     }
 
+    readonly property string selectedItemType: {
+        var item = selectedItem
+        if (!item) return "none"
+        if (item.type === "folder") return "folder"
+        if (item.type === "drive")  return "drive"
+        if (item.type === "file") {
+            var ts = (item.typeStr || "").toLowerCase()
+            if (ts.indexOf("image") >= 0) return "image"
+            if (ts.indexOf("audio") >= 0 || ts.indexOf("música") >= 0 || ts.indexOf("musica") >= 0) return "audio"
+            if (ts.indexOf("video") >= 0 || ts.indexOf("vídeo") >= 0) return "video"
+            if (ts.indexOf("document") >= 0 || ts.indexOf("texto") >= 0 || ts.indexOf("pdf") >= 0 ||
+                ts.indexOf("officedocument") >= 0 || ts.indexOf("word") >= 0 ||
+                ts.indexOf("spreadsheet") >= 0 || ts.indexOf("text/") >= 0) return "document"
+        }
+        return "generic"
+    }
+
     // ── View options ───────────────────────────────────────────────────────
     property string viewMode:         "large"
     property string sortBy:           "name"
@@ -589,10 +606,11 @@ ApplicationWindow {
         CommandBar {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
-            pal:           win.pal
-            selectedCount: win.selectedCount
-            showPreview:   win.showPreview
-            viewMode:      win.viewMode
+            pal:              win.pal
+            selectedCount:    win.selectedCount
+            showPreview:      win.showPreview
+            viewMode:         win.viewMode
+            selectedItemType: win.selectedItemType
             onOrganizeClicked:          organizeMenu.popup()
             onDeleteRequested:          win.handleDelete()
             onNewFolderRequested:       win.handleNewFolder()
