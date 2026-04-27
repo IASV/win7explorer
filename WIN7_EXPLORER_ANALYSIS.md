@@ -421,7 +421,7 @@ Propiedades
 | C2 | ~~Modo **Lista** es single-column, debe ser multi-columna vertical~~ **[✓ HECHO]** | `FileListView.qml` |
 | C3 | ~~Barra de comandos **no es context-sensitive** según tipo de selección~~ **[✓ HECHO]** | `CommandBar.qml` |
 | C4 | ~~Árbol no expande **unidades de disco** como hijos de "Equipo"~~ **[✓ HECHO]** | `FolderTree.qml` |
-| C5 | **Filtrado por columna** en DetailsView (dropdown con checkboxes) | `DetailsView.qml` |
+| C5 | ~~**Filtrado por columna** en DetailsView (dropdown con checkboxes)~~ **[✓ HECHO]** | `DetailsView.qml` |
 | C6 | ~~Submenu **"Agrupar por"** ausente en context menu de zona vacía~~ **[✓ HECHO]** | `ContextMenu.qml` |
 
 ### 🟠 IMPORTANTE — UI/UX incorrecta o incompleta
