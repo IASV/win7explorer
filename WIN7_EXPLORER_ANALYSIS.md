@@ -40,7 +40,7 @@
 |-------------|-------------------|----------|
 | `large` | Grid 64 px | Correcto para "Iconos grandes" |
 | `medium` | Grid 40 px | Correcto para "Iconos medianos" |
-| `list` | ListView columna única | **MAL**: Win7 "Lista" es multi-columna, orden vertical-primero |
+| `list` | GridView FlowTopToBottom (multi-columna vertical) | ✓ Correcto para "Lista" |
 | `details` | Columnas: Nombre, Fecha mod, Tipo, Tamaño | **INCOMPLETO**: faltan Etiquetas y Clasificación (estrellas) |
 | `content` | ListView con icono 44 px + nombre + tipo/tamaño | Correcto para "Contenido" |
 
@@ -91,15 +91,15 @@
 - Los botones con `▾` son split-buttons: texto clicable + flecha separada
 
 ### Nuestro estado actual
-- Botones estáticos siempre: Organizar, Abrir, Compartir con, Imprimir, Correo, Eliminar, Nueva carpeta ✓ (parcial)
-- Switcher de vista con icono + chevron ✓
+- Botones context-sensitive según tipo: carpeta/imagen/audio/video/documento ✓
+- Incluye Presentación (imagen), Reproducir (audio/video), Incluir en biblioteca (carpeta/drive) ✓
+- Switcher de vista con icono + chevron, 8 modos ✓
 - Botón de preview panel ✓
-- Sin context-sensitivity según tipo de archivo ✗
-- Sin "Incluir en biblioteca", "Grabar", "Presentación", "Reproducir" ✗
+- Sin "Grabar" ✗
 
 ### Problemas identificados
-- **[ MEJORA ]** La barra de comandos debe cambiar botones según el tipo de elemento seleccionado
-- **[ FALTA ]** Botones contextuales: `Presentación` (imágenes), `Reproducir` (audio/vídeo), `Incluir en biblioteca`
+- **[✓ HECHO]** La barra de comandos cambia botones según el tipo de elemento seleccionado
+- **[✓ HECHO]** Botones contextuales: `Presentación` (imágenes), `Reproducir` (audio/vídeo), `Incluir en biblioteca`
 - **[ FALTA ]** Split-button visual: zona de texto + zona de flecha con separación visual
 
 ---
@@ -146,7 +146,7 @@
 
 ### Problemas identificados
 - **[ FALTA ]** Nodos **"Panel de control"** y **"Papelera de reciclaje"** al final del árbol
-- **[ FALTA ]** Al expandir "Equipo" en el árbol debe mostrar las unidades de disco como hijos directos
+- **[✓ HECHO]** Al expandir "Equipo" en el árbol muestra las unidades de disco como hijos directos
 - **[ MEJORA ]** La carpeta/nodo seleccionado debe cambiar su icono a `folder-open` (carpeta abierta)
 - **[ MEJORA ]** Triángulos de expansión: Win7 usa flechas huecas en gris (▷/▽), no flechas de color sólido
 
@@ -277,11 +277,11 @@ Propiedades
 ```
 
 ### Nuestro estado actual
-**Zona vacía**: Ver ▶, Ordenar por ▶, Actualizar, Pegar, Nueva carpeta — falta Agrupar por, Personalizar, Pegar acceso directo, Compartir con, Nuevo ▶, Propiedades ✗
+**Zona vacía**: Ver ▶ (8 modos) ✓, Ordenar por ▶ (Asc/Desc) ✓, Agrupar por ▶ ✓, Actualizar ✓, Pegar ✓, Nueva carpeta ✓ — falta Personalizar, Pegar acceso directo, Compartir con ▶, Nuevo ▶, Propiedades ✗
 **Archivo/carpeta**: Abrir, Abrir en nueva ventana, Abrir con ▶, Cortar, Copiar, Pegar, Agregar a Favoritos, Crear acceso directo, Eliminar, Cambiar nombre, Propiedades ✓ (bastante completo)
 
 ### Problemas identificados
-- **[ FALTA ]** Submenu **"Agrupar por"** en zona vacía (Nombre/Fecha/Tipo/Tamaño/Etiquetas + Asc/Desc + Más...)
+- **[✓ HECHO]** Submenu **"Agrupar por"** en zona vacía (Ninguno/Nombre/Fecha/Tipo/Tamaño)
 - **[ FALTA ]** **"Personalizar esta carpeta..."** en zona vacía
 - **[ FALTA ]** **"Pegar acceso directo"** en zona vacía
 - **[ FALTA ]** **"Compartir con ▶"** en zona vacía y en selección
@@ -289,7 +289,8 @@ Propiedades
 - **[ FALTA ]** **"Propiedades"** en zona vacía (abre propiedades de la carpeta)
 - **[ FALTA ]** **"Incluir en biblioteca ▶"** en archivos/carpetas
 - **[ FALTA ]** **"Enviar a ▶"** en archivos/carpetas
-- **[ MEJORA ]** El submenu "Ordenar por" debe incluir **Ascendente/Descendente** y **"Más..."**
+- **[✓ HECHO]** El submenu "Ordenar por" incluye **Ascendente/Descendente**
+- **[ FALTA ]** **"Más..."** en Ordenar por para criterios adicionales
 
 ---
 
@@ -303,18 +304,19 @@ Propiedades
 
 ### Nuestro estado actual
 - Ordenar por columnas en DetailsView ✓ (con indicador ▲/▼)
-- Ordenar por context menu ✓ (Nombre/Fecha/Tipo/Tamaño)
-- Sin filtrado por columna ✗
-- Sin agrupación ✗
+- Ordenar por context menu ✓ (Nombre/Fecha/Tipo/Tamaño + Ascendente/Descendente)
+- Filtrado por columna en DetailsView ✓ (▾ en hover, checkboxes, indicador ●)
+- Agrupar por en context menu ✓ (Ninguno/Nombre/Fecha/Tipo/Tamaño)
+- Sin agrupación visual en el área de contenidos ✗
 - Sin "Organizar por" en bibliotecas ✗
 - El ordenar sólo funciona visualmente en DetailsView; en los otros modos no hay indicador
 
 ### Problemas identificados
-- **[ FALTA ]** **Filtrado por columna** en DetailsView: hover → `▾` dropdown con checkboxes por rangos
-- **[ FALTA ]** **Agrupación** de archivos (con sub-cabeceras en el área de contenidos)
+- **[✓ HECHO]** **Filtrado por columna** en DetailsView: hover → `▾` dropdown con checkboxes por valor único
+- **[ FALTA ]** **Agrupación visual** de archivos (sub-cabeceras en el área de contenidos)
 - **[ FALTA ]** **"Organizar por"** en el encabezado de bibliotecas
-- **[ MEJORA ]** Opciones **Ascendente/Descendente** explícitas en el submenu "Ordenar por" del context menu
-- **[ MEJORA ]** **"Más..."** en Ordenar por para criterios adicionales (Etiquetas, Clasificación, etc.)
+- **[✓ HECHO]** Opciones **Ascendente/Descendente** en el submenu "Ordenar por" del context menu
+- **[ FALTA ]** **"Más..."** en Ordenar por para criterios adicionales (Etiquetas, Clasificación, etc.)
 
 ---
 
@@ -393,7 +395,7 @@ Propiedades
 #### Cabeceras de columna (DetailsView)
 - Win7: fondo degradado gris claro → gris; borde inferior visible
 - Win7: texto de columna activa en color azul ✓ (lo tenemos)
-- Win7: dropdown de filtro (`▾`) aparece en hover sobre la cabecera — **no implementado**
+- Win7: dropdown de filtro (`▾`) aparece en hover sobre la cabecera — **implementado ✓**
 - Win7: separadores verticales entre columnas son líneas finas
 
 #### Panel de detalles — diseño
@@ -451,7 +453,7 @@ Propiedades
 | M4 | Context menu: añadir **"Personalizar esta carpeta..."**, **"Compartir con ▶"**, **"Nuevo ▶"** | `ContextMenu.qml` |
 | M5 | Panel de detalles: menú contextual para **resize** (Pequeño/Mediano/Grande) | `DetailsPanel.qml` |
 | M6 | Panel de detalles debería ser **redimensionable** (drag en borde superior) | `main.qml` |
-| M7 | Menú de vista en CommandBar: añadir los 3 modos faltantes | `CommandBar.qml` |
+| M7 | ~~Menú de vista en CommandBar: añadir los 3 modos faltantes~~ **[✓ HECHO]** | `CommandBar.qml` |
 | M8 | Edición → añadir **"Copiar a la carpeta"**, **"Mover a la carpeta"**, **"Invertir selección"** | `MenuBarMenus.qml` |
 | M9 | Ver → **"Organizar → Diseño"** para toggle de paneles | `MenuBarMenus.qml`, `main.qml` |
 | M10 | Imágenes: mostrar **miniaturas reales** en modos de iconos (no icono genérico) | `iconprovider.cpp` |
