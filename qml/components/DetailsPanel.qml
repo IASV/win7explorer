@@ -40,9 +40,11 @@ Rectangle {
                 font.pixelSize: 13; font.bold: true
             }
             Label {
-                text: root.systemInfo ? ("Grupo de trabajo: " + root.systemInfo.workgroup) : ""
+                text: root.systemInfo ? root.systemInfo.osVersion : ""
                 color: root.pal.muted
                 font.pixelSize: 11
+                elide: Text.ElideRight
+                Layout.fillWidth: true
             }
         }
 

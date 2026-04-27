@@ -14,6 +14,9 @@ int main(int argc, char *argv[])
     QLoggingCategory::setFilterRules("kf.iconthemes=false\nqt.svg=false");
     QApplication app(argc, argv);
     app.setApplicationName("Win7Explorer");
+    app.setWindowIcon(QIcon::fromTheme("system-file-manager",
+                                       QIcon::fromTheme("folder-open",
+                                       QIcon(u":/icons/folder-closed.png"_s))));
 
     QQuickStyle::setStyle("Basic");
 

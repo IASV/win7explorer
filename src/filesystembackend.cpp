@@ -3,8 +3,11 @@
 #include <QStorageInfo>
 #include <QFile>
 #include <QTextStream>
+#include <QDir>
+#include <QSettings>
 #include <QSysInfo>
 #include <QDebug>
+#include <unistd.h>
 
 static bool copyDirRecursively(const QString &src, const QString &dst)
 {
@@ -225,6 +228,14 @@ QString FileSystemBackend::getMimeIcon(const QString &filePath) const
     QFileInfo fi(filePath);
     if (fi.isDir()) return "folder";
 
+    if (fi.suffix() == "desktop") {
+        QSettings desktopFile(fi.absoluteFilePath(), QSettings::IniFormat);
+        desktopFile.beginGroup("Desktop Entry");
+        const QString iconName = desktopFile.value("Icon").toString();
+        if (!iconName.isEmpty())
+            return iconName;
+    }
+
     QMimeType mime = m_mimeDb.mimeTypeForFile(fi);
     return mime.iconName();
 }
@@ -317,6 +328,32 @@ QVariantList FileSystemBackend::getStorageDevices() const {
         m["fsType"]      = fsType;
         result.append(m);
     }
+
+    // Scan GVFS for MTP devices (Android phones, cameras, etc.)
+    const QString gvfsPath = QStringLiteral("/run/user/%1/gvfs").arg(getuid());
+    QDir gvfsDir(gvfsPath);
+    if (gvfsDir.exists()) {
+        const QStringList mtpDirs = gvfsDir.entryList({"mtp:*"}, QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QString &mtpDir : mtpDirs) {
+            QString deviceName = mtpDir;
+            const int hostIdx = mtpDir.indexOf("host=");
+            if (hostIdx != -1) {
+                deviceName = mtpDir.mid(hostIdx + 5);
+                deviceName.replace('_', ' ');
+            }
+            QVariantMap m;
+            m["displayName"] = deviceName;
+            m["label"]       = "Teléfono Android";
+            m["path"]        = gvfsDir.absoluteFilePath(mtpDir);
+            m["totalGb"]     = 0.0;
+            m["freeGb"]      = 0.0;
+            m["usedGb"]      = 0.0;
+            m["kind"]        = "mtp";
+            m["fsType"]      = "mtp";
+            result.append(m);
+        }
+    }
+
     return result;
 }
 
@@ -400,6 +437,66 @@ QString FileSystemBackend::downloadsPath() const { return QStandardPaths::writab
 QString FileSystemBackend::musicPath() const { return QStandardPaths::writableLocation(QStandardPaths::MusicLocation); }
 QString FileSystemBackend::picturesPath() const { return QStandardPaths::writableLocation(QStandardPaths::PicturesLocation); }
 QString FileSystemBackend::videosPath() const { return QStandardPaths::writableLocation(QStandardPaths::MoviesLocation); }
+
+QVariantList FileSystemBackend::getNetworkDevices() const
+{
+    QVariantList result;
+
+    // 1. GVFS network mounts
+    const QString gvfsPath = QStringLiteral("/run/user/%1/gvfs").arg(getuid());
+    QDir gvfsDir(gvfsPath);
+    if (gvfsDir.exists()) {
+        for (const QString &entry : gvfsDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            QString kind;
+            if (entry.startsWith("smb-share:") || entry.startsWith("smb:")) kind = "smb";
+            else if (entry.startsWith("dav:") || entry.startsWith("davs:"))  kind = "dav";
+            else if (entry.startsWith("ftp:") || entry.startsWith("ftps:"))  kind = "ftp";
+            else if (entry.startsWith("sftp:"))                               kind = "sftp";
+            else if (entry.startsWith("nfs:"))                                kind = "nfs";
+            else continue;
+
+            QVariantMap m;
+            m["displayName"] = entry;
+            m["label"]       = entry;
+            m["path"]        = gvfsDir.absoluteFilePath(entry);
+            m["kind"]        = kind;
+            m["type"]        = "network";
+            m["totalGb"]     = 0.0;
+            m["freeGb"]      = 0.0;
+            result.append(m);
+        }
+    }
+
+    // 2. /proc/mounts network filesystems
+    QFile mountsFile("/proc/mounts");
+    if (mountsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&mountsFile);
+        while (!in.atEnd()) {
+            const QStringList parts = in.readLine().split(' ');
+            if (parts.size() < 3) continue;
+            const QString mountPoint = parts[1];
+            const QString fsType     = parts[2];
+            QString kind;
+            if (fsType == "cifs" || fsType == "smbfs") kind = "smb";
+            else if (fsType == "nfs" || fsType == "nfs4") kind = "nfs";
+            else if (fsType == "davfs") kind = "dav";
+            else continue;
+
+            QVariantMap m;
+            m["displayName"] = mountPoint.split('/').last();
+            m["label"]       = mountPoint;
+            m["path"]        = mountPoint;
+            m["kind"]        = kind;
+            m["type"]        = "network";
+            QStorageInfo si(mountPoint);
+            m["totalGb"] = si.isValid() ? si.bytesTotal()    / 1073741824.0 : 0.0;
+            m["freeGb"]  = si.isValid() ? si.bytesAvailable()/ 1073741824.0 : 0.0;
+            result.append(m);
+        }
+    }
+
+    return result;
+}
 
 bool FileSystemBackend::copyItem(const QString &sourcePath, const QString &destinationPath)
 {

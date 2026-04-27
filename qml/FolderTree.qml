@@ -7,7 +7,7 @@ Item {
     property var    pal
     property string currentPath: ""
     property var    favorites: [
-        { name: "Escritorio", path: fsBackend.desktopPath(),  icon: "folder-closed" },
+        { name: "Escritorio", path: fsBackend.desktopPath(),   icon: "folder-closed" },
         { name: "Descargas",  path: fsBackend.downloadsPath(), icon: "folder-blue" }
     ]
 
@@ -42,6 +42,9 @@ Item {
             readonly property int    itemIndex:       index
             readonly property string itemSection:     sectionType
 
+            // Indentation x for toggle area
+            readonly property int indentX: itemLevel * 14 + (itemType === "header" ? 6 : 18)
+
             color: {
                 if (itemType === "header" && itemPath === "") return "transparent"
                 if (currentPath === itemPath && itemPath !== "") return pal.sbCurrent
@@ -55,16 +58,17 @@ Item {
                 width: 2; color: pal.selectionBorder
             }
 
+            // Row content
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: itemLevel * 14 + (itemType === "header" ? 6 : 18)
+                anchors.leftMargin: row.indentX
                 anchors.rightMargin: 4
                 spacing: 4
 
-                // Collapse/expand triangle
+                // Triangle (visual only — click is handled by toggleMa below)
                 Item {
-                    Layout.preferredWidth: 12
-                    Layout.preferredHeight: 12
+                    Layout.preferredWidth: 12; Layout.preferredHeight: 12
+                    Layout.alignment: Qt.AlignVCenter
                     opacity: itemHasChildren ? 1 : 0
                     rotation: itemExpanded ? 90 : 0
                     Behavior on rotation { NumberAnimation { duration: 120 } }
@@ -79,18 +83,10 @@ Item {
                             ctx.clearRect(0, 0, 12, 12)
                             ctx.fillStyle = fg
                             ctx.beginPath()
-                            // Filled right-pointing triangle ▶ (rotates to ▼ when expanded)
+                            // Filled right-pointing triangle ▶ (rotates to ▼ at 90°)
                             ctx.moveTo(3, 2); ctx.lineTo(10, 6); ctx.lineTo(3, 10)
                             ctx.closePath()
                             ctx.fill()
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: function(mouse) {
-                            mouse.accepted = true
-                            toggleNode(row.itemPath, row.itemIndex, row.itemSection)
                         }
                     }
                 }
@@ -99,9 +95,9 @@ Item {
                     visible: itemType !== "header" || itemPath !== ""
                     source: "qrc:/icons/" + itemIcon + ".png"
                     Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                    Layout.alignment: Qt.AlignVCenter
                     fillMode: Image.PreserveAspectFit
                 }
-                // spacer for plain headers (no icon)
                 Item {
                     visible: itemType === "header" && itemPath === ""
                     Layout.preferredWidth: 16; Layout.preferredHeight: 16
@@ -119,6 +115,7 @@ Item {
                 }
             }
 
+            // ── Row hover + navigate (lower z-order — declared first) ──────
             MouseArea {
                 id: rowMouse
                 anchors.fill: parent
@@ -127,17 +124,33 @@ Item {
                     if (itemPath) folderTree.folderActivated(itemPath)
                 }
             }
+
+            // ── Toggle click (higher z-order — declared AFTER rowMouse) ───
+            // Covers exactly the triangle area so it intercepts clicks before rowMouse.
+            MouseArea {
+                id: toggleMa
+                x: row.indentX - 2
+                y: 0
+                width: 20
+                height: parent.height
+                visible: itemHasChildren
+                // No hoverEnabled — rowMouse handles hover color
+                onClicked: function(mouse) {
+                    mouse.accepted = true
+                    toggleNode(row.itemPath, row.itemIndex, row.itemSection)
+                }
+            }
         }
     }
 
-    // ── Toggle collapse/expand ─────────────────────────────────────────────
+    // ── Toggle collapse / expand ───────────────────────────────────────────
     function toggleNode(path, idx, sectionType) {
         if (idx < 0 || idx >= treeModel.count) return
         var item = treeModel.get(idx)
         if (!item) return
 
         if (item.expanded) {
-            // Collapse: remove all descendants
+            // Collapse: remove all direct and indirect descendants
             var parentLevel = item.level
             var start = idx + 1
             var count = 0
@@ -149,7 +162,7 @@ Item {
                 treeModel.remove(start)
             treeModel.setProperty(idx, "expanded", false)
         } else {
-            // Expand
+            // Expand: insert children
             var childLevel = item.level + 1
             var sType = sectionType || ""
 
@@ -191,11 +204,11 @@ Item {
         }
     }
 
-    // ── Build tree ─────────────────────────────────────────────────────────
+    // ── Build initial tree ─────────────────────────────────────────────────
     function loadTree() {
         treeModel.clear()
 
-        // Favoritos (user-managed)
+        // Favoritos
         treeModel.append({
             name: "Favoritos", type: "header", level: 0, icon: "folder-closed",
             path: "", hasChildren: favorites.length > 0, expanded: true, sectionType: "favorites"

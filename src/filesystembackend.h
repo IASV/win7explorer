@@ -72,6 +72,7 @@ public:
 
     // Storage & libraries
     Q_INVOKABLE QVariantList getStorageDevices() const;
+    Q_INVOKABLE QVariantList getNetworkDevices() const;
     Q_INVOKABLE QVariantList getLibraries() const;
     Q_INVOKABLE QVariantMap  getSystemInfo() const;
 

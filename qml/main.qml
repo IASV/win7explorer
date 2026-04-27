@@ -181,7 +181,22 @@ ApplicationWindow {
                 })
             }
         }
-        // "network": no backend API yet — arr stays empty, GroupedView shows nothing
+        if (n.kind === "network") {
+            var netDevs = fsBackend.getNetworkDevices()
+            for (var j = 0; j < netDevs.length; j++) {
+                var nd = netDevs[j]
+                arr.push({
+                    id:      nd.path,
+                    name:    nd.displayName,
+                    type:    "network",
+                    kind:    nd.kind,
+                    total:   nd.totalGb || 0,
+                    free:    nd.freeGb  || 0,
+                    iconSrc: "image://fileicons/network",
+                    typeStr: nd.kind ? (nd.kind.toUpperCase() + " Share") : "Recurso de red"
+                })
+            }
+        }
         return arr
     }
 
@@ -352,17 +367,22 @@ ApplicationWindow {
 
     ContextMenu {
         id: ctxMenu
-        pal:          win.pal
+        pal:           win.pal
         selectedCount: win.selectedCount
-        onOpenRequested:       function(item) { win.handleOpen(item) }
-        onCutRequested:        { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
-        onCopyRequested:       { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
-        onPasteRequested:      win.handlePaste()
-        onDeleteRequested:     win.handleDelete()
-        onRenameRequested:     win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onPropertiesRequested: win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : ""))
-        onNewFolderRequested:       win.handleNewFolder()
-        onAddToFavoritesRequested:  win.addToFavorites(win.selectedItem)
+        viewMode:      win.viewMode
+        sortBy:        win.sortBy
+        onOpenRequested:           function(item) { win.handleOpen(item) }
+        onCutRequested:            { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "cut"  } }
+        onCopyRequested:           { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" } }
+        onPasteRequested:          win.handlePaste()
+        onDeleteRequested:         win.handleDelete()
+        onRenameRequested:         win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : ""))
+        onPropertiesRequested:     win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : ""))
+        onNewFolderRequested:      win.handleNewFolder()
+        onAddToFavoritesRequested: win.addToFavorites(win.selectedItem)
+        onViewModeChangeRequested: function(m) { win.viewMode = m }
+        onSortRequested:           function(col) { if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" } }
+        onRefreshRequested:        { if (win.isRealPath) fsBackend.refresh() }
     }
 
     // ── About dialog ───────────────────────────────────────────────────────
