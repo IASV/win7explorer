@@ -99,10 +99,13 @@ Item {
 
                 Image {
                     visible: itemType !== "header" || itemPath !== ""
-                    source: (itemPath !== "" && currentPath === itemPath &&
-                             (itemIcon === "folder-closed" || itemIcon === "folder-blue"))
-                            ? "qrc:/icons/folder-semi.png"
-                            : "qrc:/icons/" + itemIcon + ".png"
+                    source: {
+                        if (itemPath !== "" && currentPath === itemPath &&
+                            (itemIcon === "folder-closed" || itemIcon === "folder-blue"))
+                            return "qrc:/icons/folder-semi.png"
+                        return "image://fileicons/" + itemIcon
+                    }
+                    sourceSize: Qt.size(16, 16)
                     Layout.preferredWidth: 16; Layout.preferredHeight: 16
                     Layout.alignment: Qt.AlignVCenter
                     fillMode: Image.PreserveAspectFit
@@ -244,7 +247,7 @@ Item {
         // Equipo
         var drives = fsBackend.getStorageDevices()
         treeModel.append({
-            name: "Equipo", type: "header", level: 0, icon: "window",
+            name: "Equipo", type: "header", level: 0, icon: "computer",
             path: "computer", hasChildren: drives.length > 0, expanded: true, sectionType: "equipo"
         })
         for (var k = 0; k < drives.length; k++)
@@ -257,18 +260,18 @@ Item {
 
         // Red
         treeModel.append({
-            name: "Red", type: "header", level: 0, icon: "network",
+            name: "Red", type: "header", level: 0, icon: "network-workgroup",
             path: "network", hasChildren: false, expanded: false, sectionType: ""
         })
 
         // Panel de control
         treeModel.append({
-            name: "Panel de control", type: "header", level: 0, icon: "control-panel",
+            name: "Panel de control", type: "header", level: 0, icon: "preferences-system",
             path: "control-panel", hasChildren: false, expanded: false, sectionType: ""
         })
         // Papelera de reciclaje
         treeModel.append({
-            name: "Papelera de reciclaje", type: "special", level: 0, icon: "folder-empty",
+            name: "Papelera de reciclaje", type: "special", level: 0, icon: "user-trash",
             path: "trash", hasChildren: false, expanded: false, sectionType: ""
         })
     }

@@ -38,22 +38,38 @@ static QString qrcIconPath(const QString &id)
         return base + u"drive-local.png"_s;
     }
 
-    if (id.contains(u"network",   Qt::CaseInsensitive)) return base + u"network.png"_s;
-    if (id.contains(u"printer",   Qt::CaseInsensitive)) return base + u"printer.png"_s;
-    if (id.contains(u"computer",  Qt::CaseInsensitive)) return base + u"window.png"_s;
-    if (id.contains(u"document",  Qt::CaseInsensitive)) return base + u"document.png"_s;
-    if (id.contains(u"picture",   Qt::CaseInsensitive)) return base + u"picture.png"_s;
-    if (id.contains(u"image",     Qt::CaseInsensitive)) return base + u"picture.png"_s;
-    if (id.contains(u"music",     Qt::CaseInsensitive)) return base + u"music.png"_s;
-    if (id.contains(u"audio",     Qt::CaseInsensitive)) return base + u"music.png"_s;
-    if (id.contains(u"video",     Qt::CaseInsensitive)) return base + u"video.png"_s;
-    if (id.contains(u"mail",      Qt::CaseInsensitive)) return base + u"mail.png"_s;
-    if (id.contains(u"shield",    Qt::CaseInsensitive)) return base + u"shield.png"_s;
-    if (id.contains(u"search",    Qt::CaseInsensitive)) return base + u"search.png"_s;
-    if (id.contains(u"games",     Qt::CaseInsensitive)) return base + u"games.png"_s;
+    if (id.contains(u"trash",       Qt::CaseInsensitive)) return base + u"folder-empty.png"_s;
+    if (id.contains(u"preferences", Qt::CaseInsensitive)) return base + u"shield.png"_s;
+    if (id.contains(u"network",     Qt::CaseInsensitive)) return base + u"network.png"_s;
+    if (id.contains(u"printer",     Qt::CaseInsensitive)) return base + u"printer.png"_s;
+    if (id.contains(u"computer",    Qt::CaseInsensitive)) return base + u"window.png"_s;
+    if (id.contains(u"document",    Qt::CaseInsensitive)) return base + u"document.png"_s;
+    if (id.contains(u"picture",     Qt::CaseInsensitive)) return base + u"picture.png"_s;
+    if (id.contains(u"image",       Qt::CaseInsensitive)) return base + u"picture.png"_s;
+    if (id.contains(u"music",       Qt::CaseInsensitive)) return base + u"music.png"_s;
+    if (id.contains(u"audio",       Qt::CaseInsensitive)) return base + u"music.png"_s;
+    if (id.contains(u"video",       Qt::CaseInsensitive)) return base + u"video.png"_s;
+    if (id.contains(u"mail",        Qt::CaseInsensitive)) return base + u"mail.png"_s;
+    if (id.contains(u"shield",      Qt::CaseInsensitive)) return base + u"shield.png"_s;
+    if (id.contains(u"search",      Qt::CaseInsensitive)) return base + u"search.png"_s;
+    if (id.contains(u"games",       Qt::CaseInsensitive)) return base + u"games.png"_s;
 
     // Unknown — let caller try QIcon::fromTheme()
     return {};
+}
+
+// Maps internal icon names to standard FreeDesktop icon names for system theme lookup.
+static QString themeIconName(const QString &id)
+{
+    if (id == u"drive-local" || id == u"drive-system")         return u"drive-harddisk"_s;
+    if (id.startsWith(u"drive-removable") || id == u"drive-mtp") return u"drive-removable-media"_s;
+    if (id.contains(u"dvd", Qt::CaseInsensitive) ||
+        id.contains(u"cd",  Qt::CaseInsensitive))               return u"media-optical"_s;
+    if (id == u"document")                                       return u"folder-documents"_s;
+    if (id == u"music")                                          return u"folder-music"_s;
+    if (id == u"picture")                                        return u"folder-pictures"_s;
+    if (id == u"video")                                          return u"folder-videos"_s;
+    return id;
 }
 
 QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
@@ -82,12 +98,12 @@ QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize 
         }
     }
 
-    const bool isFolderOrDrive = decoded.contains(u"folder", Qt::CaseInsensitive) ||
-                                  decoded.contains(u"drive",  Qt::CaseInsensitive);
+    // Folder icons use QRC custom art; everything else prefers the system theme (Win7 Aero).
+    const bool isFolder = decoded.contains(u"folder", Qt::CaseInsensitive);
 
-    // 1. For non-folder/non-drive: prefer system theme (Win7 Aero icon theme)
-    if (!isFolderOrDrive && !decoded.startsWith(u'/') && !decoded.isEmpty()) {
-        QIcon icon = QIcon::fromTheme(decoded);
+    // 1. Non-folder: prefer system theme icon (Win7 Aero FreeDesktop icon theme)
+    if (!isFolder && !decoded.startsWith(u'/') && !decoded.isEmpty()) {
+        QIcon icon = QIcon::fromTheme(themeIconName(decoded));
         if (!icon.isNull()) {
             QPixmap px = icon.pixmap(sz, sz);
             if (!px.isNull() && px.width() > 0) {
@@ -97,16 +113,16 @@ QPixmap IconProvider::requestPixmap(const QString &id, QSize *size, const QSize 
         }
     }
 
-    // 2. QRC bundled icons (folders/drives use custom art; others as fallback)
+    // 2. QRC bundled icons (authoritative for folders/drives; fallback for others)
     const QString qrcPath = qrcIconPath(decoded);
     if (!qrcPath.isEmpty()) {
         QPixmap px(qrcPath);
         if (!px.isNull()) return scaled(px);
     }
 
-    // 3. System theme fallback for anything not matched above
+    // 3. System theme fallback (covers anything qrcIconPath didn't match)
     if (!decoded.startsWith(u'/') && !decoded.isEmpty()) {
-        QIcon icon = QIcon::fromTheme(decoded);
+        QIcon icon = QIcon::fromTheme(themeIconName(decoded));
         if (!icon.isNull()) {
             QPixmap px = icon.pixmap(sz, sz);
             if (!px.isNull() && px.width() > 0) {

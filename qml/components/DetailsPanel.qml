@@ -14,7 +14,7 @@ Rectangle {
     property int    currentItemCount:  0
     property string totalSelectedSize: ""
 
-    property int panelHeight: 72
+    property int panelHeight: 80
 
     Menu {
         id: sizeMenu
@@ -44,8 +44,9 @@ Rectangle {
         spacing: 14
 
         Image {
-            source: "qrc:/icons/window.png"
-            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            source: "image://fileicons/computer"
+            sourceSize: Qt.size(56, 56)
+            Layout.preferredWidth: 56; Layout.preferredHeight: 56
             fillMode: Image.PreserveAspectFit
         }
 
@@ -106,12 +107,13 @@ Rectangle {
             source: root.detailItem
                     ? (root.detailItem.previewSrc || root.detailItem.iconSrc || "")
                     : ""
-            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            Layout.preferredWidth: 56; Layout.preferredHeight: 56
+            sourceSize: Qt.size(56, 56)
             fillMode: Image.PreserveAspectFit
         }
         Canvas {
             visible: root.detailItem === null
-            width: 48; height: 48
+            width: 56; height: 56
             property color fg: root.pal.muted
             onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
             onPaint: {
