@@ -105,20 +105,70 @@ Rectangle {
 
         // ── Breadcrumb bar ───────────────────────────────────────────────
         Rectangle {
+            id: breadcrumbBar
             Layout.fillWidth: true; Layout.preferredHeight: 26
             color: root.pal.content; border.color: root.pal.borderSoft; radius: 3; clip: true
+
+            property bool textEditMode: false
+
+            // Click on bar background → enter text mode
+            MouseArea {
+                anchors.fill: parent
+                onDoubleClicked: {
+                    breadcrumbBar.textEditMode = true
+                    var last = root.pathToCurrent
+                    pathField.text = last.length > 0 ? (last[last.length-1].path || last[last.length-1].id || "") : ""
+                    pathField.selectAll()
+                    pathField.forceActiveFocus()
+                }
+            }
 
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 4; anchors.rightMargin: 4
                 spacing: 0
 
-                Repeater {
-                    model: root.pathToCurrent
-                    delegate: RowLayout {
-                        spacing: 0
+                // Folder icon (I2: click → text mode)
+                Image {
+                    source: "qrc:/icons/folder-closed.png"
+                    Layout.preferredWidth: 16; Layout.preferredHeight: 16
+                    Layout.alignment: Qt.AlignVCenter
+                    fillMode: Image.PreserveAspectFit
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            breadcrumbBar.textEditMode = !breadcrumbBar.textEditMode
+                            if (breadcrumbBar.textEditMode) {
+                                var last = root.pathToCurrent
+                                pathField.text = last.length > 0 ? (last[last.length-1].path || last[last.length-1].id || "") : ""
+                                pathField.selectAll()
+                                pathField.forceActiveFocus()
+                            }
+                        }
+                    }
+                }
 
-                        // Separator chevron between segments
+                // Text edit mode (I2)
+                TextField {
+                    id: pathField
+                    visible: breadcrumbBar.textEditMode
+                    Layout.fillWidth: true; Layout.preferredHeight: 22
+                    background: Item {}
+                    color: root.pal.text; font.pixelSize: 12; leftPadding: 6
+                    selectByMouse: true
+                    Keys.onReturnPressed: { root.segmentClicked(text); breadcrumbBar.textEditMode = false }
+                    Keys.onEscapePressed: breadcrumbBar.textEditMode = false
+                }
+
+                // Breadcrumb segments (I1: with dropdown ►)
+                Repeater {
+                    model: breadcrumbBar.textEditMode ? [] : root.pathToCurrent
+                    delegate: RowLayout {
+                        id: segRow
+                        spacing: 0
+                        property var siblings: []
+
+                        // Separator chevron
                         Canvas {
                             visible: index > 0
                             Layout.preferredWidth: 8; Layout.preferredHeight: 10
@@ -127,30 +177,94 @@ Rectangle {
                             Component.onCompleted: requestPaint()
                             onPaint: {
                                 var ctx = getContext("2d")
-                                ctx.clearRect(0, 0, 8, 10)
-                                ctx.strokeStyle = fg; ctx.lineWidth = 1.4; ctx.lineCap = "round"
-                                ctx.beginPath(); ctx.moveTo(2, 1); ctx.lineTo(6, 5); ctx.lineTo(2, 9); ctx.stroke()
+                                ctx.clearRect(0, 0, 8, 10); ctx.strokeStyle = fg
+                                ctx.lineWidth = 1.4; ctx.lineCap = "round"
+                                ctx.beginPath(); ctx.moveTo(2,1); ctx.lineTo(6,5); ctx.lineTo(2,9); ctx.stroke()
                             }
                         }
 
                         Rectangle {
+                            id: crumbRect
                             Layout.preferredHeight: 20
-                            color: crumbMa.containsMouse ? root.pal.accentSoft : "transparent"
+                            color: (crumbMa.containsMouse || arrowMa.containsMouse) ? root.pal.accentSoft : "transparent"
                             radius: 2
-                            implicitWidth: crumbLbl.implicitWidth + 14
+                            implicitWidth: crumbLbl.implicitWidth + (arrowBox.visible ? 20 : 10)
 
                             Label {
                                 id: crumbLbl
-                                anchors.centerIn: parent
+                                anchors.left: parent.left; anchors.leftMargin: 5
+                                anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.name
-                                color: crumbMa.containsMouse ? root.pal.accent : root.pal.text
+                                color: (crumbMa.containsMouse || arrowMa.containsMouse) ? root.pal.accent : root.pal.text
                                 font.pixelSize: 12
                             }
+
+                            // Dropdown arrow ► (I1)
+                            Rectangle {
+                                id: arrowBox
+                                visible: crumbMa.containsMouse || arrowMa.containsMouse || sibMenu.visible
+                                anchors.right: parent.right; anchors.rightMargin: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 12; height: 18
+                                color: arrowMa.containsMouse ? root.pal.accentSoft : "transparent"
+                                radius: 2
+                                Canvas {
+                                    anchors.centerIn: parent; width: 6; height: 8
+                                    property color fg: root.pal.muted
+                                    onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+                                    onPaint: {
+                                        var ctx = getContext("2d"); ctx.clearRect(0,0,6,8)
+                                        ctx.fillStyle = fg
+                                        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(5,4); ctx.lineTo(0,8)
+                                        ctx.closePath(); ctx.fill()
+                                    }
+                                }
+                            }
+
+                            // Label click → navigate
                             MouseArea {
                                 id: crumbMa
-                                anchors.fill: parent
+                                anchors.left: parent.left; anchors.right: arrowBox.left
+                                anchors.top: parent.top; anchors.bottom: parent.bottom
                                 hoverEnabled: true
                                 onClicked: root.segmentClicked(modelData.path || modelData.id)
+                            }
+
+                            // Arrow click → show siblings
+                            MouseArea {
+                                id: arrowMa
+                                anchors.left: arrowBox.left; anchors.right: parent.right
+                                anchors.top: parent.top; anchors.bottom: parent.bottom
+                                hoverEnabled: true
+                                onClicked: function(mouse) {
+                                    mouse.accepted = true
+                                    var p = modelData.path || ""
+                                    if (p.indexOf("/") >= 0) {
+                                        var parts = p.split("/").filter(function(x){ return x !== "" })
+                                        if (parts.length > 0) parts.pop()
+                                        var parentPath = parts.length > 0 ? "/" + parts.join("/") : "/"
+                                        segRow.siblings = fsBackend.getSubdirectories(parentPath)
+                                    }
+                                    sibMenu.popup()
+                                }
+
+                                Menu {
+                                    id: sibMenu
+                                    palette.window:     root.pal.panel
+                                    palette.windowText: root.pal.text
+                                    Repeater {
+                                        model: segRow.siblings
+                                        MenuItem {
+                                            text: modelData.name
+                                            onTriggered: root.segmentClicked(modelData.path)
+                                        }
+                                    }
+                                    MenuItem {
+                                        visible: segRow.siblings.length === 0
+                                        enabled: false
+                                        text: "—"
+                                    }
+                                }
                             }
                         }
                     }
