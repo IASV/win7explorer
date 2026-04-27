@@ -4,13 +4,77 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
-    property var pal
-    property var detailItem: null
+    property var    pal
+    property var    detailItem:     null
+    property int    selectedCount:  0
+    property bool   useGroupedView: false
+    property string currentKind:   ""
+    property var    systemInfo:     null
+
+    readonly property bool computerMode:
+        root.useGroupedView && root.currentKind === "computer" && root.selectedCount === 0
 
     color: pal.panel
     border.color: pal.borderSoft
 
+    // ── Computer / Equipo info bar ─────────────────────────────────────────
     RowLayout {
+        visible: root.computerMode
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 8;   anchors.bottomMargin: 8
+        spacing: 14
+
+        Image {
+            source: "qrc:/icons/window.png"
+            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            fillMode: Image.PreserveAspectFit
+        }
+
+        ColumnLayout {
+            spacing: 3
+
+            Label {
+                text: root.systemInfo ? root.systemInfo.hostname : ""
+                color: root.pal.text
+                font.pixelSize: 13; font.bold: true
+            }
+            Label {
+                text: root.systemInfo ? ("Grupo de trabajo: " + root.systemInfo.workgroup) : ""
+                color: root.pal.muted
+                font.pixelSize: 11
+            }
+        }
+
+        Rectangle {
+            Layout.preferredWidth: 1
+            Layout.fillHeight: true
+            color: root.pal.border
+            opacity: 0.5
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 3
+
+            Label {
+                text: root.systemInfo ? ("Memoria: " + root.systemInfo.ramFormatted) : ""
+                color: root.pal.text
+                font.pixelSize: 11
+            }
+            Label {
+                text: root.systemInfo ? ("Procesador: " + root.systemInfo.cpuModel) : ""
+                color: root.pal.muted
+                font.pixelSize: 11
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+        }
+    }
+
+    // ── Normal file info bar ───────────────────────────────────────────────
+    RowLayout {
+        visible: !root.computerMode
         anchors.fill: parent
         anchors.leftMargin: 14; anchors.rightMargin: 14
         anchors.topMargin: 10;  anchors.bottomMargin: 10

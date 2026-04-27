@@ -2,6 +2,8 @@
 #include <QDirIterator>
 #include <QStorageInfo>
 #include <QFile>
+#include <QTextStream>
+#include <QSysInfo>
 #include <QDebug>
 
 static bool copyDirRecursively(const QString &src, const QString &dst)
@@ -339,6 +341,56 @@ QVariantList FileSystemBackend::getLibraries() const {
         result.append(m);
     }
     return result;
+}
+
+QVariantMap FileSystemBackend::getSystemInfo() const
+{
+    QVariantMap info;
+
+    info["hostname"]  = QSysInfo::machineHostName();
+    info["workgroup"] = QStringLiteral("WORKGROUP");
+    info["osVersion"] = QSysInfo::prettyProductName();
+
+    // RAM from /proc/meminfo
+    double totalRamGb = 0.0;
+    QFile memFile("/proc/meminfo");
+    if (memFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&memFile);
+        QString line;
+        while (in.readLineInto(&line)) {
+            if (line.startsWith("MemTotal:")) {
+                const QStringList parts = line.split(' ', Qt::SkipEmptyParts);
+                if (parts.size() >= 2) {
+                    bool ok = false;
+                    const long kB = parts[1].toLong(&ok);
+                    if (ok && kB > 0)
+                        totalRamGb = kB / (1024.0 * 1024.0);
+                }
+                break;
+            }
+        }
+    }
+    info["totalRamGb"]   = totalRamGb;
+    info["ramFormatted"] = QStringLiteral("%1 GB").arg(totalRamGb, 0, 'f', 2);
+
+    // CPU from /proc/cpuinfo
+    QString cpuModel;
+    QFile cpuFile("/proc/cpuinfo");
+    if (cpuFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&cpuFile);
+        QString line;
+        while (in.readLineInto(&line)) {
+            if (line.startsWith("model name")) {
+                const int colon = line.indexOf(':');
+                if (colon != -1)
+                    cpuModel = line.mid(colon + 1).trimmed();
+                break;
+            }
+        }
+    }
+    info["cpuModel"] = cpuModel;
+
+    return info;
 }
 
 QString FileSystemBackend::homePath() const { return QDir::homePath(); }

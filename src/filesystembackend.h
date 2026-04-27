@@ -73,6 +73,7 @@ public:
     // Storage & libraries
     Q_INVOKABLE QVariantList getStorageDevices() const;
     Q_INVOKABLE QVariantList getLibraries() const;
+    Q_INVOKABLE QVariantMap  getSystemInfo() const;
 
     // Quick access paths
     Q_INVOKABLE QString homePath() const;

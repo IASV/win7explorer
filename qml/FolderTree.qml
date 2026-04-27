@@ -185,7 +185,7 @@ Item {
         treeModel.append({ name: "Equipo", type: "header", level: 0, icon: "window", path: "computer", hasChildren: false, expanded: false })
         var drives = fsBackend.getStorageDevices()
         for (var j = 0; j < drives.length; j++)
-            treeModel.append({ name: drives[j].label, type: "special", level: 1, icon: "drive-" + drives[j].kind, path: drives[j].path, hasChildren: drives[j].path !== "", expanded: false })
+            treeModel.append({ name: drives[j].displayName, type: "special", level: 1, icon: "drive-" + drives[j].kind, path: drives[j].path, hasChildren: drives[j].path !== "", expanded: false })
 
         // Network
         treeModel.append({ name: "Red", type: "header", level: 0, icon: "network", path: "network", hasChildren: false, expanded: false })

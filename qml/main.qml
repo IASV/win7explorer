@@ -30,7 +30,7 @@ ApplicationWindow {
     FileSystem { id: fs }
 
     // ── Navigation state ───────────────────────────────────────────────────
-    property string currentId: fsBackend.homePath()
+    property string currentId: "computer"
     property var    historyStack:   [currentId]
     property int    historyIndex:   0
 
@@ -156,7 +156,7 @@ ApplicationWindow {
                 var d = drives[i]
                 arr.push({
                     id:      d.path,
-                    name:    d.label,
+                    name:    d.displayName,
                     type:    "drive",
                     kind:    d.kind,
                     total:   d.totalGb,
@@ -617,23 +617,28 @@ ApplicationWindow {
         // Details panel
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: win.showDetailsPanel ? 1 : 0
-            Layout.maximumHeight:   win.showDetailsPanel ? 1 : 0
+            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 1 : 0
+            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 1 : 0
             color: win.pal.borderSoft
         }
         DetailsPanel {
             Layout.fillWidth: true
-            Layout.preferredHeight: win.showDetailsPanel ? 72 : 0
-            Layout.maximumHeight:   win.showDetailsPanel ? 72 : 0
+            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 72 : 0
+            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 72 : 0
             clip: true
-            pal: win.pal
-            detailItem: win.selectedItem
+            pal:            win.pal
+            detailItem:     win.selectedItem
+            selectedCount:  win.selectedCount
+            useGroupedView: win.useGroupedView
+            currentKind:    win.currentNode ? (win.currentNode.kind || "") : ""
+            systemInfo:     (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")
+                                ? fsBackend.getSystemInfo() : null
         }
 
         // Status bar
         StatusBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: 28
+            Layout.preferredHeight: 42
             pal:           win.pal
             itemCount:     win.useGroupedView ? win.groupedItems.length : win.items.length
             selectedCount: win.selectedCount
