@@ -67,14 +67,14 @@
 
 ### Nuestro estado actual
 - Breadcrumb con segmentos clicables ✓
-- Sin flecha dropdown por segmento ✗
-- Sin modo texto / path completo editable ✗
-- Búsqueda con placeholder genérico "Buscar" ✗
+- Flecha dropdown ► por segmento con sibling folders ✓
+- Modo texto editable al hacer clic en icono de carpeta ✓
+- Placeholder dinámico "Buscar en [carpeta]" ✓
 
 ### Problemas identificados
-- **[ FALTA ]** Flecha dropdown `►` en cada segmento del breadcrumb con sub-carpetas del nivel
-- **[ FALTA ]** Modo texto: clic en el icono de carpeta → muestra path completo editable (con Enter para navegar)
-- **[ MEJORA ]** Placeholder de búsqueda debe ser `"Buscar en [carpeta actual]"` dinámicamente
+- **[✓ HECHO]** Flecha dropdown `►` en cada segmento del breadcrumb con sub-carpetas del nivel
+- **[✓ HECHO]** Modo texto: clic en el icono de carpeta → muestra path completo editable (con Enter para navegar)
+- **[✓ HECHO]** Placeholder de búsqueda es `"Buscar en [carpeta actual]"` dinámicamente
 
 ---
 
@@ -139,13 +139,13 @@
 ### Nuestro estado actual
 - Secciones: Favoritos, Bibliotecas, Equipo, Red ✓
 - Triángulos coloreados con animación de rotación ✓
-- Sin "Panel de control" ni "Papelera de reciclaje" ✗
+- "Panel de control" y "Papelera de reciclaje" añadidos ✓
 - Carpeta seleccionada no cambia a icono de carpeta abierta ✗
 - Triángulos son flechas sólidas de color (no el estilo hueco blanco / sólido negro de Win7) ✗
 - Expandir "Equipo" en el árbol muestra las unidades como hijos directos ✓
 
 ### Problemas identificados
-- **[ FALTA ]** Nodos **"Panel de control"** y **"Papelera de reciclaje"** al final del árbol
+- **[✓ HECHO]** Nodos **"Panel de control"** y **"Papelera de reciclaje"** añadidos al árbol
 - **[✓ HECHO]** Al expandir "Equipo" en el árbol muestra las unidades de disco como hijos directos
 - **[ MEJORA ]** La carpeta/nodo seleccionado debe cambiar su icono a `folder-open` (carpeta abierta)
 - **[ MEJORA ]** Triángulos de expansión: Win7 usa flechas huecas en gris (▷/▽), no flechas de color sólido
@@ -164,11 +164,11 @@ Cada tarjeta de unidad muestra: icono grande + nombre + barra de uso Aero-style 
 ### Nuestro estado actual
 - 4 secciones: Unidades de disco duro, Dispositivos extraíbles, Ubicaciones de red, Carpetas ✓
 - Tarjetas con barra de uso Aero-style ✓
-- La sección "Otros" no existe ✗
+- Sección renombrada a "Otros" ✓; sección "Carpetas" eliminada ✓
 
 ### Problemas identificados
-- **[ MEJORA ]** La sección para dispositivos de red/compartidos debería llamarse **"Otros"** (no "Ubicaciones de red") para ser fiel a Win7
-- **[ MEJORA ]** Las carpetas del usuario (Documentos, Descargas, etc.) en "Equipo" deben mostrarse como tarjetas en la sección "Otros" o eliminarse de la vista — Win7 no muestra carpetas en la vista de Equipo
+- **[✓ HECHO]** Sección renombrada a **"Otros"**; sección "Carpetas" eliminada (no "Ubicaciones de red") para ser fiel a Win7
+- **[✓ HECHO]** Carpetas de usuario eliminadas de la vista Equipo
 
 ---
 
@@ -192,7 +192,7 @@ Cada tarjeta de unidad muestra: icono grande + nombre + barra de uso Aero-style 
 - Menú contextual en zona vacía del panel: "Quitar propiedades..." + tamaños: ✓ **Mediano** / Grande
 
 ### Nuestro estado actual
-- Sin selección: muestra texto "Selecciona un archivo..." ✗ (Win7 muestra info de la carpeta actual)
+- Sin selección: muestra carpeta actual + N elementos ✓
 - Selección única: icono + nombre + tipo + tamaño + modificado ✓ (parcial)
 - Sin etiquetas (tags) editables ✗
 - Sin clasificación (rating stars) ✗
@@ -223,9 +223,9 @@ Cada tarjeta de unidad muestra: icono grande + nombre + barra de uso Aero-style 
 - La barra de estado es thin (~22 px) y sólo texto
 
 ### Nuestro estado actual
-- Siempre visible ✗ (debe ser ocultable desde Ver)
+- Siempre visible (toggle pendiente desde Ver)
 - Muestra: count de items + item seleccionado con icono/nombre/tipo/tamaño ✓
-- Nuestra barra mezcla funcionalidades de "barra de estado" + "panel de detalles" simplificado
+- Altura reducida a 24 px ✓; muestra solo nombre en selección única
 
 ### Problemas identificados
 - **[ MEJORA ]** Debe poder **ocultarse** desde `Ver → Barra de estado` (toggle)
@@ -354,7 +354,7 @@ Propiedades
 
 ### Nuestro estado actual
 - Búsqueda en AddressBar (no en área de contenidos) ✓ (posición distinta)
-- Placeholder genérico "Buscar" ✗
+- Placeholder dinámico "Buscar en [carpeta]" ✓
 - Filtra la lista visible por nombre ✓ (sólo nombres)
 
 ### Problemas identificados
