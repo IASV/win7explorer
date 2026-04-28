@@ -9,12 +9,156 @@
 #include <QPainter>
 #include <QApplication>
 #include <QPalette>
+#include <QMimeDatabase>
+#include <QMimeType>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QProcess>
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QFile>
+#include <QDir>
 
 using namespace Qt::StringLiterals;
 
 NativeMenu::NativeMenu(QObject *parent) : QObject(parent) {}
 
 static QIcon ti(const QString &name) { return QIcon::fromTheme(name); }
+
+// Returns first executable found from the candidate list
+static QString firstExec(std::initializer_list<const char *> apps)
+{
+    for (auto *app : apps)
+        if (!QStandardPaths::findExecutable(QLatin1String(app)).isEmpty())
+            return QLatin1String(app);
+    return {};
+}
+
+// Resolves display name + icon name for the default handler of a MIME type
+static QPair<QString, QString> defaultAppInfo(const QString &mimeType)
+{
+    QProcess proc;
+    proc.start(u"xdg-mime"_s, {u"query"_s, u"default"_s, mimeType});
+    if (!proc.waitForFinished(800)) return {};
+    const QString desktop = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+    if (desktop.isEmpty()) return {};
+
+    const QStringList dirs = {
+        QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation),
+        u"/usr/share/applications"_s,
+        u"/usr/local/share/applications"_s
+    };
+    for (const auto &dir : dirs) {
+        QFile f(dir + u'/' + desktop);
+        if (!f.open(QIODevice::ReadOnly)) continue;
+        QString name, icon;
+        bool inEntry = false;
+        while (!f.atEnd()) {
+            const QString line = QString::fromUtf8(f.readLine()).trimmed();
+            if (line == u"[Desktop Entry]"_s) { inEntry = true; continue; }
+            if (line.startsWith(u'[')) inEntry = false;
+            if (!inEntry) continue;
+            if (line.startsWith(u"Name="_s) && name.isEmpty())  name = line.mid(5);
+            if (line.startsWith(u"Icon="_s) && icon.isEmpty())  icon = line.mid(5);
+        }
+        if (!name.isEmpty()) return {name, icon};
+    }
+    return {desktop.left(desktop.size() - 8), {}}; // strip ".desktop"
+}
+
+// Adds type-specific actions to `menu` for a real file at `filePath`.
+// These actions execute directly via QProcess / QDesktopServices (no result string).
+static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
+                                   const QString &mimeName)
+{
+    const QString cat = mimeName.section(u'/', 0, 0);
+
+    // ── Images ───────────────────────────────────────────────────────────────
+    if (cat == u"image"_s) {
+        const QString editor = firstExec({"gimp", "krita", "pinta", "inkscape"});
+        if (!editor.isEmpty())
+            menu.addAction(ti(u"gimp"_s), u"Editar imagen"_s,
+                           [filePath, editor]{ QProcess::startDetached(editor, {filePath}); });
+
+        const QString wallSetter = firstExec({"plasma-apply-wallpaperimage", "feh", "nitrogen", "xwallpaper"});
+        if (!wallSetter.isEmpty()) {
+            QStringList wallArgs;
+            if (wallSetter == u"feh"_s)       wallArgs = {u"--bg-scale"_s, filePath};
+            else if (wallSetter == u"nitrogen"_s) wallArgs = {u"--set-zoom-fill"_s, u"--save"_s, filePath};
+            else if (wallSetter == u"xwallpaper"_s) wallArgs = {u"--zoom"_s, filePath};
+            else wallArgs = {filePath};
+            menu.addAction(ti(u"preferences-desktop-wallpaper"_s), u"Establecer como fondo de escritorio"_s,
+                           [wallSetter, wallArgs]{ QProcess::startDetached(wallSetter, wallArgs); });
+        }
+
+    // ── Audio / Video ─────────────────────────────────────────────────────────
+    } else if (cat == u"audio"_s || cat == u"video"_s) {
+        const QString player = firstExec({"vlc", "mpv", "smplayer", "rhythmbox", "clementine", "elisa"});
+        if (!player.isEmpty()) {
+            menu.addAction(ti(u"media-playback-start"_s), u"Reproducir"_s,
+                           [filePath, player]{ QProcess::startDetached(player, {filePath}); });
+            if (player == u"vlc"_s)
+                menu.addAction(ti(u"media-playlist-append"_s), u"Agregar a lista de reproducción"_s,
+                               [filePath]{ QProcess::startDetached(u"vlc"_s, {u"--playlist-enqueue"_s, filePath}); });
+        }
+
+    // ── Text / Code / Scripts ─────────────────────────────────────────────────
+    } else if (cat == u"text"_s || mimeName.contains(u"json"_s) || mimeName.contains(u"xml"_s) ||
+               mimeName.contains(u"script"_s) || mimeName.contains(u"source"_s)) {
+
+        const QString editor = firstExec({"kate", "gedit", "kwrite", "mousepad", "geany", "pluma", "xed", "nano"});
+        if (!editor.isEmpty())
+            menu.addAction(ti(u"text-editor"_s), u"Abrir en editor de texto"_s,
+                           [filePath, editor]{ QProcess::startDetached(editor, {filePath}); });
+
+        const bool isScript =
+            mimeName.contains(u"python"_s)    || mimeName.contains(u"shellscript"_s) ||
+            mimeName.contains(u"x-sh"_s)      || mimeName.contains(u"ruby"_s)        ||
+            mimeName.contains(u"javascript"_s) || filePath.endsWith(u".sh"_s)         ||
+            filePath.endsWith(u".py"_s)        || filePath.endsWith(u".rb"_s)         ||
+            filePath.endsWith(u".js"_s);
+
+        if (isScript) {
+            const QString term = firstExec({"konsole", "gnome-terminal", "xterm", "alacritty", "kitty", "tilix"});
+            QString runCmd = filePath;
+            if (filePath.endsWith(u".py"_s))  runCmd = u"python3 \""_s + filePath + u"\""_s;
+            else if (filePath.endsWith(u".rb"_s)) runCmd = u"ruby \""_s + filePath + u"\""_s;
+            else if (filePath.endsWith(u".js"_s)) runCmd = u"node \""_s + filePath + u"\""_s;
+            if (!term.isEmpty()) {
+                const QString cmd = runCmd + u"; echo; read -p 'Presiona Enter para cerrar...'"_s;
+                menu.addAction(ti(u"system-run"_s), u"Ejecutar en terminal"_s, [term, cmd]{
+                    QProcess::startDetached(term, {u"-e"_s, u"bash"_s, u"-c"_s, cmd});
+                });
+            }
+        }
+
+    // ── Archives ──────────────────────────────────────────────────────────────
+    } else if (mimeName.contains(u"zip"_s) || mimeName.contains(u"tar"_s)  ||
+               mimeName.contains(u"gzip"_s)|| mimeName.contains(u"bzip"_s) ||
+               mimeName.contains(u"xz"_s)  || mimeName.contains(u"7z"_s)   ||
+               mimeName.contains(u"rar"_s) || mimeName.contains(u"archive"_s)) {
+
+        const QFileInfo fi(filePath);
+        const QString dir = fi.absolutePath();
+        const QString ark = firstExec({"ark", "file-roller", "xarchiver", "peazip", "engrampa"});
+        if (!ark.isEmpty()) {
+            if (ark == u"ark"_s) {
+                menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s,
+                               [filePath, dir]{ QProcess::startDetached(u"ark"_s, {u"-b"_s, u"-o"_s, dir, filePath}); });
+                menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
+                               [filePath]{ QProcess::startDetached(u"ark"_s, {filePath}); });
+            } else if (ark == u"file-roller"_s || ark == u"engrampa"_s) {
+                menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s,
+                               [filePath, dir, ark]{ QProcess::startDetached(ark, {u"--extract-to="_s + dir, filePath}); });
+                menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
+                               [filePath, ark]{ QProcess::startDetached(ark, {u"--extract"_s, filePath}); });
+            } else {
+                menu.addAction(ti(u"archive-extract"_s), u"Abrir archivo comprimido"_s,
+                               [filePath, ark]{ QProcess::startDetached(ark, {filePath}); });
+            }
+        }
+    }
+}
 
 // ── Context menu ──────────────────────────────────────────────────────────────
 QString NativeMenu::showMenu(const QVariantMap &params)
@@ -27,9 +171,11 @@ QString NativeMenu::showMenu(const QVariantMap &params)
     const QString sortDir    = params.value(u"sortDir"_s).toString();
     const QString groupBy    = params.value(u"groupBy"_s).toString();
 
-    const bool isEmpty = type == u"empty"_s;
+    const bool isEmpty  = type == u"empty"_s;
+    const QString filePath = item.value(u"id"_s).toString();
     const bool isFolder = !isEmpty && (item.value(u"type"_s).toString() == u"folder"_s ||
                                        item.value(u"type"_s).toString() == u"drive"_s);
+    const bool isRealFile = !isEmpty && !isFolder && filePath.startsWith(u'/');
     const bool hasSel   = selectedCount > 0;
 
     QMenu menu;
@@ -49,10 +195,46 @@ QString NativeMenu::showMenu(const QVariantMap &params)
     };
 
     if (!isEmpty) {
-        QAction *openAct = act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
-        QFont f = openAct->font(); f.setBold(true); openAct->setFont(f);
-        if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
-        menu.addSeparator();
+        // ── Open action ───────────────────────────────────────────────────────
+        if (isRealFile) {
+            // Detect MIME and build "Open with <App>" label
+            QMimeDatabase mimeDb;
+            const QMimeType mime   = mimeDb.mimeTypeForFile(filePath);
+            const QString mimeName = mime.name();
+
+            auto [appName, appIcon] = defaultAppInfo(mimeName);
+            const QString openLabel = appName.isEmpty()
+                                      ? u"Abrir"_s
+                                      : u"Abrir con "_s + appName;
+            QAction *openAct = act(openLabel, u"open"_s,
+                                   appIcon.isEmpty() ? ti(u"document-open"_s) : ti(appIcon));
+            QFont bf = openAct->font(); bf.setBold(true); openAct->setFont(bf);
+
+            // "Abrir con" submenu
+            QMenu *owMenu = menu.addMenu(ti(u"document-open"_s), u"Abrir con"_s);
+            owMenu->addAction(ti(u"document-open"_s), u"Aplicación predeterminada"_s, [filePath]{
+                QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+            });
+            owMenu->addSeparator();
+            owMenu->addAction(u"Otra aplicación…"_s);
+
+            menu.addSeparator();
+
+            // Type-specific section
+            addTypeSpecificActions(menu, filePath, mimeName);
+
+            const bool hasTypeActions = !menu.actions().isEmpty();
+            if (hasTypeActions) menu.addSeparator();
+
+        } else {
+            // Folder / drive / mock item
+            QAction *openAct = act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
+            QFont f = openAct->font(); f.setBold(true); openAct->setFont(f);
+            if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
+            menu.addSeparator();
+        }
+
+        // ── Common actions ────────────────────────────────────────────────────
         QMenu *sendTo = menu.addMenu(u"Enviar a"_s);
         sendTo->addAction(ti(u"user-desktop"_s), u"Escritorio (crear acceso directo)"_s);
         sendTo->addAction(ti(u"mail-send"_s),    u"Destinatario de correo"_s);
