@@ -83,6 +83,15 @@ ApplicationWindow {
     }
     readonly property int currentItemCount: useGroupedView ? groupedItems.length : items.length
 
+    readonly property string totalSelectedSizeStr: {
+        if (selectedCount <= 1) return ""
+        var pool = useGroupedView ? groupedItems : items
+        var totalBytes = 0
+        for (var i = 0; i < pool.length; i++)
+            if (selectedIds[pool[i].id]) totalBytes += (pool[i].sizeBytes || 0)
+        return totalBytes > 0 ? fsBackend.formatFileSize(totalBytes) : ""
+    }
+
     readonly property string selectedItemType: {
         var item = selectedItem
         if (!item) return "none"
@@ -108,7 +117,7 @@ ApplicationWindow {
     property bool   showMenuBar:      false
     property bool   showSidebar:      true
     property bool   showPreview:      false
-    property bool   showDetailsPanel: false
+    property bool   showDetailsPanel: true
     property bool   showStatusBar:    true
     property int    sidebarWidth:     220
     property int    previewWidth:     260
@@ -135,6 +144,7 @@ ApplicationWindow {
                     name:       f.name,
                     type:       f.isDir ? "folder" : "file",
                     size:       f.sizeFormatted || "",
+                    sizeBytes:  f.isDir ? 0 : (f.size || 0),
                     modified:   f.modified || "",
                     iconSrc:    "image://fileicons/" + (f.mimeIcon || "file-generic"),
                     typeStr:    f.type || "",
@@ -749,7 +759,7 @@ ApplicationWindow {
             selectedCount:       win.selectedCount
             currentFolderName:   win.currentFolderName
             currentItemCount:    win.currentItemCount
-            totalSelectedSize:   win.selectedCount > 1 ? (win.selectedCount + " elementos seleccionados") : ""
+            totalSelectedSize:   win.totalSelectedSizeStr
             useGroupedView: win.useGroupedView
             currentKind:    win.currentNode ? (win.currentNode.kind || "") : ""
             systemInfo:     (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")

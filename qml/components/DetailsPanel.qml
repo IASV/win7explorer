@@ -13,9 +13,42 @@ Rectangle {
     property string currentFolderName: ""
     property int    currentItemCount:  0
     property string totalSelectedSize: ""
+    property int    panelHeight:       80
 
-    property int panelHeight: 80
+    property var    fileMetadata:      ({})
+    property bool   metaModified:      false
 
+    readonly property bool   computerMode: useGroupedView && currentKind === "computer" && selectedCount === 0
+    readonly property string metaCategory: fileMetadata.category || ""
+
+    // ── Metadata loading ───────────────────────────────────────────────────
+    onDetailItemChanged: {
+        root.fileMetadata = {}
+        root.metaModified = false
+        albumField.loadedValue = ""; albumField.text = ""
+        genreField.loadedValue = ""; genreField.text = ""
+        metaTimer.restart()
+    }
+
+    Timer {
+        id: metaTimer
+        interval: 150
+        onTriggered: {
+            if (root.detailItem && root.detailItem.id && root.detailItem.id.startsWith('/')) {
+                var meta = fsBackend.getFileMetadata(root.detailItem.id)
+                root.fileMetadata = meta
+                albumField.loadedValue = meta.album || ""
+                albumField.text = albumField.loadedValue
+                genreField.loadedValue = meta.genre || ""
+                genreField.text = genreField.loadedValue
+            } else {
+                root.fileMetadata = {}
+            }
+            root.metaModified = false
+        }
+    }
+
+    // ── Right-click size menu ──────────────────────────────────────────────
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.RightButton
@@ -28,13 +61,26 @@ Rectangle {
         }
     }
 
-    readonly property bool computerMode:
-        root.useGroupedView && root.currentKind === "computer" && root.selectedCount === 0
-
     color: pal.panel
     border.color: pal.borderSoft
 
-    // ── Computer / Equipo info bar ─────────────────────────────────────────
+    // ── Reusable star rating row ───────────────────────────────────────────
+    component StarRating: Row {
+        id: srRoot
+        property int rating: 0
+        spacing: 1
+        Repeater {
+            model: 5
+            Label {
+                text: "★"
+                font.pixelSize: 13
+                color: "#e8a800"
+                opacity: index < srRoot.rating ? 1.0 : 0.2
+            }
+        }
+    }
+
+    // ══ 1. COMPUTER MODE ══════════════════════════════════════════════════
     RowLayout {
         visible: root.computerMode
         anchors.fill: parent
@@ -44,152 +90,352 @@ Rectangle {
 
         Image {
             source: "image://fileicons/computer"
-            sourceSize: Qt.size(56, 56)
-            Layout.preferredWidth: 56; Layout.preferredHeight: 56
+            sourceSize: Qt.size(52, 52)
+            Layout.preferredWidth: 52; Layout.preferredHeight: 52
             fillMode: Image.PreserveAspectFit
         }
+        ColumnLayout { spacing: 3
+            Label { text: root.systemInfo ? root.systemInfo.hostname : ""
+                    color: pal.text; font.pixelSize: 13; font.bold: true }
+            Label { text: root.systemInfo ? root.systemInfo.osVersion : ""
+                    color: pal.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+        }
+        Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: pal.border; opacity: 0.5 }
+        ColumnLayout { Layout.fillWidth: true; spacing: 3
+            Label { text: root.systemInfo ? ("Memoria: " + root.systemInfo.ramFormatted) : ""
+                    color: pal.text; font.pixelSize: 11 }
+            Label { text: root.systemInfo ? ("Procesador: " + root.systemInfo.cpuModel) : ""
+                    color: pal.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+        }
+    }
 
-        ColumnLayout {
-            spacing: 3
+    // ══ 2. NO SELECTION ════════════════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && !root.detailItem && root.selectedCount === 0
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 8;   anchors.bottomMargin: 8
+        spacing: 14
 
-            Label {
-                text: root.systemInfo ? root.systemInfo.hostname : ""
-                color: root.pal.text
-                font.pixelSize: 13; font.bold: true
-            }
-            Label {
-                text: root.systemInfo ? root.systemInfo.osVersion : ""
-                color: root.pal.muted
-                font.pixelSize: 11
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+        Canvas {
+            width: 44; height: 44
+            property color fg: root.pal.muted
+            onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+            onPaint: {
+                var ctx = getContext("2d"); ctx.clearRect(0, 0, 44, 44)
+                ctx.strokeStyle = fg; ctx.globalAlpha = 0.2; ctx.lineWidth = 1.5
+                ctx.strokeRect(6, 8, 32, 28)
+                ctx.beginPath()
+                ctx.moveTo(12, 18); ctx.lineTo(32, 18)
+                ctx.moveTo(12, 24); ctx.lineTo(32, 24)
+                ctx.moveTo(12, 30); ctx.lineTo(24, 30)
+                ctx.stroke()
             }
         }
+        ColumnLayout { Layout.fillWidth: true; spacing: 3
+            Label { text: root.currentFolderName; color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+            Label { text: root.currentItemCount + " elemento" + (root.currentItemCount === 1 ? "" : "s")
+                    color: pal.muted; font.pixelSize: 11 }
+        }
+    }
 
-        Rectangle {
-            Layout.preferredWidth: 1
-            Layout.fillHeight: true
-            color: root.pal.border
-            opacity: 0.5
+    // ══ 3. MULTI-SELECTION ═════════════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && root.selectedCount > 1
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 8;   anchors.bottomMargin: 8
+        spacing: 14
+
+        Canvas {
+            width: 44; height: 44
+            property color fg: root.pal.muted
+            onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
+            onPaint: {
+                var ctx = getContext("2d"); ctx.clearRect(0, 0, 44, 44)
+                ctx.strokeStyle = fg; ctx.globalAlpha = 0.22; ctx.lineWidth = 1.2
+                ctx.strokeRect(4,  12, 26, 30)
+                ctx.strokeRect(8,  8,  26, 30)
+                ctx.strokeRect(12, 4,  26, 30)
+                ctx.beginPath()
+                ctx.moveTo(16, 16); ctx.lineTo(34, 16)
+                ctx.moveTo(16, 21); ctx.lineTo(34, 21)
+                ctx.stroke()
+            }
+        }
+        ColumnLayout { Layout.fillWidth: true; spacing: 3
+            Label { text: root.selectedCount + " elementos seleccionados"
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+            Label { visible: root.totalSelectedSize !== ""
+                    text: "Tamaño: " + root.totalSelectedSize
+                    color: pal.muted; font.pixelSize: 11 }
+        }
+    }
+
+    // ══ 4. DRIVE ═══════════════════════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && !!root.detailItem && root.detailItem.type === "drive"
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 8;   anchors.bottomMargin: 8
+        spacing: 14
+
+        Image {
+            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            sourceSize: Qt.size(48, 48)
+            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            fillMode: Image.PreserveAspectFit
+        }
+        ColumnLayout { Layout.fillWidth: true; spacing: 4
+            Label { text: root.detailItem ? root.detailItem.name : ""
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+            RowLayout { spacing: 20
+                Label { text: "Espacio disponible: " + (root.detailItem ? (root.detailItem.free || 0).toFixed(1) : "0") + " GB"
+                        color: pal.muted; font.pixelSize: 11 }
+                Label { text: "Total: " + (root.detailItem ? (root.detailItem.total || 0).toFixed(1) : "0") + " GB"
+                        color: pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.typeStr
+                        text: "Sistema de archivos: " + (root.detailItem ? root.detailItem.typeStr : "")
+                        color: pal.muted; font.pixelSize: 11 }
+            }
+        }
+    }
+
+    // ══ 5. AUDIO ═══════════════════════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && !!root.detailItem && root.metaCategory === "audio"
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 6;   anchors.bottomMargin: 6
+        spacing: 14
+
+        Image {
+            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            sourceSize: Qt.size(52, 52)
+            Layout.preferredWidth: 52; Layout.preferredHeight: 52
+            fillMode: Image.PreserveAspectFit
         }
 
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 3
+            clip: true
 
-            Label {
-                text: root.systemInfo ? ("Memoria: " + root.systemInfo.ramFormatted) : ""
-                color: root.pal.text
-                font.pixelSize: 11
+            // Row 1: title + artist + duration
+            RowLayout { spacing: 14; Layout.fillWidth: true
+                Label {
+                    text: (root.fileMetadata.title || "") !== "" ? root.fileMetadata.title
+                          : (root.detailItem ? root.detailItem.name : "")
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true
+                }
+                Label {
+                    visible: (root.fileMetadata.artist || "") !== ""
+                    text: "Intérpretes: " + (root.fileMetadata.artist || "")
+                    color: pal.text; font.pixelSize: 11
+                    elide: Text.ElideRight; Layout.maximumWidth: 200
+                }
+                Label {
+                    visible: (root.fileMetadata.duration || "") !== ""
+                    text: "Duración: " + (root.fileMetadata.duration || "")
+                    color: pal.muted; font.pixelSize: 11
+                }
             }
-            Label {
-                text: root.systemInfo ? ("Procesador: " + root.systemInfo.cpuModel) : ""
-                color: root.pal.muted
-                font.pixelSize: 11
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+
+            // Row 2: type + editable album + stars  (medium+)
+            RowLayout {
+                visible: root.panelHeight >= 70
+                spacing: 10; Layout.fillWidth: true
+
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""
+                        color: pal.muted; font.pixelSize: 11 }
+
+                Label { text: "Álbum:"; color: pal.muted; font.pixelSize: 11 }
+                TextField {
+                    id: albumField
+                    property string loadedValue: ""
+                    implicitWidth: 140; height: 20
+                    font.pixelSize: 11; color: pal.text
+                    leftPadding: 4; rightPadding: 4; topPadding: 1; bottomPadding: 1
+                    background: Rectangle {
+                        border.color: albumField.activeFocus ? pal.accent : pal.borderSoft
+                        color: pal.content; radius: 2
+                    }
+                    onTextChanged: if (text !== loadedValue) root.metaModified = true
+                }
+
+                StarRating { rating: root.fileMetadata.rating || 0 }
+                Item { Layout.fillWidth: true }
+            }
+
+            // Row 3: editable genre + save/cancel  (large only)
+            RowLayout {
+                visible: root.panelHeight >= 95
+                spacing: 10; Layout.fillWidth: true
+
+                Label { text: "Género:"; color: pal.muted; font.pixelSize: 11 }
+                TextField {
+                    id: genreField
+                    property string loadedValue: ""
+                    implicitWidth: 140; height: 20
+                    font.pixelSize: 11; color: pal.text
+                    leftPadding: 4; rightPadding: 4; topPadding: 1; bottomPadding: 1
+                    background: Rectangle {
+                        border.color: genreField.activeFocus ? pal.accent : pal.borderSoft
+                        color: pal.content; radius: 2
+                    }
+                    onTextChanged: if (text !== loadedValue) root.metaModified = true
+                }
+
+                // Save / Cancel
+                RowLayout {
+                    visible: root.metaModified
+                    spacing: 6
+                    Repeater {
+                        model: [
+                            { label: "Guardar",   isSave: true  },
+                            { label: "Cancelar",  isSave: false }
+                        ]
+                        delegate: Rectangle {
+                            implicitWidth: btnLbl.implicitWidth + 18; height: 22
+                            color: btnMa.containsMouse ? pal.accentSoft : pal.panel
+                            border.color: pal.border; radius: 3
+                            Label { id: btnLbl; anchors.centerIn: parent; text: modelData.label
+                                    font.pixelSize: 11; color: pal.text }
+                            MouseArea {
+                                id: btnMa; anchors.fill: parent; hoverEnabled: true
+                                onClicked: {
+                                    if (modelData.isSave) {
+                                        fsBackend.saveFileMetadata(root.detailItem.id, {
+                                            album: albumField.text,
+                                            genre: genreField.text
+                                        })
+                                        albumField.loadedValue = albumField.text
+                                        genreField.loadedValue = genreField.text
+                                    } else {
+                                        albumField.text = albumField.loadedValue
+                                        genreField.text = genreField.loadedValue
+                                    }
+                                    root.metaModified = false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
             }
         }
     }
 
-    // ── Normal file info bar ───────────────────────────────────────────────
+    // ══ 6. IMAGE ═══════════════════════════════════════════════════════════
     RowLayout {
-        visible: !root.computerMode
+        visible: !root.computerMode && !!root.detailItem && root.metaCategory === "image"
         anchors.fill: parent
         anchors.leftMargin: 14; anchors.rightMargin: 14
-        anchors.topMargin: 10;  anchors.bottomMargin: 10
+        anchors.topMargin: 6;   anchors.bottomMargin: 6
         spacing: 14
 
-        // Icon: thumbnail for images, file icon for others
         Image {
-            visible: root.detailItem !== null
-            source: root.detailItem
-                    ? (root.detailItem.previewSrc || root.detailItem.iconSrc || "")
-                    : ""
-            Layout.preferredWidth: 56; Layout.preferredHeight: 56
-            sourceSize: Qt.size(56, 56)
+            source: root.detailItem ? (root.detailItem.previewSrc || root.detailItem.iconSrc || "") : ""
+            sourceSize: Qt.size(52, 52)
+            Layout.preferredWidth: 52; Layout.preferredHeight: 52
             fillMode: Image.PreserveAspectFit
         }
-        Canvas {
-            visible: root.detailItem === null
-            width: 56; height: 56
-            property color fg: root.pal.muted
-            onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
-            onPaint: {
-                var ctx = getContext("2d"); ctx.clearRect(0,0,48,48)
-                ctx.strokeStyle=fg; ctx.globalAlpha=0.25; ctx.lineWidth=1.2
-                ctx.strokeRect(8,5,28,38)
-                ctx.beginPath(); ctx.moveTo(14,18); ctx.lineTo(30,18)
-                ctx.moveTo(14,24); ctx.lineTo(30,24); ctx.moveTo(14,30); ctx.lineTo(24,30); ctx.stroke()
+
+        ColumnLayout { Layout.fillWidth: true; spacing: 3; clip: true
+            Label { text: root.detailItem ? root.detailItem.name : ""
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+
+            RowLayout { spacing: 18
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: (root.fileMetadata.dimensions || "") !== ""
+                        text: root.fileMetadata.dimensions || ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.size
+                        text: root.detailItem ? (root.detailItem.size || "") : ""; color: pal.muted; font.pixelSize: 11 }
+            }
+
+            RowLayout { visible: root.panelHeight >= 70; spacing: 16
+                Label { text: "Etiquetas:"; color: pal.muted; font.pixelSize: 11 }
+                Label { text: "Agregar una etiqueta"; color: pal.accent; font.pixelSize: 11; opacity: 0.85 }
+                Label { text: "Clasificación:"; color: pal.muted; font.pixelSize: 11 }
+                StarRating { rating: 0 }
+                Item { Layout.fillWidth: true }
             }
         }
+    }
 
-        ColumnLayout {
-            Layout.fillWidth: true; spacing: 4
+    // ══ 7. VIDEO ═══════════════════════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && !!root.detailItem && root.metaCategory === "video"
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 8;   anchors.bottomMargin: 8
+        spacing: 14
 
-            // No selection → current folder name + item count
-            Label {
-                visible: root.detailItem === null && root.selectedCount === 0
-                text: root.currentFolderName
-                color: root.pal.text; font.pixelSize: 13; font.bold: true
-                elide: Text.ElideRight; Layout.fillWidth: true
+        Image {
+            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            sourceSize: Qt.size(48, 48)
+            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            fillMode: Image.PreserveAspectFit
+        }
+        ColumnLayout { Layout.fillWidth: true; spacing: 4
+            Label { text: root.detailItem ? root.detailItem.name : ""
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+            RowLayout { spacing: 18
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: (root.fileMetadata.dimensions || "") !== ""
+                        text: root.fileMetadata.dimensions || ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: (root.fileMetadata.duration || "") !== ""
+                        text: "Duración: " + (root.fileMetadata.duration || ""); color: pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.size
+                        text: root.detailItem ? (root.detailItem.size || "") : ""; color: pal.muted; font.pixelSize: 11 }
             }
-            Label {
-                visible: root.detailItem === null && root.selectedCount === 0
-                text: root.currentItemCount + " elemento" + (root.currentItemCount === 1 ? "" : "s")
-                color: root.pal.muted; font.pixelSize: 11
-            }
+        }
+    }
 
-            // Multi-selection
-            Label {
-                visible: root.selectedCount > 1
-                text: root.selectedCount + " elementos seleccionados"
-                color: root.pal.text; font.pixelSize: 13; font.bold: true
-                elide: Text.ElideRight; Layout.fillWidth: true
-            }
-            Label {
-                visible: root.selectedCount > 1 && root.totalSelectedSize !== ""
-                text: root.totalSelectedSize
-                color: root.pal.muted; font.pixelSize: 11
-            }
+    // ══ 8. GENERIC FILE / FOLDER ═══════════════════════════════════════════
+    RowLayout {
+        visible: !root.computerMode && !!root.detailItem
+                 && root.detailItem.type !== "drive"
+                 && root.metaCategory !== "audio"
+                 && root.metaCategory !== "image"
+                 && root.metaCategory !== "video"
+        anchors.fill: parent
+        anchors.leftMargin: 14; anchors.rightMargin: 14
+        anchors.topMargin: 6;   anchors.bottomMargin: 6
+        spacing: 14
 
-            // Single selection
-            Label {
-                visible: root.detailItem !== null
-                text: root.detailItem ? root.detailItem.name : ""
-                color: root.pal.text; font.pixelSize: 13; font.bold: true
-                elide: Text.ElideRight; Layout.fillWidth: true
+        Image {
+            source: root.detailItem ? (root.detailItem.iconSrc || "") : ""
+            sourceSize: Qt.size(48, 48)
+            Layout.preferredWidth: 48; Layout.preferredHeight: 48
+            fillMode: Image.PreserveAspectFit
+        }
+        ColumnLayout { Layout.fillWidth: true; spacing: 3; clip: true
+            Label { text: root.detailItem ? root.detailItem.name : ""
+                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    elide: Text.ElideRight; Layout.fillWidth: true }
+            RowLayout { spacing: 18
+                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.size
+                        text: root.detailItem ? (root.detailItem.size || "") : ""; color: pal.muted; font.pixelSize: 11 }
+                Label { visible: root.detailItem && !!root.detailItem.modified
+                        text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""
+                        color: pal.muted; font.pixelSize: 11 }
             }
-            // Drive info (filesystem + free space)
+            // Stars for files (not folders)
             RowLayout {
-                visible: root.detailItem !== null && root.detailItem.type === "drive"
-                spacing: 12
-                Label {
-                    text: root.detailItem ? (root.detailItem.typeStr || "Unidad local") : ""
-                    color: root.pal.muted; font.pixelSize: 11
-                }
-                Label {
-                    visible: root.detailItem && root.detailItem.free !== undefined && root.detailItem.free > 0
-                    text: root.detailItem && root.detailItem.free !== undefined
-                          ? "Espacio disponible: " + (root.detailItem.free || 0).toFixed(1) + " GB"
-                          : ""
-                    color: root.pal.muted; font.pixelSize: 11
-                }
-                Label {
-                    visible: root.detailItem && root.detailItem.total !== undefined && root.detailItem.total > 0
-                    text: root.detailItem && root.detailItem.total !== undefined
-                          ? "Total: " + (root.detailItem.total || 0).toFixed(1) + " GB"
-                          : ""
-                    color: root.pal.muted; font.pixelSize: 11
-                }
-            }
-            // File / folder info
-            RowLayout {
-                visible: root.detailItem !== null && root.detailItem.type !== "drive"
-                spacing: 18
-                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
-                Label { visible: root.detailItem && !!root.detailItem.size;     text: root.detailItem ? (root.detailItem.size || "") : ""; color: root.pal.muted; font.pixelSize: 11 }
-                Label { visible: root.detailItem && !!root.detailItem.modified; text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""; color: root.pal.muted; font.pixelSize: 11 }
+                visible: root.panelHeight >= 70 && root.detailItem && root.detailItem.type !== "folder"
+                spacing: 10
+                Label { text: "Clasificación:"; color: pal.muted; font.pixelSize: 11 }
+                StarRating { rating: 0 }
+                Item { Layout.fillWidth: true }
             }
         }
     }

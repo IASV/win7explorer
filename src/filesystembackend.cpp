@@ -7,6 +7,11 @@
 #include <QSettings>
 #include <QSysInfo>
 #include <QDebug>
+#include <QImageReader>
+#include <QProcess>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <unistd.h>
 
 static bool copyDirRecursively(const QString &src, const QString &dst)
@@ -657,4 +662,114 @@ void FileSystemBackend::loadDirectory(const QString &path)
 
     emit currentFilesChanged();
     emit selectedFileChanged();
+}
+
+QVariantMap FileSystemBackend::getFileMetadata(const QString &path) const
+{
+    QVariantMap result;
+    if (path.isEmpty() || !path.startsWith(QLatin1Char('/'))) return result;
+    QFileInfo fi(path);
+    if (!fi.exists() || !fi.isFile()) return result;
+
+    const QMimeType mime = m_mimeDb.mimeTypeForFile(path);
+    const QString mimeName = mime.name();
+    result[QStringLiteral("mime")] = mimeName;
+
+    const QDateTime born = fi.birthTime().isValid() ? fi.birthTime() : fi.lastModified();
+    result[QStringLiteral("created")] = born.toString(QStringLiteral("dd/MM/yyyy hh:mm"));
+
+    if (mimeName.startsWith(QLatin1String("image/"))) {
+        result[QStringLiteral("category")] = QStringLiteral("image");
+        QImageReader reader(path);
+        const QSize sz = reader.size();
+        if (sz.isValid())
+            result[QStringLiteral("dimensions")] =
+                QString::number(sz.width()) + QStringLiteral(" x ") + QString::number(sz.height());
+    }
+    else if (mimeName.startsWith(QLatin1String("audio/")) ||
+             mimeName.startsWith(QLatin1String("video/"))) {
+        const bool isAudio = mimeName.startsWith(QLatin1String("audio/"));
+        result[QStringLiteral("category")] = isAudio ? QStringLiteral("audio")
+                                                      : QStringLiteral("video");
+
+        QProcess proc;
+        proc.start(QStringLiteral("ffprobe"),
+                   {QStringLiteral("-v"),           QStringLiteral("quiet"),
+                    QStringLiteral("-print_format"), QStringLiteral("json"),
+                    QStringLiteral("-show_format"), QStringLiteral("-show_streams"), path});
+
+        if (proc.waitForFinished(4000)) {
+            const QJsonObject root =
+                QJsonDocument::fromJson(proc.readAllStandardOutput()).object();
+            const QJsonObject fmt     = root[QLatin1String("format")].toObject();
+            const QJsonObject fmtTags = fmt[QLatin1String("tags")].toObject();
+
+            QJsonObject stmTags;
+            int vW = 0, vH = 0;
+            for (const QJsonValue &sv : root[QLatin1String("streams")].toArray()) {
+                const QJsonObject so = sv.toObject();
+                const QString ctype = so[QLatin1String("codec_type")].toString();
+                if (ctype == QLatin1String("audio") && stmTags.isEmpty())
+                    stmTags = so[QLatin1String("tags")].toObject();
+                if (ctype == QLatin1String("video") && vW == 0) {
+                    vW = so[QLatin1String("width")].toInt();
+                    vH = so[QLatin1String("height")].toInt();
+                }
+            }
+
+            auto tag = [&](const QString &key) -> QString {
+                for (const QJsonObject &obj : {fmtTags, stmTags})
+                    for (auto it = obj.begin(); it != obj.end(); ++it)
+                        if (it.key().compare(key, Qt::CaseInsensitive) == 0)
+                            return it.value().toString();
+                return {};
+            };
+
+            if (isAudio) {
+                result[QStringLiteral("title")]  = tag(QStringLiteral("title"));
+                result[QStringLiteral("artist")] = tag(QStringLiteral("artist"));
+                result[QStringLiteral("album")]  = tag(QStringLiteral("album"));
+                result[QStringLiteral("genre")]  = tag(QStringLiteral("genre"));
+            }
+            if (!isAudio && vW > 0)
+                result[QStringLiteral("dimensions")] =
+                    QString::number(vW) + QStringLiteral(" x ") + QString::number(vH);
+
+            bool ok = false;
+            const double dur = fmt[QLatin1String("duration")].toString().toDouble(&ok);
+            if (ok && dur > 0.5) {
+                const int h = int(dur) / 3600;
+                const int m = (int(dur) % 3600) / 60;
+                const int s = int(dur) % 60;
+                result[QStringLiteral("duration")] = h > 0
+                    ? QString::asprintf("%d:%02d:%02d", h, m, s)
+                    : QString::asprintf("%02d:%02d", m, s);
+            }
+        }
+    }
+    return result;
+}
+
+bool FileSystemBackend::saveFileMetadata(const QString &path, const QVariantMap &metadata)
+{
+    if (!QFileInfo::exists(path)) return false;
+    const QString tmpPath = path + QStringLiteral(".__meta_tmp__");
+
+    QStringList args = {QStringLiteral("-y"),
+                        QStringLiteral("-i"), path,
+                        QStringLiteral("-map_metadata"), QStringLiteral("0"),
+                        QStringLiteral("-c"), QStringLiteral("copy")};
+    for (auto it = metadata.cbegin(); it != metadata.cend(); ++it)
+        args << QStringLiteral("-metadata")
+             << (it.key() + QLatin1Char('=') + it.value().toString());
+    args << tmpPath;
+
+    QProcess proc;
+    proc.start(QStringLiteral("ffmpeg"), args);
+    if (!proc.waitForFinished(30000) || proc.exitCode() != 0) {
+        QFile::remove(tmpPath);
+        return false;
+    }
+    QFile::remove(path);
+    return QFile::rename(tmpPath, path);
 }

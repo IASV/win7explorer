@@ -200,7 +200,7 @@ Rectangle {
                             // Dropdown arrow ► (I1)
                             Rectangle {
                                 id: arrowBox
-                                visible: crumbMa.containsMouse || arrowMa.containsMouse || sibMenu.visible
+                                visible: crumbMa.containsMouse || arrowMa.containsMouse
                                 anchors.right: parent.right; anchors.rightMargin: 2
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 12; height: 18

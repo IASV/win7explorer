@@ -93,6 +93,9 @@ public:
     Q_INVOKABLE bool renameItem(const QString &oldPath, const QString &newPath);
     Q_INVOKABLE bool createFolder(const QString &parentPath, const QString &name);
 
+    // Rich file metadata (image dims, audio tags via ffprobe)
+    Q_INVOKABLE QVariantMap getFileMetadata(const QString &path) const;
+    Q_INVOKABLE bool        saveFileMetadata(const QString &path, const QVariantMap &metadata);
 
 signals:
     void currentPathChanged();

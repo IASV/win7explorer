@@ -548,9 +548,9 @@ int NativeMenu::showDetailsPanelSizeMenu()
     QMenu menu;
     int result = -1;
 
-    menu.addAction(u"Pequeño"_s, [&result]{ result = 56; });
-    menu.addAction(u"Mediano"_s, [&result]{ result = 72; });
-    menu.addAction(u"Grande"_s,  [&result]{ result = 100; });
+    menu.addAction(u"Pequeño"_s, [&result]{ result = 56;  });
+    menu.addAction(u"Mediano"_s, [&result]{ result = 80;  });
+    menu.addAction(u"Grande"_s,  [&result]{ result = 110; });
 
     menu.exec(QCursor::pos());
     return result;
