@@ -223,8 +223,9 @@ ScrollView {
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onClicked: function(mouse) {
-                                    root.itemClicked(modelData, false, false)
-                                    if (mouse.button === Qt.RightButton)
+                                    if (mouse.button === Qt.LeftButton)
+                                        root.itemClicked(modelData, false, false)
+                                    else if (mouse.button === Qt.RightButton)
                                         root.contextMenuRequested(modelData)
                                 }
                                 onDoubleClicked: root.itemDoubleClicked(modelData)

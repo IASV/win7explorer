@@ -664,6 +664,18 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 color: win.pal.content
 
+                // Empty-area right-click — declared BEFORE Loader so it sits behind it.
+                // Flickables/ListViews only accept Qt.LeftButton by default, so right-clicks
+                // on empty space fall through the view and reach this MouseArea.
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onClicked: function(mouse) {
+                        win.selectedIds = {}
+                        win.showContextMenu(null)
+                    }
+                }
+
                 Loader {
                     id: viewLoader
                     anchors.fill: parent
@@ -678,19 +690,6 @@ ApplicationWindow {
                         if (win.viewMode === "tiles")   return tilesComp
                         if (win.viewMode === "content") return contentComp
                         return iconsComp
-                    }
-                }
-
-                // Empty-area right-click
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.RightButton
-                    propagateComposedEvents: true
-                    onClicked: function(mouse) {
-                        if (mouse.button === Qt.RightButton) {
-                            win.selectedIds = {}
-                            win.showContextMenu(null)
-                        }
                     }
                 }
             }

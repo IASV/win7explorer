@@ -64,10 +64,11 @@ Item {
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 onClicked: (mouse) => {
-                    root.itemClicked(modelData,
-                        !!(mouse.modifiers & Qt.ControlModifier),
-                        !!(mouse.modifiers & Qt.ShiftModifier))
-                    if (mouse.button === Qt.RightButton)
+                    if (mouse.button === Qt.LeftButton)
+                        root.itemClicked(modelData,
+                            !!(mouse.modifiers & Qt.ControlModifier),
+                            !!(mouse.modifiers & Qt.ShiftModifier))
+                    else if (mouse.button === Qt.RightButton)
                         root.contextMenuRequested(modelData)
                 }
                 onDoubleClicked: root.itemDoubleClicked(modelData)
