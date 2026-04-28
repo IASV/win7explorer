@@ -19,8 +19,8 @@ GridView {
         return 16
     }
 
-    cellWidth:  viewMode === "xlarge" ? 175 : viewMode === "large" ? 110 : viewMode === "medium" ? 82 : 110
-    cellHeight: viewMode === "xlarge" ? 165 : viewMode === "large" ? 100 : viewMode === "medium" ? 78 : 22
+    cellWidth:  viewMode === "xlarge" ? 180 : viewMode === "large" ? 116 : viewMode === "medium" ? 90 : 110
+    cellHeight: viewMode === "xlarge" ? 180 : viewMode === "large" ? 112 : viewMode === "medium" ? 88 : 22
     clip: true
 
     delegate: Rectangle {
@@ -37,10 +37,11 @@ GridView {
             anchors.fill: parent
             anchors.margins: 4
             spacing: 4
+            clip: true
 
             Image {
                 Layout.alignment: Qt.AlignHCenter
-                source: modelData.iconSrc || ""
+                source: modelData.previewSrc || modelData.iconSrc || ""
                 Layout.preferredWidth:  root.iconSize
                 Layout.preferredHeight: root.iconSize
                 sourceSize.width:  root.iconSize

@@ -32,7 +32,7 @@ ListView {
             spacing: 14
 
             Image {
-                source: modelData.iconSrc || ""
+                source: modelData.previewSrc || modelData.iconSrc || ""
                 Layout.preferredWidth: 44; Layout.preferredHeight: 44
                 fillMode: Image.PreserveAspectFit
             }

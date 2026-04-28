@@ -236,7 +236,7 @@ Item {
         var libs = fsBackend.getLibraries()
         treeModel.append({
             name: "Bibliotecas", type: "header", level: 0, icon: "document",
-            path: "", hasChildren: libs.length > 0, expanded: true, sectionType: "libraries"
+            path: "libraries", hasChildren: libs.length > 0, expanded: true, sectionType: "libraries"
         })
         for (var j = 0; j < libs.length; j++)
             treeModel.append({

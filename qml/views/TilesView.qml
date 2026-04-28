@@ -41,7 +41,7 @@ ScrollView {
                     spacing: 8
 
                     Image {
-                        source: modelData.iconSrc || ""
+                        source: modelData.previewSrc || modelData.iconSrc || ""
                         Layout.preferredWidth:  40
                         Layout.preferredHeight: 40
                         Layout.alignment: Qt.AlignVCenter

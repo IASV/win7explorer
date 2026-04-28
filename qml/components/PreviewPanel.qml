@@ -46,10 +46,9 @@ Rectangle {
 
             Image {
                 visible: root.previewItem !== null
-                anchors.centerIn: parent
-                width: 96; height: 96
+                anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: root.previewItem ? (root.previewItem.iconSrc || "") : ""
+                source: root.previewItem ? (root.previewItem.previewSrc || root.previewItem.iconSrc || "") : ""
             }
         }
 

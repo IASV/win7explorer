@@ -19,6 +19,7 @@ ApplicationWindow {
     color: pal.bg1
 
     title: {
+        if (currentId === "libraries") return "Bibliotecas — Win7 Explorer"
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name + " — Win7 Explorer"
         if (currentNode) return currentNode.name + " — Win7 Explorer"
@@ -51,6 +52,8 @@ ApplicationWindow {
     readonly property bool isRealPath: currentId.startsWith("/")
     readonly property var  currentNode: isRealPath ? null : fs.findNode(currentId)
     readonly property var  pathToCurrent: {
+        if (currentId === "libraries")
+            return [{ name: "Bibliotecas", id: "libraries", path: "libraries" }]
         if (isRealPath) {
             var segs = fsBackend.pathSegments
             var result = []
@@ -87,7 +90,7 @@ ApplicationWindow {
 
     readonly property bool isSpecialPath: {
         if (!isRealPath)
-            return currentId === "trash" || currentId === "network"
+            return currentId === "trash" || currentId === "network" || currentId === "libraries"
         return currentId === fsBackend.homePath()      ||
                currentId === fsBackend.desktopPath()   ||
                currentId === fsBackend.documentsPath() ||
@@ -99,8 +102,9 @@ ApplicationWindow {
 
     readonly property string currentFolderIconSrc: {
         if (!isRealPath) {
-            if (currentId === "trash")   return "image://fileicons/user-trash"
-            if (currentId === "network") return "image://fileicons/network-workgroup"
+            if (currentId === "trash")     return "image://fileicons/user-trash"
+            if (currentId === "network")   return "image://fileicons/network-workgroup"
+            if (currentId === "libraries") return "image://fileicons/document"
             return "image://fileicons/folder-closed"
         }
         var si = specialFolderIcon(currentId)
@@ -108,6 +112,7 @@ ApplicationWindow {
     }
 
     readonly property string currentFolderName: {
+        if (currentId === "libraries") return "Bibliotecas"
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
         if (currentNode) return currentNode.name
@@ -197,7 +202,23 @@ ApplicationWindow {
 
     // ── Computed item list ─────────────────────────────────────────────────
     readonly property var items: {
-        var raw = isRealPath ? realFiles : (currentNode ? (currentNode.children || []) : [])
+        var raw
+        if (currentId === "libraries") {
+            var libList = fsBackend.getLibraries()
+            raw = []
+            for (var li = 0; li < libList.length; li++) {
+                var lib = libList[li]
+                raw.push({
+                    id: lib.path, name: lib.name, type: "folder",
+                    size: "", sizeBytes: 0, modified: "",
+                    iconSrc:    "image://fileicons/" + lib.icon,
+                    typeStr:    "Biblioteca",
+                    previewSrc: ""
+                })
+            }
+            return raw
+        }
+        raw = isRealPath ? realFiles : (currentNode ? (currentNode.children || []) : [])
         var arr = raw.slice()
 
         // Attach iconSrc / typeStr to mock items
