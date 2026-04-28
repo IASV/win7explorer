@@ -22,21 +22,9 @@ Rectangle {
         spacing: 10
 
         Label {
-            visible: root.selectedCount === 0
-            text: root.itemCount + " elemento" + (root.itemCount === 1 ? "" : "s")
-            color: root.pal.muted; font.pixelSize: 11
-        }
-        Label {
-            visible: root.selectedCount > 1
             text: root.selectedCount + " elementos seleccionados"
             color: root.pal.muted; font.pixelSize: 11
         }
-
-        Label {
-            visible: root.selectedCount === 1
-            text: root.selItem ? root.selItem.name : ""
-            color: root.pal.text; font.pixelSize: 11; font.bold: true
-            elide: Text.ElideRight; Layout.fillWidth: true
-        }
+        Item { Layout.fillWidth: true }
     }
 }

@@ -17,6 +17,7 @@ Rectangle {
 
     property var    fileMetadata:      ({})
     property bool   metaModified:      false
+    property string currentFolderIconSrc: "image://fileicons/folder-closed"
 
     readonly property bool   computerMode: useGroupedView && currentKind === "computer" && selectedCount === 0
     readonly property string metaCategory: fileMetadata.category || ""
@@ -64,22 +65,6 @@ Rectangle {
     color: pal.panel
     border.color: pal.borderSoft
 
-    // ── Reusable star rating row ───────────────────────────────────────────
-    component StarRating: Row {
-        id: srRoot
-        property int rating: 0
-        spacing: 1
-        Repeater {
-            model: 5
-            Label {
-                text: "★"
-                font.pixelSize: 13
-                color: "#e8a800"
-                opacity: index < srRoot.rating ? 1.0 : 0.2
-            }
-        }
-    }
-
     // ══ 1. COMPUTER MODE ══════════════════════════════════════════════════
     RowLayout {
         visible: root.computerMode
@@ -117,20 +102,11 @@ Rectangle {
         anchors.topMargin: 8;   anchors.bottomMargin: 8
         spacing: 14
 
-        Canvas {
-            width: 44; height: 44
-            property color fg: root.pal.muted
-            onFgChanged: requestPaint(); Component.onCompleted: requestPaint()
-            onPaint: {
-                var ctx = getContext("2d"); ctx.clearRect(0, 0, 44, 44)
-                ctx.strokeStyle = fg; ctx.globalAlpha = 0.2; ctx.lineWidth = 1.5
-                ctx.strokeRect(6, 8, 32, 28)
-                ctx.beginPath()
-                ctx.moveTo(12, 18); ctx.lineTo(32, 18)
-                ctx.moveTo(12, 24); ctx.lineTo(32, 24)
-                ctx.moveTo(12, 30); ctx.lineTo(24, 30)
-                ctx.stroke()
-            }
+        Image {
+            source: root.currentFolderIconSrc
+            sourceSize: Qt.size(44, 44)
+            Layout.preferredWidth: 44; Layout.preferredHeight: 44
+            fillMode: Image.PreserveAspectFit
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 3
             Label { text: root.currentFolderName; color: pal.text; font.pixelSize: 13; font.bold: true
@@ -245,7 +221,7 @@ Rectangle {
                 }
             }
 
-            // Row 2: type + editable album + stars  (medium+)
+            // Row 2: type + editable album  (medium+)
             RowLayout {
                 visible: root.panelHeight >= 70
                 spacing: 10; Layout.fillWidth: true
@@ -267,7 +243,6 @@ Rectangle {
                     onTextChanged: if (text !== loadedValue) root.metaModified = true
                 }
 
-                StarRating { rating: root.fileMetadata.rating || 0 }
                 Item { Layout.fillWidth: true }
             }
 
@@ -362,8 +337,6 @@ Rectangle {
             RowLayout { visible: root.panelHeight >= 70; spacing: 16
                 Label { text: "Etiquetas:"; color: pal.muted; font.pixelSize: 11 }
                 Label { text: "Agregar una etiqueta"; color: pal.accent; font.pixelSize: 11; opacity: 0.85 }
-                Label { text: "Clasificación:"; color: pal.muted; font.pixelSize: 11 }
-                StarRating { rating: 0 }
                 Item { Layout.fillWidth: true }
             }
         }
@@ -428,14 +401,6 @@ Rectangle {
                 Label { visible: root.detailItem && !!root.detailItem.modified
                         text: root.detailItem ? ("Modificado: " + (root.detailItem.modified || "")) : ""
                         color: pal.muted; font.pixelSize: 11 }
-            }
-            // Stars for files (not folders)
-            RowLayout {
-                visible: root.panelHeight >= 70 && root.detailItem && root.detailItem.type !== "folder"
-                spacing: 10
-                Label { text: "Clasificación:"; color: pal.muted; font.pixelSize: 11 }
-                StarRating { rating: 0 }
-                Item { Layout.fillWidth: true }
             }
         }
     }

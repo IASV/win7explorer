@@ -75,6 +75,38 @@ ApplicationWindow {
         return null
     }
 
+    // ── Special-path detection ─────────────────────────────────────────────
+    function specialFolderIcon(path) {
+        if (path === fsBackend.documentsPath()) return "document"
+        if (path === fsBackend.musicPath())     return "music"
+        if (path === fsBackend.picturesPath())  return "picture"
+        if (path === fsBackend.videosPath())    return "video"
+        if (path === fsBackend.downloadsPath()) return "folder-blue"
+        return null
+    }
+
+    readonly property bool isSpecialPath: {
+        if (!isRealPath)
+            return currentId === "trash" || currentId === "network"
+        return currentId === fsBackend.homePath()      ||
+               currentId === fsBackend.desktopPath()   ||
+               currentId === fsBackend.documentsPath() ||
+               currentId === fsBackend.musicPath()     ||
+               currentId === fsBackend.picturesPath()  ||
+               currentId === fsBackend.videosPath()    ||
+               currentId === fsBackend.downloadsPath()
+    }
+
+    readonly property string currentFolderIconSrc: {
+        if (!isRealPath) {
+            if (currentId === "trash")   return "image://fileicons/user-trash"
+            if (currentId === "network") return "image://fileicons/network-workgroup"
+            return "image://fileicons/folder-closed"
+        }
+        var si = specialFolderIcon(currentId)
+        return "image://fileicons/" + (si || "folder-closed")
+    }
+
     readonly property string currentFolderName: {
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
@@ -139,6 +171,8 @@ ApplicationWindow {
             for (var i = 0; i < raw.length; i++) {
                 var f = raw[i]
                 var isImg = !f.isDir && (f.mimeIcon || "").indexOf("image") >= 0
+                var iconName = f.isDir ? (win.specialFolderIcon(f.path) || f.mimeIcon || "folder-closed")
+                                       : (f.mimeIcon || "file-generic")
                 arr.push({
                     id:         f.path,
                     name:       f.name,
@@ -146,7 +180,7 @@ ApplicationWindow {
                     size:       f.sizeFormatted || "",
                     sizeBytes:  f.isDir ? 0 : (f.size || 0),
                     modified:   f.modified || "",
-                    iconSrc:    "image://fileicons/" + (f.mimeIcon || "file-generic"),
+                    iconSrc:    "image://fileicons/" + iconName,
                     typeStr:    f.type || "",
                     previewSrc: isImg ? ("image://fileicons/" + encodeURIComponent(f.path)) : ""
                 })
@@ -733,8 +767,8 @@ ApplicationWindow {
         // Details panel drag handle + separator
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? 4 : 0
-            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 4 : 0
+            Layout.preferredHeight: ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 4 : 0
+            Layout.maximumHeight:   ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 4 : 0
             color: win.pal.borderSoft
             MouseArea {
                 anchors.fill: parent
@@ -751,27 +785,28 @@ ApplicationWindow {
         DetailsPanel {
             id: detailsPanel
             Layout.fillWidth: true
-            Layout.preferredHeight: (win.showDetailsPanel || win.useGroupedView) ? detailsPanel.panelHeight : 0
-            Layout.maximumHeight:   (win.showDetailsPanel || win.useGroupedView) ? 200 : 0
+            Layout.preferredHeight: ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? detailsPanel.panelHeight : 0
+            Layout.maximumHeight:   ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 200 : 0
             clip: true
-            pal:            win.pal
+            pal:                 win.pal
             detailItem:          win.selectedItem
             selectedCount:       win.selectedCount
             currentFolderName:   win.currentFolderName
             currentItemCount:    win.currentItemCount
             totalSelectedSize:   win.totalSelectedSizeStr
-            useGroupedView: win.useGroupedView
-            currentKind:    win.currentNode ? (win.currentNode.kind || "") : ""
-            systemInfo:     (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")
-                                ? fsBackend.getSystemInfo() : null
+            currentFolderIconSrc: win.currentFolderIconSrc
+            useGroupedView:      win.useGroupedView
+            currentKind:         win.currentNode ? (win.currentNode.kind || "") : ""
+            systemInfo:          (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")
+                                     ? fsBackend.getSystemInfo() : null
         }
 
         // Status bar
         StatusBar {
             Layout.fillWidth: true
-            Layout.preferredHeight: win.showStatusBar ? 24 : 0
-            Layout.maximumHeight:   win.showStatusBar ? 24 : 0
-            visible: win.showStatusBar
+            Layout.preferredHeight: (win.showStatusBar && win.selectedCount > 1) ? 24 : 0
+            Layout.maximumHeight:   (win.showStatusBar && win.selectedCount > 1) ? 24 : 0
+            visible: win.showStatusBar && win.selectedCount > 1
             pal:           win.pal
             itemCount:     win.useGroupedView ? win.groupedItems.length : win.items.length
             selectedCount: win.selectedCount
