@@ -115,7 +115,6 @@ Menu {
         text: "Abrir"
         enabled: root.targetItem !== null
         visible: !root.isEmpty
-        font.bold: !root.isEmpty
         onTriggered: root.openRequested(root.targetItem)
     }
     W7Item {

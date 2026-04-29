@@ -56,7 +56,7 @@ Rectangle {
             visible: root.previewItem !== null
             Layout.fillWidth: true
             text: root.previewItem ? root.previewItem.name : ""
-            color: root.pal.text; font.pixelSize: 12; font.bold: true
+            color: root.pal.text; font.pixelSize: 12; 
             horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap
         }
 

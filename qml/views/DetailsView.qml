@@ -152,7 +152,7 @@ ColumnLayout {
                         Label {
                             text: modelData.label + (root.isFiltered(headerCell.colId) ? " ●" : "")
                             color: root.sortBy === headerCell.colId ? root.pal.accent : root.pal.text
-                            font.pixelSize: 11; font.bold: true
+                            font.pixelSize: 11
                             Layout.fillWidth: true
                         }
 
@@ -216,7 +216,7 @@ ColumnLayout {
             color: root.pal.tbar2
             RowLayout {
                 anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10; spacing: 6
-                Label { text: section; color: root.pal.accent; font.pixelSize: 11; font.bold: true }
+                Label { text: section; color: root.pal.accent; font.pixelSize: 11 }
                 Rectangle { Layout.fillWidth: true; height: 1; color: root.pal.border; Layout.alignment: Qt.AlignVCenter }
             }
         }

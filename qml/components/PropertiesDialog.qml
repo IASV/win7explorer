@@ -8,13 +8,13 @@ Window {
     property var item:      null
     property var fileProps: ({})
 
-    title:      item ? ("Propiedades: " + (item.name || "")) : "Propiedades"
-    width:      420
-    height:     545
+    title:       item ? ("Propiedades: " + (item.name || "")) : "Propiedades"
+    width:       420
+    height:      620
     minimumWidth:  400
-    minimumHeight: 500
-    modality:   Qt.ApplicationModal
-    flags:      Qt.Dialog
+    minimumHeight: 540
+    modality:    Qt.ApplicationModal
+    flags:       Qt.Dialog
 
     onVisibleChanged: {
         if (visible && root.item && root.item.id && root.item.id.startsWith('/'))
@@ -40,7 +40,7 @@ Window {
             }
             Label {
                 text: root.item ? (root.item.name || "") : ""
-                font.pixelSize: 13; font.bold: true
+                font.pixelSize: 13
                 Layout.fillWidth: true; elide: Text.ElideRight
             }
         }
@@ -115,15 +115,74 @@ Window {
             CheckBox { text: "Oculto";       checked: root.fileProps.hidden   || false; font.pixelSize: 11; enabled: false }
         }
 
+        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+        // ── Permisos ───────────────────────────────────────────────
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 4
+
+            Label { text: "Permisos:"; font.pixelSize: 11; color: "#555" }
+
+            GridLayout {
+                columns: 4
+                columnSpacing: 10; rowSpacing: 2
+
+                Label { text: "" }
+                Label { text: "Lectura";   font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                Label { text: "Escritura"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                Label { text: "Ejecución"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+
+                Label { text: "Propietario"; font.pixelSize: 11; color: "#555" }
+                CheckBox { id: ownerRead;   checked: root.fileProps.ownerRead  || false; font.pixelSize: 11 }
+                CheckBox { id: ownerWrite;  checked: root.fileProps.ownerWrite || false; font.pixelSize: 11 }
+                CheckBox { id: ownerExec;   checked: root.fileProps.ownerExec  || false; font.pixelSize: 11 }
+
+                Label { text: "Grupo"; font.pixelSize: 11; color: "#555" }
+                CheckBox { id: groupRead;   checked: root.fileProps.groupRead  || false; font.pixelSize: 11 }
+                CheckBox { id: groupWrite;  checked: root.fileProps.groupWrite || false; font.pixelSize: 11 }
+                CheckBox { id: groupExec;   checked: root.fileProps.groupExec  || false; font.pixelSize: 11 }
+
+                Label { text: "Otros"; font.pixelSize: 11; color: "#555" }
+                CheckBox { id: othersRead;  checked: root.fileProps.othersRead  || false; font.pixelSize: 11 }
+                CheckBox { id: othersWrite; checked: root.fileProps.othersWrite || false; font.pixelSize: 11 }
+                CheckBox { id: othersExec;  checked: root.fileProps.othersExec  || false; font.pixelSize: 11 }
+            }
+        }
+
         Item { Layout.fillHeight: true }
 
         // ── Buttons ────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             Item { Layout.fillWidth: true }
-            Button { text: "Aceptar";   onClicked: root.close() }
-            Button { text: "Cancelar";  onClicked: root.close() }
-            Button { text: "Aplicar";   enabled: false }
+            Button {
+                text: "Aceptar"
+                onClicked: { applyPermissions(); root.close() }
+            }
+            Button {
+                text: "Cancelar"
+                onClicked: root.close()
+            }
+            Button {
+                text: "Aplicar"
+                onClicked: applyPermissions()
+            }
         }
+    }
+
+    function applyPermissions() {
+        if (!root.item || !root.item.id || !root.item.id.startsWith('/')) return
+        fsBackend.setFilePermissions(root.item.id, {
+            ownerRead:   ownerRead.checked,
+            ownerWrite:  ownerWrite.checked,
+            ownerExec:   ownerExec.checked,
+            groupRead:   groupRead.checked,
+            groupWrite:  groupWrite.checked,
+            groupExec:   groupExec.checked,
+            othersRead:  othersRead.checked,
+            othersWrite: othersWrite.checked,
+            othersExec:  othersExec.checked
+        })
     }
 }

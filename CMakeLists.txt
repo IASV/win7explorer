@@ -33,6 +33,7 @@ qt_add_qml_module(win7explorer
         qml/components/StatusBar.qml
         qml/components/ToastNotification.qml
         qml/components/PropertiesDialog.qml
+        qml/components/RenameDialog.qml
         qml/components/WinMenuBar.qml
         qml/menus/ContextMenu.qml
         qml/menus/MenuBarMenus.qml

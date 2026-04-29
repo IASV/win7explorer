@@ -54,7 +54,7 @@ ListView {
                 Label {
                     text: modelData.name
                     color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
-                    font.pixelSize: 13; font.bold: true
+                    font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true
                 }
                 Label {

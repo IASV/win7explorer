@@ -70,7 +70,7 @@ Rectangle {
         }
         ColumnLayout { spacing: 3
             Label { text: root.systemInfo ? root.systemInfo.hostname : ""
-                    color: pal.text; font.pixelSize: 13; font.bold: true }
+                    color: pal.text; font.pixelSize: 13 }
             Label { text: root.systemInfo ? root.systemInfo.osVersion : ""
                     color: pal.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
         }
@@ -98,7 +98,7 @@ Rectangle {
             fillMode: Image.PreserveAspectFit
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 3
-            Label { text: root.currentFolderName; color: pal.text; font.pixelSize: 13; font.bold: true
+            Label { text: root.currentFolderName; color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             Label { text: root.currentItemCount + " elemento" + (root.currentItemCount === 1 ? "" : "s")
                     color: pal.muted; font.pixelSize: 11 }
@@ -131,7 +131,7 @@ Rectangle {
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 3
             Label { text: root.selectedCount + " elementos seleccionados"
-                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             Label { visible: root.totalSelectedSize !== ""
                     text: "Tamaño: " + root.totalSelectedSize
@@ -155,7 +155,7 @@ Rectangle {
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 4
             Label { text: root.detailItem ? root.detailItem.name : ""
-                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             RowLayout { spacing: 20
                 Label { text: "Espacio disponible: " + (root.detailItem ? (root.detailItem.free || 0).toFixed(1) : "0") + " GB"
@@ -186,29 +186,27 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 3
+            spacing: 2
 
-            // Row 1: title + duration
-            RowLayout { spacing: 14; Layout.fillWidth: true
+            Label {
+                text: (root.fileMetadata.title || "") !== "" ? root.fileMetadata.title
+                      : (root.detailItem ? root.detailItem.name : "")
+                color: pal.text; font.pixelSize: 13
+                elide: Text.ElideRight; Layout.fillWidth: true
+            }
+
+            RowLayout {
+                spacing: 8; Layout.fillWidth: true
                 Label {
-                    text: (root.fileMetadata.title || "") !== "" ? root.fileMetadata.title
-                          : (root.detailItem ? root.detailItem.name : "")
-                    color: pal.text; font.pixelSize: 13; font.bold: true
-                    elide: Text.ElideRight; Layout.fillWidth: true
+                    text: root.detailItem ? (root.detailItem.typeStr || "") : ""
+                    color: pal.muted; font.pixelSize: 11
+                    elide: Text.ElideRight
                 }
                 Label {
                     visible: (root.fileMetadata.duration || "") !== ""
-                    text: "Duración: " + (root.fileMetadata.duration || "")
+                    text: "·  " + root.fileMetadata.duration
                     color: pal.muted; font.pixelSize: 11
                 }
-            }
-
-            // Row 2: type  (medium+)
-            RowLayout {
-                visible: root.panelHeight >= 70
-                spacing: 10; Layout.fillWidth: true
-                Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""
-                        color: pal.muted; font.pixelSize: 11 }
                 Item { Layout.fillWidth: true }
             }
         }
@@ -231,7 +229,7 @@ Rectangle {
 
         ColumnLayout { Layout.fillWidth: true; spacing: 3
             Label { text: root.detailItem ? root.detailItem.name : ""
-                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
 
             RowLayout { spacing: 18
@@ -260,7 +258,7 @@ Rectangle {
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 4
             Label { text: root.detailItem ? root.detailItem.name : ""
-                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             RowLayout { spacing: 18
                 Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: pal.muted; font.pixelSize: 11 }
@@ -294,7 +292,7 @@ Rectangle {
         }
         ColumnLayout { Layout.fillWidth: true; spacing: 3; clip: true
             Label { text: root.detailItem ? root.detailItem.name : ""
-                    color: pal.text; font.pixelSize: 13; font.bold: true
+                    color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             RowLayout { spacing: 18
                 Label { text: root.detailItem ? (root.detailItem.typeStr || "") : ""; color: pal.muted; font.pixelSize: 11 }

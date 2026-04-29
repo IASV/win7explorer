@@ -103,6 +103,9 @@ public:
     // Trash support
     Q_INVOKABLE bool restoreFromTrash(const QString &path);
 
+    // File permissions
+    Q_INVOKABLE bool setFilePermissions(const QString &path, const QVariantMap &perms);
+
 signals:
     void currentPathChanged();
     void currentFilesChanged();

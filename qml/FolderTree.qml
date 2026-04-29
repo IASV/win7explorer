@@ -122,7 +122,7 @@ Item {
                          : itemType === "header" ? pal.muted
                          : pal.sbText
                     font.pixelSize: 12
-                    font.bold: itemType === "header"
+                    font.bold: false
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }

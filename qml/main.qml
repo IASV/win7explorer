@@ -199,12 +199,7 @@ ApplicationWindow {
         function onErrorOccurred(msg) { win.showToast(msg) }
     }
 
-    onCurrentIdChanged: {
-        if (currentId === "trash")
-            fsBackend.navigateTo(fsBackend.homePath() + "/.local/share/Trash/files")
-        else if (isRealPath)
-            fsBackend.navigateTo(currentId)
-    }
+    onCurrentIdChanged: { /* navigation is driven by navigate/goBack/goForward */ }
 
     // ── Computed item list ─────────────────────────────────────────────────
     readonly property var items: {
@@ -301,9 +296,17 @@ ApplicationWindow {
     }
 
     // ── Navigation helpers ─────────────────────────────────────────────────
+    function _syncBackend(id) {
+        if (id === "trash")
+            fsBackend.navigateTo(fsBackend.homePath() + "/.local/share/Trash/files")
+        else if (id.startsWith("/"))
+            fsBackend.navigateTo(id)
+    }
+
     function navigate(id) {
         if (id === currentId) return
-        realFiles = []          // prevent stale content flash when switching contexts
+        realFiles = []
+        _syncBackend(id)          // load backend BEFORE currentId changes so pathSegments are ready
         historyStack = historyStack.slice(0, historyIndex + 1)
         historyStack.push(id)
         historyIndex = historyStack.length - 1
@@ -312,10 +315,24 @@ ApplicationWindow {
     }
 
     function goBack() {
-        if (historyIndex > 0) { historyIndex--; currentId = historyStack[historyIndex]; selectedIds = ({}) }
+        if (historyIndex > 0) {
+            historyIndex--
+            var id = historyStack[historyIndex]
+            realFiles = []
+            _syncBackend(id)
+            currentId = id
+            selectedIds = ({})
+        }
     }
     function goForward() {
-        if (historyIndex < historyStack.length - 1) { historyIndex++; currentId = historyStack[historyIndex]; selectedIds = ({}) }
+        if (historyIndex < historyStack.length - 1) {
+            historyIndex++
+            var id = historyStack[historyIndex]
+            realFiles = []
+            _syncBackend(id)
+            currentId = id
+            selectedIds = ({})
+        }
     }
     function goUp() {
         if (isRealPath) {
@@ -400,6 +417,7 @@ ApplicationWindow {
     }
 
     // ── Keyboard shortcuts ─────────────────────────────────────────────────
+    Shortcut { sequence: "F2";          onActivated: { if (win.selectedItem && win.isRealPath) { renameDialog.item = win.selectedItem; renameDialog.open() } } }
     Shortcut { sequence: "F5";          onActivated: { if (isRealPath) fsBackend.refresh() } }
     Shortcut { sequence: "F10";         onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+Return";  onActivated: win.showMenuBar = !win.showMenuBar }
@@ -420,7 +438,7 @@ ApplicationWindow {
         if (action === "copy")             { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" }; return }
         if (action === "paste")            { win.handlePaste(); return }
         if (action === "delete")           { win.handleDelete(); return }
-        if (action === "rename")           { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "rename")           { if (win.selectedItem && win.isRealPath) { renameDialog.item = win.selectedItem; renameDialog.open() }; return }
         if (action === "restore")          { if (win.selectedItem) fsBackend.restoreFromTrash(win.selectedItem.id); return }
         if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
@@ -488,6 +506,18 @@ ApplicationWindow {
     PropertiesDialog {
         id: propertiesDialog
         pal: win.pal
+    }
+
+    // ── Rename dialog ──────────────────────────────────────────────────────
+    RenameDialog {
+        id: renameDialog
+        pal: win.pal
+        anchors.centerIn: parent
+        onRenameConfirmed: function(oldPath, newName) {
+            var dir = oldPath.substring(0, oldPath.lastIndexOf('/'))
+            var newPath = dir + "/" + newName
+            fsBackend.renameItem(oldPath, newPath)
+        }
     }
 
     // ── About dialog ───────────────────────────────────────────────────────

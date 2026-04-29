@@ -83,8 +83,7 @@ ScrollView {
                             text: modelData.title + " (" + sectionCol.subset.length + ")"
                             color: root.pal.accent
                             font.pixelSize: 12
-                            font.bold: true
-                        }
+                                                    }
 
                         // Separator line
                         Rectangle {

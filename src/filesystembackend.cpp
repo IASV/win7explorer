@@ -782,7 +782,40 @@ QVariantMap FileSystemBackend::getFileProperties(const QString &path) const
     props["diskSize"]          = diskBytes;
     props["diskSizeFormatted"] = fi.isDir() ? "" : formatFileSize(diskBytes);
 
+    // Unix permissions
+    QFile::Permissions p = fi.permissions();
+    props["ownerRead"]    = bool(p & QFile::ReadOwner);
+    props["ownerWrite"]   = bool(p & QFile::WriteOwner);
+    props["ownerExec"]    = bool(p & QFile::ExeOwner);
+    props["groupRead"]    = bool(p & QFile::ReadGroup);
+    props["groupWrite"]   = bool(p & QFile::WriteGroup);
+    props["groupExec"]    = bool(p & QFile::ExeGroup);
+    props["othersRead"]   = bool(p & QFile::ReadOther);
+    props["othersWrite"]  = bool(p & QFile::WriteOther);
+    props["othersExec"]   = bool(p & QFile::ExeOther);
+    props["isExecutable"] = bool(p & (QFile::ExeOwner | QFile::ExeGroup | QFile::ExeOther));
+
     return props;
+}
+
+bool FileSystemBackend::setFilePermissions(const QString &path, const QVariantMap &perms)
+{
+    QFile::Permissions p;
+    if (perms.value(QStringLiteral("ownerRead"),   false).toBool()) p |= QFile::ReadOwner;
+    if (perms.value(QStringLiteral("ownerWrite"),  false).toBool()) p |= QFile::WriteOwner;
+    if (perms.value(QStringLiteral("ownerExec"),   false).toBool()) p |= QFile::ExeOwner;
+    if (perms.value(QStringLiteral("groupRead"),   false).toBool()) p |= QFile::ReadGroup;
+    if (perms.value(QStringLiteral("groupWrite"),  false).toBool()) p |= QFile::WriteGroup;
+    if (perms.value(QStringLiteral("groupExec"),   false).toBool()) p |= QFile::ExeGroup;
+    if (perms.value(QStringLiteral("othersRead"),  false).toBool()) p |= QFile::ReadOther;
+    if (perms.value(QStringLiteral("othersWrite"), false).toBool()) p |= QFile::WriteOther;
+    if (perms.value(QStringLiteral("othersExec"),  false).toBool()) p |= QFile::ExeOther;
+
+    if (!QFile::setPermissions(path, p)) {
+        emit errorOccurred("No se pudieron cambiar los permisos de: " + QFileInfo(path).fileName());
+        return false;
+    }
+    return true;
 }
 
 bool FileSystemBackend::restoreFromTrash(const QString &path)

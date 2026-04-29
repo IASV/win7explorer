@@ -69,8 +69,7 @@ ScrollView {
                             text: modelData.name
                             color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
                             font.pixelSize: 12
-                            font.bold: true
-                            elide: Text.ElideRight
+                                                        elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
                         Label {
