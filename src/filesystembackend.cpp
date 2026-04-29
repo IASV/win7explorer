@@ -13,6 +13,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QRegularExpression>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -294,35 +295,59 @@ QVariantList FileSystemBackend::getStorageDevices() const {
         "securityfs","efivarfs","fusectl","configfs","bpf","tracefs","debugfs",
         "hugetlbfs","mqueue","pstore","autofs","rpc_pipefs"
     };
+
+    // Determine system disk to hide sub-partitions (/boot, /home, /boot/efi, etc.)
+    auto getParentDisk = [](const QString &dev) -> QString {
+        // NVMe/MMC: /dev/nvme0n1p3 → /dev/nvme0n1  |  /dev/mmcblk0p2 → /dev/mmcblk0
+        static const QRegularExpression nvmeRe(QStringLiteral(R"(^(.*\d+)p\d+$)"));
+        auto m = nvmeRe.match(dev);
+        if (m.hasMatch()) return m.captured(1);
+        // SCSI/SATA/virtio: /dev/sda1 → /dev/sda  |  /dev/vdb2 → /dev/vdb
+        static const QRegularExpression scsiRe(QStringLiteral(R"(^(.*[a-z])\d+$)"));
+        m = scsiRe.match(dev);
+        if (m.hasMatch()) return m.captured(1);
+        return dev;
+    };
+    const QString rootDev    = QString::fromLatin1(QStorageInfo(QStringLiteral("/")).device());
+    const QString systemDisk = getParentDisk(rootDev);
+
     for (const QStorageInfo &si : QStorageInfo::mountedVolumes()) {
         if (!si.isValid() || !si.isReady() || si.bytesTotal() <= 0) continue;
         QString fsType = QString::fromLatin1(si.fileSystemType());
         if (skipFs.contains(fsType)) continue;
         const QString root = si.rootPath();
         if (root.startsWith("/sys") || root.startsWith("/proc")
-            || root.startsWith("/dev") || root.startsWith("/run")
-            || root.startsWith("/snap")) continue;
+            || root.startsWith("/dev") || root.startsWith("/snap")) continue;
+        // Block /run/* but allow /run/media/* (udisks2 mounts USB drives there)
+        if (root.startsWith("/run") && !root.startsWith("/run/media")) continue;
+
+        // Hide partitions on the same physical disk as "/" that are not "/"
+        // (e.g. /boot, /home, /boot/efi)
+        const QString dev = QString::fromLatin1(si.device());
+        if (!systemDisk.isEmpty() && getParentDisk(dev) == systemDisk
+                && root != QLatin1String("/"))
+            continue;
 
         double totalGb = si.bytesTotal() / (1024.0 * 1024.0 * 1024.0);
         double freeGb  = si.bytesFree()  / (1024.0 * 1024.0 * 1024.0);
 
         QString label = si.name();
         if (label.isEmpty()) {
-            if (si.isRoot()) label = "Disco local";
+            if (root == QLatin1String("/")) label = "Disco local";
             else label = root.section('/', -1, -1);
             if (label.isEmpty()) label = root;
         }
-        // Friendly label with path hint
         QString display = label + " (" + root + ")";
 
         QString kind = "local";
-        QString dev = QString::fromLatin1(si.device());
         if (dev.contains("cdrom") || dev.contains("dvd") || fsType == "iso9660" || fsType == "udf")
             kind = "disc";
         else if (root == QLatin1String("/"))
             kind = "system";
         else if (dev.startsWith("/dev/sd") || dev.startsWith("/dev/vd"))
             kind = "local";
+        else if (root.startsWith("/run/media"))
+            kind = "removable";
 
         QVariantMap m;
         m["displayName"] = display;

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Qt.labs.settings 1.0
 import "styles/Palettes.js" as Palettes
 import "components"
 import "views"
@@ -12,6 +13,35 @@ ApplicationWindow {
     minimumWidth: 680
     minimumHeight: 440
     visible: true
+
+    // ── Persistent settings ────────────────────────────────────────────────
+    property bool _settingsReady: false
+
+    Settings {
+        id: appSettings
+        property alias viewMode:            win.viewMode
+        property alias sortBy:              win.sortBy
+        property alias sortDir:             win.sortDir
+        property alias showMenuBar:         win.showMenuBar
+        property alias showSidebar:         win.showSidebar
+        property alias showPreview:         win.showPreview
+        property alias showDetailsPanel:    win.showDetailsPanel
+        property alias showStatusBar:       win.showStatusBar
+        property alias showContentPreviews: win.showContentPreviews
+        property alias themeName:           win.themeName
+        property alias sidebarWidth:        win.sidebarWidth
+        property alias previewWidth:        win.previewWidth
+        property alias windowWidth:         win.width
+        property alias windowHeight:        win.height
+        property string favoritesJson:      ""
+
+        Component.onCompleted: {
+            if (favoritesJson !== "") {
+                try { win.favorites = JSON.parse(favoritesJson) } catch(e) {}
+            }
+            win._settingsReady = true
+        }
+    }
 
     // ── Theme ──────────────────────────────────────────────────────────────
     property string themeName: "glass"
@@ -39,6 +69,8 @@ ApplicationWindow {
         { name: "Escritorio", path: fsBackend.desktopPath(),   icon: "folder-closed" },
         { name: "Descargas",  path: fsBackend.downloadsPath(), icon: "folder-blue" }
     ]
+    onFavoritesChanged: if (win._settingsReady) appSettings.favoritesJson = JSON.stringify(favorites)
+
     function addToFavorites(item) {
         if (!item || item.type !== "folder") return
         for (var i = 0; i < favorites.length; i++)
@@ -197,6 +229,14 @@ ApplicationWindow {
             }
             win.realFiles = arr
             win.selectedIds = ({})
+            if (win.pendingRenameOnRefresh !== "") {
+                var pending = win.pendingRenameOnRefresh
+                win.pendingRenameOnRefresh = ""
+                var s = {}
+                s[pending] = true
+                win.selectedIds = s
+                win.renamingId = pending
+            }
         }
         function onErrorOccurred(msg) { win.showToast(msg) }
     }
@@ -401,10 +441,13 @@ ApplicationWindow {
         }
     }
 
+    property string pendingRenameOnRefresh: ""
+
     function handleNewFolder() {
         if (isRealPath) {
+            win.pendingRenameOnRefresh = currentId.replace(/\/$/, '') + "/Nueva carpeta"
             fsBackend.createFolder(currentId, "Nueva carpeta")
-            fsBackend.refresh()
+            // createFolder calls refresh() internally; no need to call again
         } else {
             showToast("Nueva carpeta: solo disponible en modo sistema de archivos real")
         }
@@ -827,6 +870,7 @@ ApplicationWindow {
                 Loader {
                     id: viewLoader
                     anchors.fill: parent
+                    anchors.margins: 6
                     sourceComponent: {
                         if (win.useGroupedView && win.groupedItems.length === 0) return networkEmptyComp
                         if (win.useGroupedView)        return groupedComp
