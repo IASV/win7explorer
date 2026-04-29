@@ -12,6 +12,7 @@ Item {
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
+    signal emptyAreaClicked()
 
     readonly property int cellW: 220
     readonly property int cellH: 22
@@ -26,6 +27,15 @@ Item {
         cellWidth:  root.cellW
         cellHeight: root.cellH
         ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            onTapped: function(point) {
+                var idx = grid.indexAt(point.position.x + grid.contentX,
+                                       point.position.y)
+                if (idx < 0) root.emptyAreaClicked()
+            }
+        }
 
         // Fix height so items wrap to next column after filling one column.
         // The view scrolls horizontally when all columns exceed the viewport width.

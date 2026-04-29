@@ -11,6 +11,7 @@ ScrollView {
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
+    signal emptyAreaClicked()
 
     clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -23,6 +24,12 @@ ScrollView {
         topPadding:    8
         bottomPadding: 8
         spacing: 2
+
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: root.emptyAreaClicked()
+        }
 
         Repeater {
             model: root.model

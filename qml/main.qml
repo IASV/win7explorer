@@ -421,7 +421,8 @@ ApplicationWindow {
         if (action === "paste")            { win.handlePaste(); return }
         if (action === "delete")           { win.handleDelete(); return }
         if (action === "rename")           { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
-        if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.open() }; return }
+        if (action === "restore")          { if (win.selectedItem) fsBackend.restoreFromTrash(win.selectedItem.id); return }
+        if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
         if (action === "open")             { win.handleOpen(win.selectedItem); return }
         if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
@@ -476,7 +477,8 @@ ApplicationWindow {
             viewMode:      win.viewMode,
             sortBy:        win.sortBy,
             sortDir:       win.sortDir,
-            groupBy:       win.groupBy
+            groupBy:       win.groupBy,
+            inTrash:       win.currentId === "trash"
         })
         if (action === "open" && item) { win.handleOpen(item); return }
         win.handleMenuAction(action)
@@ -563,6 +565,7 @@ ApplicationWindow {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
                 win.showContextMenu(item)
             }
+            onEmptyAreaClicked: win.selectedIds = ({})
         }
     }
 
@@ -578,6 +581,7 @@ ApplicationWindow {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
                 win.showContextMenu(item)
             }
+            onEmptyAreaClicked: win.selectedIds = ({})
         }
     }
 
@@ -600,6 +604,7 @@ ApplicationWindow {
                 if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc")
                 else { win.sortBy = col; win.sortDir = "asc" }
             }
+            onEmptyAreaClicked: win.selectedIds = ({})
         }
     }
 
@@ -615,6 +620,7 @@ ApplicationWindow {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
                 win.showContextMenu(item)
             }
+            onEmptyAreaClicked: win.selectedIds = ({})
         }
     }
 

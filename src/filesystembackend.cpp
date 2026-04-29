@@ -5,6 +5,7 @@
 #include <QTextStream>
 #include <QDir>
 #include <QSettings>
+#include <QUrl>
 #include <QSysInfo>
 #include <QDebug>
 #include <QImageReader>
@@ -782,6 +783,42 @@ QVariantMap FileSystemBackend::getFileProperties(const QString &path) const
     props["diskSizeFormatted"] = fi.isDir() ? "" : formatFileSize(diskBytes);
 
     return props;
+}
+
+bool FileSystemBackend::restoreFromTrash(const QString &path)
+{
+    QFileInfo fi(path);
+    if (!fi.exists()) return false;
+
+    QString trashBase = QDir::homePath() + "/.local/share/Trash";
+    QString infoFile  = trashBase + "/info/" + fi.fileName() + ".trashinfo";
+
+    QString originalPath;
+    if (QFile::exists(infoFile)) {
+        QSettings info(infoFile, QSettings::IniFormat);
+        info.beginGroup("Trash Info");
+        originalPath = info.value("Path").toString();
+        info.endGroup();
+        // Paths in .trashinfo are percent-encoded
+        originalPath = QUrl::fromPercentEncoding(originalPath.toUtf8());
+    }
+
+    if (originalPath.isEmpty())
+        originalPath = QDir::homePath() + "/" + fi.fileName();
+    else if (!originalPath.startsWith('/'))
+        originalPath = "/" + originalPath;
+
+    QFileInfo destFi(originalPath);
+    QDir().mkpath(destFi.absolutePath());
+
+    if (!QFile::rename(path, originalPath)) {
+        emit errorOccurred("No se pudo restaurar: " + fi.fileName());
+        return false;
+    }
+
+    QFile::remove(infoFile);
+    refresh();
+    return true;
 }
 
 bool FileSystemBackend::saveFileMetadata(const QString &path, const QVariantMap &metadata)

@@ -11,6 +11,16 @@ GridView {
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
+    signal emptyAreaClicked()
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        onTapped: function(point) {
+            var idx = root.indexAt(point.position.x + root.contentX,
+                                   point.position.y + root.contentY)
+            if (idx < 0) root.emptyAreaClicked()
+        }
+    }
 
     readonly property int iconSize: {
         if (viewMode === "xlarge") return 128

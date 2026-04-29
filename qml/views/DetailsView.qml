@@ -17,6 +17,7 @@ ColumnLayout {
     signal contextMenuRequested(var item)
     signal sortRequested(string col)
     signal filterChanged()
+    signal emptyAreaClicked()
 
     spacing: 0
 
@@ -192,11 +193,21 @@ ColumnLayout {
 
     // File rows
     ListView {
+        id: detailsListView
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         model: root.filteredModel
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            onTapped: function(point) {
+                var idx = detailsListView.indexAt(point.position.x,
+                                                  point.position.y + detailsListView.contentY)
+                if (idx < 0) root.emptyAreaClicked()
+            }
+        }
         section.property: root.groupBy !== "none" ? "groupKey" : ""
         section.criteria: ViewSection.FullString
         section.delegate: Rectangle {

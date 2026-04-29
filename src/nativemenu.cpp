@@ -172,6 +172,7 @@ QString NativeMenu::showMenu(const QVariantMap &params)
     const QString groupBy    = params.value(u"groupBy"_s).toString();
 
     const bool isEmpty  = type == u"empty"_s;
+    const bool inTrash  = params.value(u"inTrash"_s).toBool();
     const QString filePath = item.value(u"id"_s).toString();
     const bool isFolder = !isEmpty && (item.value(u"type"_s).toString() == u"folder"_s ||
                                        item.value(u"type"_s).toString() == u"drive"_s);
@@ -231,6 +232,12 @@ QString NativeMenu::showMenu(const QVariantMap &params)
             QAction *openAct = act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
             QFont f = openAct->font(); f.setBold(true); openAct->setFont(f);
             if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
+            menu.addSeparator();
+        }
+
+        // ── Restore from trash ────────────────────────────────────────────────
+        if (inTrash) {
+            act(u"Restaurar"_s, u"restore"_s, ti(u"edit-undo"_s));
             menu.addSeparator();
         }
 

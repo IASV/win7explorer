@@ -43,6 +43,7 @@ static QString qrcIconPath(const QString &id)
     if (id.contains(u"network",     Qt::CaseInsensitive)) return base + u"network.png"_s;
     if (id.contains(u"printer",     Qt::CaseInsensitive)) return base + u"printer.png"_s;
     if (id.contains(u"computer",    Qt::CaseInsensitive)) return base + u"window.png"_s;
+    if (id.contains(u"libraries",   Qt::CaseInsensitive)) return base + u"libraries.png"_s;
     if (id.contains(u"document",    Qt::CaseInsensitive)) return base + u"document.png"_s;
     if (id.contains(u"picture",     Qt::CaseInsensitive)) return base + u"picture.png"_s;
     if (id.contains(u"image",       Qt::CaseInsensitive)) return base + u"picture.png"_s;

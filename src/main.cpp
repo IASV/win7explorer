@@ -19,8 +19,6 @@ int main(int argc, char *argv[])
                                        QIcon::fromTheme("folder-open",
                                        QIcon(u":/icons/folder-closed.png"_s))));
 
-    QQuickStyle::setStyle("Basic");
-
     QStringList searchPaths = QIcon::themeSearchPaths();
     if (!searchPaths.contains("/usr/share/icons"))
         searchPaths.prepend("/usr/share/icons");

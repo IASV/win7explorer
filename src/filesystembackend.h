@@ -100,6 +100,9 @@ public:
     // Full file properties for the Properties dialog
     Q_INVOKABLE QVariantMap getFileProperties(const QString &path) const;
 
+    // Trash support
+    Q_INVOKABLE bool restoreFromTrash(const QString &path);
+
 signals:
     void currentPathChanged();
     void currentFilesChanged();
