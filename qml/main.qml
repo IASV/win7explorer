@@ -54,6 +54,8 @@ ApplicationWindow {
     readonly property var  pathToCurrent: {
         if (currentId === "libraries")
             return [{ name: "Bibliotecas", id: "libraries", path: "libraries" }]
+        if (currentId === "trash")
+            return [{ name: "Papelera de reciclaje", id: "trash", path: "trash" }]
         if (isRealPath) {
             var segs = fsBackend.pathSegments
             var result = []
@@ -104,7 +106,7 @@ ApplicationWindow {
         if (!isRealPath) {
             if (currentId === "trash")     return "image://fileicons/user-trash"
             if (currentId === "network")   return "image://fileicons/network-workgroup"
-            if (currentId === "libraries") return "image://fileicons/document"
+            if (currentId === "libraries") return "image://fileicons/libraries"
             return "image://fileicons/folder-closed"
         }
         var si = specialFolderIcon(currentId)
@@ -113,6 +115,7 @@ ApplicationWindow {
 
     readonly property string currentFolderName: {
         if (currentId === "libraries") return "Bibliotecas"
+        if (currentId === "trash")     return "Papelera de reciclaje"
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
         if (currentNode) return currentNode.name
@@ -197,7 +200,10 @@ ApplicationWindow {
     }
 
     onCurrentIdChanged: {
-        if (isRealPath) fsBackend.navigateTo(currentId)
+        if (currentId === "trash")
+            fsBackend.navigateTo(fsBackend.homePath() + "/.local/share/Trash/files")
+        else if (isRealPath)
+            fsBackend.navigateTo(currentId)
     }
 
     // ── Computed item list ─────────────────────────────────────────────────
@@ -218,7 +224,8 @@ ApplicationWindow {
             }
             return raw
         }
-        raw = isRealPath ? realFiles : (currentNode ? (currentNode.children || []) : [])
+        raw = (isRealPath || currentId === "trash") ? realFiles
+            : (currentNode ? (currentNode.children || []) : [])
         var arr = raw.slice()
 
         // Attach iconSrc / typeStr to mock items
@@ -296,6 +303,7 @@ ApplicationWindow {
     // ── Navigation helpers ─────────────────────────────────────────────────
     function navigate(id) {
         if (id === currentId) return
+        realFiles = []          // prevent stale content flash when switching contexts
         historyStack = historyStack.slice(0, historyIndex + 1)
         historyStack.push(id)
         historyIndex = historyStack.length - 1
@@ -413,7 +421,7 @@ ApplicationWindow {
         if (action === "paste")            { win.handlePaste(); return }
         if (action === "delete")           { win.handleDelete(); return }
         if (action === "rename")           { win.showToast("Cambiar nombre: " + (win.selectedItem ? win.selectedItem.name : "")); return }
-        if (action === "properties")       { win.showToast("Propiedades: " + (win.selectedItem ? win.selectedItem.name : "")); return }
+        if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.open() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
         if (action === "open")             { win.handleOpen(win.selectedItem); return }
         if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
@@ -472,6 +480,12 @@ ApplicationWindow {
         })
         if (action === "open" && item) { win.handleOpen(item); return }
         win.handleMenuAction(action)
+    }
+
+    // ── Properties dialog ──────────────────────────────────────────────────
+    PropertiesDialog {
+        id: propertiesDialog
+        pal: win.pal
     }
 
     // ── About dialog ───────────────────────────────────────────────────────

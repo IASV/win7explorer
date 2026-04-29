@@ -97,6 +97,9 @@ public:
     Q_INVOKABLE QVariantMap getFileMetadata(const QString &path) const;
     Q_INVOKABLE bool        saveFileMetadata(const QString &path, const QVariantMap &metadata);
 
+    // Full file properties for the Properties dialog
+    Q_INVOKABLE QVariantMap getFileProperties(const QString &path) const;
+
 signals:
     void currentPathChanged();
     void currentFilesChanged();

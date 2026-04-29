@@ -21,6 +21,7 @@ Item {
         clip: true
         model: treeModel
         delegate: treeDelegate
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
     }
 
     ListModel { id: treeModel }
@@ -42,8 +43,8 @@ Item {
             readonly property int    itemIndex:       index
             readonly property string itemSection:     sectionType
 
-            // Indentation x for toggle area
-            readonly property int indentX: itemLevel * 14 + (itemType === "header" ? 6 : 18)
+            // Indentation x for toggle area — level-0 items always flush at 6
+            readonly property int indentX: itemLevel * 14 + (itemLevel === 0 ? 6 : 18)
 
             color: {
                 if (itemType === "header" && itemPath === "") return "transparent"
@@ -235,7 +236,7 @@ Item {
         // Bibliotecas
         var libs = fsBackend.getLibraries()
         treeModel.append({
-            name: "Bibliotecas", type: "header", level: 0, icon: "document",
+            name: "Bibliotecas", type: "header", level: 0, icon: "libraries",
             path: "libraries", hasChildren: libs.length > 0, expanded: true, sectionType: "libraries"
         })
         for (var j = 0; j < libs.length; j++)

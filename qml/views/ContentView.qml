@@ -13,6 +13,7 @@ ListView {
 
     clip: true
     spacing: 0
+    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
     delegate: Rectangle {
         width:  ListView.view.width

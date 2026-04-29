@@ -13,6 +13,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <unistd.h>
+#include <sys/stat.h>
 
 static bool copyDirRecursively(const QString &src, const QString &dst)
 {
@@ -748,6 +749,39 @@ QVariantMap FileSystemBackend::getFileMetadata(const QString &path) const
         }
     }
     return result;
+}
+
+QVariantMap FileSystemBackend::getFileProperties(const QString &path) const
+{
+    QVariantMap props;
+    QFileInfo fi(path);
+    if (!fi.exists()) return props;
+
+    QMimeType mime = m_mimeDb.mimeTypeForFile(fi);
+
+    props["name"]            = fi.fileName();
+    props["isDir"]           = fi.isDir();
+    props["location"]        = fi.absolutePath();
+    props["size"]            = fi.size();
+    props["sizeFormatted"]   = fi.isDir() ? "" : formatFileSize(fi.size());
+    props["type"]            = fi.isDir() ? "Carpeta de archivos" : mime.comment();
+    props["readonly"]        = !fi.isWritable();
+    props["hidden"]          = fi.isHidden();
+    props["created"]         = fi.birthTime().toString("dddd, d 'de' MMMM 'de' yyyy, hh:mm:ss");
+    props["modified"]        = fi.lastModified().toString("dddd, d 'de' MMMM 'de' yyyy, hh:mm:ss");
+    props["accessed"]        = fi.lastRead().toString("dddd, d 'de' MMMM 'de' yyyy, hh:mm:ss");
+
+    // Disk size via stat
+    qint64 diskBytes = 0;
+    struct stat st;
+    if (::stat(path.toLocal8Bit().constData(), &st) == 0)
+        diskBytes = (qint64)st.st_blocks * 512;
+    else
+        diskBytes = ((fi.size() + 4095) / 4096) * 4096;
+    props["diskSize"]          = diskBytes;
+    props["diskSizeFormatted"] = fi.isDir() ? "" : formatFileSize(diskBytes);
+
+    return props;
 }
 
 bool FileSystemBackend::saveFileMetadata(const QString &path, const QVariantMap &metadata)

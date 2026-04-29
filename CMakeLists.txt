@@ -32,6 +32,7 @@ qt_add_qml_module(win7explorer
         qml/components/PreviewPanel.qml
         qml/components/StatusBar.qml
         qml/components/ToastNotification.qml
+        qml/components/PropertiesDialog.qml
         qml/components/WinMenuBar.qml
         qml/menus/ContextMenu.qml
         qml/menus/MenuBarMenus.qml
@@ -112,6 +113,7 @@ qt_add_resources(win7explorer "winicons"
         icons/sqbtn-pressed.png
         icons/sqbtn-disabled.png
         icons/details-shadow.png
+        icons/libraries.png
 )
 
 target_link_libraries(win7explorer PRIVATE

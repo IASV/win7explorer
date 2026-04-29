@@ -196,6 +196,7 @@ ColumnLayout {
         Layout.fillHeight: true
         clip: true
         model: root.filteredModel
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
         section.property: root.groupBy !== "none" ? "groupKey" : ""
         section.criteria: ViewSection.FullString
         section.delegate: Rectangle {

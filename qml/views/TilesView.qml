@@ -14,6 +14,7 @@ ScrollView {
 
     clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+    ScrollBar.vertical.policy:   ScrollBar.AsNeeded
 
     Flow {
         width: root.availableWidth

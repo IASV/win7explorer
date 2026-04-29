@@ -22,6 +22,7 @@ GridView {
     cellWidth:  viewMode === "xlarge" ? 180 : viewMode === "large" ? 116 : viewMode === "medium" ? 90 : 110
     cellHeight: viewMode === "xlarge" ? 180 : viewMode === "large" ? 112 : viewMode === "medium" ? 88 : 22
     clip: true
+    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
     delegate: Rectangle {
         width:  GridView.view.cellWidth  - 6

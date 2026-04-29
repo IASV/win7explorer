@@ -25,6 +25,7 @@ Item {
         flow:       GridView.FlowTopToBottom
         cellWidth:  root.cellW
         cellHeight: root.cellH
+        ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
 
         // Fix height so items wrap to next column after filling one column.
         // The view scrolls horizontally when all columns exceed the viewport width.
