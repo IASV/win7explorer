@@ -150,17 +150,19 @@ ApplicationWindow {
     }
 
     // ── View options ───────────────────────────────────────────────────────
-    property string viewMode:         "large"
-    property string sortBy:           "name"
-    property string sortDir:          "asc"
-    property string groupBy:          "none"
-    property bool   showMenuBar:      false
-    property bool   showSidebar:      true
-    property bool   showPreview:      false
-    property bool   showDetailsPanel: true
-    property bool   showStatusBar:    true
-    property int    sidebarWidth:     220
-    property int    previewWidth:     260
+    property string viewMode:            "large"
+    property string sortBy:              "name"
+    property string sortDir:             "asc"
+    property string groupBy:             "none"
+    property bool   showMenuBar:         false
+    property bool   showSidebar:         true
+    property bool   showPreview:         false
+    property bool   showDetailsPanel:    true
+    property bool   showStatusBar:       true
+    property bool   showContentPreviews: true
+    property string renamingId:          ""
+    property int    sidebarWidth:        220
+    property int    previewWidth:        260
 
     // ── Toast ──────────────────────────────────────────────────────────────
     property string toastMsg: ""
@@ -417,7 +419,7 @@ ApplicationWindow {
     }
 
     // ── Keyboard shortcuts ─────────────────────────────────────────────────
-    Shortcut { sequence: "F2";          onActivated: { if (win.selectedItem && win.isRealPath) { renameDialog.item = win.selectedItem; renameDialog.open() } } }
+    Shortcut { sequence: "F2";          onActivated: { if (win.selectedItem && win.isRealPath) win.renamingId = win.selectedItem.id } }
     Shortcut { sequence: "F5";          onActivated: { if (isRealPath) fsBackend.refresh() } }
     Shortcut { sequence: "F10";         onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+Return";  onActivated: win.showMenuBar = !win.showMenuBar }
@@ -438,7 +440,7 @@ ApplicationWindow {
         if (action === "copy")             { if (win.selectedItem) { win.clipboardPath = win.selectedItem.id; win.clipboardMode = "copy" }; return }
         if (action === "paste")            { win.handlePaste(); return }
         if (action === "delete")           { win.handleDelete(); return }
-        if (action === "rename")           { if (win.selectedItem && win.isRealPath) { renameDialog.item = win.selectedItem; renameDialog.open() }; return }
+        if (action === "rename")           { if (win.selectedItem && win.isRealPath) win.renamingId = win.selectedItem.id; return }
         if (action === "restore")          { if (win.selectedItem) fsBackend.restoreFromTrash(win.selectedItem.id); return }
         if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
@@ -467,22 +469,24 @@ ApplicationWindow {
             if (layout === "details-panel") { win.showDetailsPanel = !win.showDetailsPanel; return }
             if (layout === "preview")       { win.showPreview      = !win.showPreview;      return }
             if (layout === "sidebar")       { win.showSidebar      = !win.showSidebar;      return }
-            if (layout === "status-bar")    { win.showStatusBar    = !win.showStatusBar;    return }
+            if (layout === "status-bar")       { win.showStatusBar       = !win.showStatusBar;       return }
+            if (layout === "content-previews") { win.showContentPreviews = !win.showContentPreviews; return }
         }
     }
 
     function menuBarParams() {
         return {
-            selectedCount:    win.selectedCount,
-            viewMode:         win.viewMode,
-            sortBy:           win.sortBy,
-            sortDir:          win.sortDir,
-            showMenuBar:      win.showMenuBar,
-            showDetailsPanel: win.showDetailsPanel,
-            showPreview:      win.showPreview,
-            showSidebar:      win.showSidebar,
-            showStatusBar:    win.showStatusBar,
-            themeName:        win.themeName
+            selectedCount:       win.selectedCount,
+            viewMode:            win.viewMode,
+            sortBy:              win.sortBy,
+            sortDir:             win.sortDir,
+            showMenuBar:         win.showMenuBar,
+            showDetailsPanel:    win.showDetailsPanel,
+            showPreview:         win.showPreview,
+            showSidebar:         win.showSidebar,
+            showStatusBar:       win.showStatusBar,
+            showContentPreviews: win.showContentPreviews,
+            themeName:           win.themeName
         }
     }
 
@@ -589,6 +593,8 @@ ApplicationWindow {
             model: win.items
             selectedIds: win.selectedIds
             viewMode: win.viewMode
+            renamingId: win.renamingId
+            showContentPreviews: win.showContentPreviews
             onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
@@ -596,6 +602,12 @@ ApplicationWindow {
                 win.showContextMenu(item)
             }
             onEmptyAreaClicked: win.selectedIds = ({})
+            onRenameCommitted: function(id, newName) {
+                win.renamingId = ""
+                var dir = id.substring(0, id.lastIndexOf('/'))
+                fsBackend.renameItem(id, dir + "/" + newName)
+            }
+            onRenameCancelled: win.renamingId = ""
         }
     }
 
@@ -624,6 +636,7 @@ ApplicationWindow {
             sortBy: win.sortBy
             sortDir: win.sortDir
             groupBy: win.groupBy
+            renamingId: win.renamingId
             onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
@@ -635,6 +648,12 @@ ApplicationWindow {
                 else { win.sortBy = col; win.sortDir = "asc" }
             }
             onEmptyAreaClicked: win.selectedIds = ({})
+            onRenameCommitted: function(id, newName) {
+                win.renamingId = ""
+                var dir = id.substring(0, id.lastIndexOf('/'))
+                fsBackend.renameItem(id, dir + "/" + newName)
+            }
+            onRenameCancelled: win.renamingId = ""
         }
     }
 
@@ -644,6 +663,7 @@ ApplicationWindow {
             pal: win.pal
             model: win.items
             selectedIds: win.selectedIds
+            renamingId: win.renamingId
             onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
@@ -651,6 +671,12 @@ ApplicationWindow {
                 win.showContextMenu(item)
             }
             onEmptyAreaClicked: win.selectedIds = ({})
+            onRenameCommitted: function(id, newName) {
+                win.renamingId = ""
+                var dir = id.substring(0, id.lastIndexOf('/'))
+                fsBackend.renameItem(id, dir + "/" + newName)
+            }
+            onRenameCancelled: win.renamingId = ""
         }
     }
 
@@ -660,12 +686,19 @@ ApplicationWindow {
             pal: win.pal
             model: win.items
             selectedIds: win.selectedIds
+            renamingId: win.renamingId
             onItemClicked: function(item, ctrl, shift) { win.toggleSelect(item, ctrl, shift) }
             onItemDoubleClicked: function(item) { win.handleOpen(item) }
             onContextMenuRequested: function(item) {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
                 win.showContextMenu(item)
             }
+            onRenameCommitted: function(id, newName) {
+                win.renamingId = ""
+                var dir = id.substring(0, id.lastIndexOf('/'))
+                fsBackend.renameItem(id, dir + "/" + newName)
+            }
+            onRenameCancelled: win.renamingId = ""
         }
     }
 
@@ -730,7 +763,7 @@ ApplicationWindow {
             showPreview:      win.showPreview
             viewMode:         win.viewMode
             selectedItemType: win.selectedItemType
-            onOrganizeClicked:          win.handleMenuAction(nativeMenu.showOrganizeMenu({ selectedCount: win.selectedCount, showMenuBar: win.showMenuBar, showDetailsPanel: win.showDetailsPanel, showPreview: win.showPreview, showSidebar: win.showSidebar }))
+            onOrganizeClicked:          win.handleMenuAction(nativeMenu.showOrganizeMenu({ selectedCount: win.selectedCount, showMenuBar: win.showMenuBar, showDetailsPanel: win.showDetailsPanel, showPreview: win.showPreview, showSidebar: win.showSidebar, showContentPreviews: win.showContentPreviews }))
             onDeleteRequested:          win.handleDelete()
             onNewFolderRequested:       win.handleNewFolder()
             onPreviewToggled:           win.showPreview = !win.showPreview

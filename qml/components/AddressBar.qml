@@ -112,7 +112,7 @@ Rectangle {
             // Click on bar background → enter text mode
             MouseArea {
                 anchors.fill: parent
-                onDoubleClicked: {
+                onClicked: {
                     breadcrumbBar.textEditMode = true
                     var last = root.pathToCurrent
                     pathField.text = last.length > 0 ? (last[last.length-1].path || last[last.length-1].id || "") : ""
@@ -156,6 +156,7 @@ Rectangle {
                     selectByMouse: true
                     Keys.onReturnPressed: { root.segmentClicked(text); breadcrumbBar.textEditMode = false }
                     Keys.onEscapePressed: breadcrumbBar.textEditMode = false
+                    onActiveFocusChanged: if (!activeFocus) breadcrumbBar.textEditMode = false
                 }
 
                 // Breadcrumb segments (I1: with dropdown ►)

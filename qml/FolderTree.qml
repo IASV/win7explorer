@@ -119,7 +119,6 @@ Item {
                 Label {
                     text: itemName
                     color: currentPath === itemPath && itemPath !== "" ? pal.selText
-                         : itemType === "header" ? pal.muted
                          : pal.sbText
                     font.pixelSize: 12
                     font.bold: false

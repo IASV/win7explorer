@@ -311,8 +311,9 @@ QString NativeMenu::showOrganizeMenu(const QVariantMap &params)
     const bool showMenuBar     = params.value(u"showMenuBar"_s).toBool();
     const bool showDetails     = params.value(u"showDetailsPanel"_s).toBool();
     const bool showPreview     = params.value(u"showPreview"_s).toBool();
-    const bool showSidebar     = params.value(u"showSidebar"_s).toBool();
-    const bool hasSel          = selectedCount > 0;
+    const bool showSidebar          = params.value(u"showSidebar"_s).toBool();
+    const bool showContentPreviews  = params.value(u"showContentPreviews"_s).toBool();
+    const bool hasSel               = selectedCount > 0;
 
     QMenu menu;
     QString result;
@@ -346,6 +347,8 @@ QString NativeMenu::showOrganizeMenu(const QVariantMap &params)
     layoutAct(u"Panel de detalles"_s,     u"layout:details-panel"_s, showDetails);
     layoutAct(u"Panel de vista previa"_s, u"layout:preview"_s,       showPreview);
     layoutAct(u"Panel de navegación"_s,   u"layout:sidebar"_s,       showSidebar);
+    layout->addSeparator();
+    layoutAct(u"Miniaturas de archivos"_s, u"layout:content-previews"_s, showContentPreviews);
 
     menu.addSeparator();
     act(u"Eliminar"_s,       u"delete"_s,     ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
@@ -370,9 +373,10 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
     const bool showDetails    = params.value(u"showDetailsPanel"_s).toBool();
     const bool showPreview    = params.value(u"showPreview"_s).toBool();
     const bool showSidebar    = params.value(u"showSidebar"_s).toBool();
-    const bool showStatusBar  = params.value(u"showStatusBar"_s).toBool();
-    const QString themeName   = params.value(u"themeName"_s).toString();
-    const bool hasSel         = selectedCount > 0;
+    const bool showStatusBar       = params.value(u"showStatusBar"_s).toBool();
+    const bool showContentPreviews = params.value(u"showContentPreviews"_s).toBool();
+    const QString themeName        = params.value(u"themeName"_s).toString();
+    const bool hasSel              = selectedCount > 0;
 
     QMenu menu;
     QString result;
@@ -440,6 +444,8 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
         layoutChk(u"Panel de navegación"_s,   u"layout:sidebar"_s,       showSidebar);
         layoutMenu->addSeparator();
         layoutChk(u"Barra de estado"_s,       u"layout:status-bar"_s,    showStatusBar);
+        layoutMenu->addSeparator();
+        layoutChk(u"Miniaturas de archivos"_s, u"layout:content-previews"_s, showContentPreviews);
 
         menu.addSeparator();
         QAction *ref = menu.addAction(ti(u"view-refresh"_s), u"Actualizar"_s,

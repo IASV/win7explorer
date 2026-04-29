@@ -38,7 +38,7 @@ Rectangle {
 
         Repeater {
             model: [
-                { label: "Organizar",             chevron: true, always: true, bold: true, visFor: null,
+                { label: "Organizar",             chevron: true, always: true, visFor: null,
                   action: function(){ root.organizeClicked() } },
                 { sep: true, visFor: null },
                 { label: "Incluir en biblioteca", chevron: true, visFor: ["folder","drive"],

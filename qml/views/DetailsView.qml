@@ -11,6 +11,7 @@ ColumnLayout {
     property string sortBy:  "name"
     property string sortDir: "asc"
     property var columnFilters: ({})
+    property string renamingId: ""
 
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
@@ -18,6 +19,8 @@ ColumnLayout {
     signal sortRequested(string col)
     signal filterChanged()
     signal emptyAreaClicked()
+    signal renameCommitted(string id, string newName)
+    signal renameCancelled()
 
     spacing: 0
 
@@ -239,10 +242,28 @@ ColumnLayout {
                         Layout.preferredWidth: 16; Layout.preferredHeight: 16
                         fillMode: Image.PreserveAspectFit
                     }
-                    Label {
-                        text: modelData.name
-                        color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
-                        font.pixelSize: 12; Layout.fillWidth: true; elide: Text.ElideRight
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: 18
+
+                        Label {
+                            anchors.fill: parent
+                            visible: modelData.id !== root.renamingId
+                            text: modelData.name
+                            color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
+                            font.pixelSize: 12; elide: Text.ElideRight
+                        }
+                        TextField {
+                            anchors.fill: parent
+                            visible: modelData.id === root.renamingId
+                            font.pixelSize: 12
+                            background: Rectangle { color: "white"; border.color: "#0078d7"; border.width: 1; radius: 1 }
+                            padding: 0; leftPadding: 2; selectByMouse: true
+                            Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
+                            Keys.onEscapePressed: root.renameCancelled()
+                            onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                            onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
+                        }
                     }
                 }
                 Label { Layout.fillWidth: true; Layout.preferredWidth: 200; Layout.leftMargin: 8
@@ -265,6 +286,7 @@ ColumnLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                enabled: modelData.id !== root.renamingId
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton)
                         root.itemClicked(modelData,

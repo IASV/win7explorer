@@ -319,7 +319,7 @@ QVariantList FileSystemBackend::getStorageDevices() const {
         QString dev = QString::fromLatin1(si.device());
         if (dev.contains("cdrom") || dev.contains("dvd") || fsType == "iso9660" || fsType == "udf")
             kind = "disc";
-        else if (si.isRoot())
+        else if (root == QLatin1String("/"))
             kind = "system";
         else if (dev.startsWith("/dev/sd") || dev.startsWith("/dev/vd"))
             kind = "local";

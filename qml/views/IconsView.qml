@@ -7,11 +7,15 @@ GridView {
     property var pal
     property var selectedIds: ({})
     property string viewMode: "large"
+    property string renamingId: ""
+    property bool   showContentPreviews: true
 
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
     signal emptyAreaClicked()
+    signal renameCommitted(string id, string newName)
+    signal renameCancelled()
 
     TapHandler {
         acceptedButtons: Qt.LeftButton
@@ -52,22 +56,43 @@ GridView {
 
             Image {
                 Layout.alignment: Qt.AlignHCenter
-                source: modelData.previewSrc || modelData.iconSrc || ""
+                source: root.showContentPreviews
+                        ? (modelData.previewSrc || modelData.iconSrc || "")
+                        : (modelData.iconSrc || "")
                 Layout.preferredWidth:  root.iconSize
                 Layout.preferredHeight: root.iconSize
                 sourceSize.width:  root.iconSize
                 sourceSize.height: root.iconSize
                 fillMode: Image.PreserveAspectFit
             }
-            Label {
+
+            Item {
                 Layout.fillWidth: true
-                text: modelData.name
-                color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
-                font.pixelSize: 11
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
+                Layout.fillHeight: true
+
+                Label {
+                    anchors.fill: parent
+                    visible: modelData.id !== root.renamingId
+                    text: modelData.name
+                    color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
+                    font.pixelSize: 11
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                }
+                TextField {
+                    anchors.fill: parent
+                    visible: modelData.id === root.renamingId
+                    font.pixelSize: 11
+                    horizontalAlignment: Text.AlignHCenter
+                    background: Rectangle { color: "white"; border.color: "#0078d7"; border.width: 1; radius: 1 }
+                    padding: 1; selectByMouse: true
+                    Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
+                    Keys.onEscapePressed: root.renameCancelled()
+                    onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                    onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
+                }
             }
         }
 
@@ -87,12 +112,30 @@ GridView {
                 fillMode: Image.PreserveAspectFit
                 Layout.alignment: Qt.AlignVCenter
             }
-            Label {
+
+            Item {
                 Layout.fillWidth: true
-                text: modelData.name
-                color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
-                font.pixelSize: 11
-                elide: Text.ElideRight
+                implicitHeight: 16
+
+                Label {
+                    anchors.fill: parent
+                    visible: modelData.id !== root.renamingId
+                    text: modelData.name
+                    color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.text
+                    font.pixelSize: 11
+                    elide: Text.ElideRight
+                }
+                TextField {
+                    anchors.fill: parent
+                    visible: modelData.id === root.renamingId
+                    font.pixelSize: 11
+                    background: Rectangle { color: "white"; border.color: "#0078d7"; border.width: 1; radius: 1 }
+                    padding: 0; leftPadding: 2; selectByMouse: true
+                    Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
+                    Keys.onEscapePressed: root.renameCancelled()
+                    onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                    onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
+                }
             }
         }
 
@@ -101,6 +144,7 @@ GridView {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            enabled: modelData.id !== root.renamingId
             onClicked: (mouse) => {
                 if (mouse.button === Qt.LeftButton)
                     root.itemClicked(modelData,
