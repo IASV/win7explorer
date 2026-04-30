@@ -111,6 +111,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 28
+        Layout.topMargin: 6
         gradient: Gradient {
             GradientStop { position: 0; color: root.pal.tbar1 }
             GradientStop { position: 1; color: root.pal.tbar2 }

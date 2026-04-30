@@ -26,6 +26,7 @@ ListView {
 
     clip: true
     spacing: 0
+    topMargin: 4
     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
     delegate: Rectangle {

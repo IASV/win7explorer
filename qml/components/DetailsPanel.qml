@@ -171,7 +171,7 @@ Rectangle {
 
     // ══ 5. AUDIO ═══════════════════════════════════════════════════════════
     RowLayout {
-        visible: !root.computerMode && !!root.detailItem && root.metaCategory === "audio"
+        visible: false
         anchors.fill: parent
         anchors.leftMargin: 14; anchors.rightMargin: 14
         anchors.topMargin: 6;   anchors.bottomMargin: 6
@@ -276,7 +276,6 @@ Rectangle {
     RowLayout {
         visible: !root.computerMode && !!root.detailItem
                  && root.detailItem.type !== "drive"
-                 && root.metaCategory !== "audio"
                  && root.metaCategory !== "image"
                  && root.metaCategory !== "video"
         anchors.fill: parent

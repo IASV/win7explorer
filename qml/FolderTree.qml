@@ -276,5 +276,10 @@ Item {
         })
     }
 
+    Connections {
+        target: fsBackend
+        function onDevicesChanged() { loadTree() }
+    }
+
     Component.onCompleted: loadTree()
 }

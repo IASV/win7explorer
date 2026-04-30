@@ -209,7 +209,6 @@ QString NativeMenu::showMenu(const QVariantMap &params)
                                       : u"Abrir con "_s + appName;
             QAction *openAct = act(openLabel, u"open"_s,
                                    appIcon.isEmpty() ? ti(u"document-open"_s) : ti(appIcon));
-            QFont bf = openAct->font(); bf.setBold(true); openAct->setFont(bf);
 
             // "Abrir con" submenu
             QMenu *owMenu = menu.addMenu(ti(u"document-open"_s), u"Abrir con"_s);
@@ -229,8 +228,7 @@ QString NativeMenu::showMenu(const QVariantMap &params)
 
         } else {
             // Folder / drive / mock item
-            QAction *openAct = act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
-            QFont f = openAct->font(); f.setBold(true); openAct->setFont(f);
+            act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
             if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
             menu.addSeparator();
         }
@@ -484,16 +482,29 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
 
 static QIcon makeViewIcon(const QString &mode)
 {
+    // Map view modes to standard freedesktop icon names
+    static const QHash<QString, QString> themeNames = {
+        { u"xlarge"_s,  u"view-list-icons"_s   },
+        { u"large"_s,   u"view-list-icons"_s   },
+        { u"medium"_s,  u"view-list-icons"_s   },
+        { u"small"_s,   u"view-list-compact"_s },
+        { u"list"_s,    u"view-list-compact"_s },
+        { u"details"_s, u"view-list-details"_s },
+        { u"tiles"_s,   u"view-media-playlist"_s },
+        { u"content"_s, u"view-preview"_s      },
+    };
+
+    const QString name = themeNames.value(mode);
+    if (!name.isEmpty() && QIcon::hasThemeIcon(name))
+        return QIcon::fromTheme(name);
+
+    // Fallback: custom-painted pixel icon
     const int S = 16;
     QPixmap px(S, S);
     px.fill(Qt::transparent);
     QPainter p(&px);
     p.setRenderHint(QPainter::Antialiasing, false);
-
     QColor fg = QApplication::palette().color(QPalette::Text);
-    p.setBrush(fg);
-    p.setPen(Qt::NoPen);
-
     auto fr = [&](qreal x, qreal y, qreal w, qreal h) {
         p.fillRect(QRectF(x, y, w, h), fg);
     };
@@ -519,7 +530,6 @@ static QIcon makeViewIcon(const QString &mode)
     } else { // content
         fr(1,2,4,4); fr(6,2.5,9,1); fr(6,4.5,7,1); fr(1,8,4,4); fr(6,8.5,9,1); fr(6,10.5,7,1);
     }
-
     p.end();
     return QIcon(px);
 }

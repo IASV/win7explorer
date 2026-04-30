@@ -41,6 +41,16 @@ FileSystemBackend::FileSystemBackend(QObject *parent)
 {
     m_currentPath = QDir::homePath();
     loadDirectory(m_currentPath);
+
+    // Watch /proc/mounts for USB/removable drive plug/unplug events
+    m_mountWatcher = new QFileSystemWatcher(this);
+    m_mountWatcher->addPath(QStringLiteral("/proc/mounts"));
+    connect(m_mountWatcher, &QFileSystemWatcher::fileChanged, this, [this](const QString &) {
+        // Re-add path because some systems replace the file on change
+        if (!m_mountWatcher->files().contains(QStringLiteral("/proc/mounts")))
+            m_mountWatcher->addPath(QStringLiteral("/proc/mounts"));
+        emit devicesChanged();
+    });
 }
 
 QString FileSystemBackend::currentPath() const

@@ -10,6 +10,7 @@
 #include <QDateTime>
 #include <QStandardPaths>
 #include <QStack>
+#include <QFileSystemWatcher>
 
 class FileSystemBackend : public QObject
 {
@@ -112,6 +113,7 @@ signals:
     void selectedFileChanged();
     void navigationChanged();
     void errorOccurred(const QString &message);
+    void devicesChanged();
 
 private:
     void loadDirectory(const QString &path);
@@ -126,6 +128,8 @@ private:
     QStack<QString> m_backStack;
     QStack<QString> m_forwardStack;
     bool m_navigatingHistory = false;
+
+    QFileSystemWatcher *m_mountWatcher = nullptr;
 };
 
 #endif // FILESYSTEMBACKEND_H

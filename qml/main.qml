@@ -870,7 +870,6 @@ ApplicationWindow {
                 Loader {
                     id: viewLoader
                     anchors.fill: parent
-                    anchors.margins: 6
                     sourceComponent: {
                         if (win.useGroupedView && win.groupedItems.length === 0) return networkEmptyComp
                         if (win.useGroupedView)        return groupedComp
