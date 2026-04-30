@@ -160,7 +160,8 @@ Rectangle {
                     anchors.centerIn: parent; width: 16; height: 16
                     property string vm: root.viewMode
                     property color fg: root.pal.muted
-                    onVmChanged: requestPaint(); onFgChanged: requestPaint()
+                    onVmChanged: Qt.callLater(requestPaint)
+                    onFgChanged: Qt.callLater(requestPaint)
                     Component.onCompleted: requestPaint()
                     onPaint: {
                         var ctx = getContext("2d"); ctx.clearRect(0,0,16,16); ctx.fillStyle=fg; var m=vm

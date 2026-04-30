@@ -104,14 +104,13 @@ ColumnLayout {
     }
 
     function isFiltered(colId) {
-        return root.columnFilters[colId] && root.columnFilters[colId].length > 0
+        return !!(root.columnFilters[colId] && root.columnFilters[colId].length > 0)
     }
 
     // Column header
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 28
-        Layout.topMargin: 6
         gradient: Gradient {
             GradientStop { position: 0; color: root.pal.tbar1 }
             GradientStop { position: 1; color: root.pal.tbar2 }
