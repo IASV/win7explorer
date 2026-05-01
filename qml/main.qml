@@ -574,16 +574,9 @@ ApplicationWindow {
     }
 
     // ── About dialog ───────────────────────────────────────────────────────
-    Dialog {
+    AboutDialog {
         id: aboutDialog
-        title: "Acerca de Win7 Explorer"
-        modal: true
-        anchors.centerIn: parent
-        standardButtons: Dialog.Ok
-        Label {
-            text: "Win7 Explorer\nRéplica de Windows 7 File Explorer para Linux\nDesarrollado con Qt6 / QML"
-            color: win.pal.text; font.pixelSize: 13
-        }
+        pal: win.pal
     }
 
     // ── View components ────────────────────────────────────────────────────
@@ -817,6 +810,7 @@ ApplicationWindow {
             onNewFolderRequested:       win.handleNewFolder()
             onPreviewToggled:           win.showPreview = !win.showPreview
             onViewModeChangeRequested:  function(m) { win.viewMode = m }
+            onHelpClicked:              aboutDialog.open()
         }
 
         // Separator
@@ -843,8 +837,8 @@ ApplicationWindow {
 
             // Sidebar splitter
             Rectangle {
-                Layout.preferredWidth: win.showSidebar ? 4 : 0
-                Layout.maximumWidth:   win.showSidebar ? 4 : 0
+                Layout.preferredWidth: win.showSidebar ? 2 : 0
+                Layout.maximumWidth:   win.showSidebar ? 2 : 0
                 Layout.fillHeight: true
                 color: win.pal.borderSoft
                 MouseArea {
@@ -893,8 +887,8 @@ ApplicationWindow {
 
             // Preview splitter
             Rectangle {
-                Layout.preferredWidth: win.showPreview ? 4 : 0
-                Layout.maximumWidth:   win.showPreview ? 4 : 0
+                Layout.preferredWidth: win.showPreview ? 2 : 0
+                Layout.maximumWidth:   win.showPreview ? 2 : 0
                 Layout.fillHeight: true
                 color: win.pal.borderSoft
                 MouseArea {
@@ -920,8 +914,8 @@ ApplicationWindow {
         // Details panel drag handle + separator
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 4 : 0
-            Layout.maximumHeight:   ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 4 : 0
+            Layout.preferredHeight: ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 2 : 0
+            Layout.maximumHeight:   ((win.showDetailsPanel && (win.selectedCount > 0 || win.isSpecialPath)) || win.useGroupedView) ? 2 : 0
             color: win.pal.borderSoft
             MouseArea {
                 anchors.fill: parent

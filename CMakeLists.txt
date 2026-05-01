@@ -25,6 +25,7 @@ qt_add_qml_module(win7explorer
         qml/main.qml
         qml/FileSystem.qml
         qml/FolderTree.qml
+        qml/components/AboutDialog.qml
         qml/components/AddressBar.qml
         qml/components/CommandBar.qml
         qml/components/DetailsPanel.qml

@@ -264,11 +264,6 @@ Item {
             path: "network", hasChildren: false, expanded: false, sectionType: ""
         })
 
-        // Panel de control
-        treeModel.append({
-            name: "Panel de control", type: "header", level: 0, icon: "preferences-system",
-            path: "control-panel", hasChildren: false, expanded: false, sectionType: ""
-        })
         // Papelera de reciclaje
         treeModel.append({
             name: "Papelera de reciclaje", type: "special", level: 0, icon: "user-trash",

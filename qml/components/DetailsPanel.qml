@@ -77,7 +77,7 @@ Rectangle {
         Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: pal.border; opacity: 0.5 }
         ColumnLayout { Layout.fillWidth: true; spacing: 3
             Label { text: root.systemInfo ? ("Memoria: " + root.systemInfo.ramFormatted) : ""
-                    color: pal.text; font.pixelSize: 11 }
+                    color: pal.muted; font.pixelSize: 11 }
             Label { text: root.systemInfo ? ("Procesador: " + root.systemInfo.cpuModel) : ""
                     color: pal.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
         }
