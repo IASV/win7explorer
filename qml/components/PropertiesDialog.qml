@@ -5,22 +5,33 @@ import QtQuick.Layouts
 Window {
     id: root
     property var pal
-    property var item:      null
-    property var fileProps: ({})
+    property var item:       null
+    property var fileProps:  ({})
+    property var driveProps: ({})
+
+    readonly property bool isDrive: root.item && root.item.type === "drive"
 
     title:       item ? ("Propiedades: " + (item.name || "")) : "Propiedades"
     width:       420
-    height:      620
+    height:      isDrive ? 480 : 620
     minimumWidth:  400
-    minimumHeight: 540
+    minimumHeight: isDrive ? 400 : 520
     modality:    Qt.ApplicationModal
     flags:       Qt.Dialog
 
     onVisibleChanged: {
-        if (visible && root.item && root.item.id && root.item.id.startsWith('/'))
-            root.fileProps = fsBackend.getFileProperties(root.item.id)
-        else if (visible)
-            root.fileProps = {}
+        if (!visible) return
+        if (!root.item || !root.item.id) { root.fileProps = {}; root.driveProps = {}; return }
+        const path = root.item.id
+        if (root.isDrive) {
+            root.driveProps = fsBackend.getDriveProperties(path)
+            root.fileProps  = {}
+        } else if (path.startsWith('/')) {
+            root.fileProps  = fsBackend.getFileProperties(path)
+            root.driveProps = {}
+        } else {
+            root.fileProps  = {}; root.driveProps = {}
+        }
     }
 
     ColumnLayout {
@@ -28,7 +39,7 @@ Window {
         anchors.margins: 12
         spacing: 6
 
-        // ── Icon + name ────────────────────────────────────────────
+        // ── Icon + name ────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true; Layout.bottomMargin: 4
             spacing: 10
@@ -47,118 +58,230 @@ Window {
 
         Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
 
-        // ── Tipo + Se abre con ─────────────────────────────────────
-        GridLayout {
-            columns: 2; columnSpacing: 12; rowSpacing: 4
-            Layout.fillWidth: true
-
-            Label { text: "Tipo de archivo:"; font.pixelSize: 11; color: "#555" }
-            Label { text: root.fileProps.type || root.item?.typeStr || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
-
-            Label { visible: !(root.fileProps.isDir || false); text: "Se abre con:"; font.pixelSize: 11; color: "#555" }
-            Label { visible: !(root.fileProps.isDir || false); text: "Aplicación predeterminada"; font.pixelSize: 11; Layout.fillWidth: true }
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
-
-        // ── Ubicación + tamaños ────────────────────────────────────
-        GridLayout {
-            columns: 2; columnSpacing: 12; rowSpacing: 4
-            Layout.fillWidth: true
-
-            Label { text: "Ubicación:"; font.pixelSize: 11; color: "#555" }
-            Label { text: root.fileProps.location || ""; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
-
-            Label { visible: !(root.fileProps.isDir || false); text: "Tamaño:"; font.pixelSize: 11; color: "#555" }
-            Label {
-                visible: !(root.fileProps.isDir || false)
-                text: root.fileProps.sizeFormatted
-                      ? (root.fileProps.sizeFormatted + " (" + root.fileProps.size + " bytes)")
-                      : ""
-                font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
-            }
-
-            Label { visible: !(root.fileProps.isDir || false); text: "Tamaño en disco:"; font.pixelSize: 11; color: "#555" }
-            Label {
-                visible: !(root.fileProps.isDir || false)
-                text: root.fileProps.diskSizeFormatted
-                      ? (root.fileProps.diskSizeFormatted + " (" + root.fileProps.diskSize + " bytes)")
-                      : ""
-                font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
-            }
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
-
-        // ── Fechas ─────────────────────────────────────────────────
-        GridLayout {
-            columns: 2; columnSpacing: 12; rowSpacing: 4
-            Layout.fillWidth: true
-
-            Label { text: "Creado:";        font.pixelSize: 11; color: "#555" }
-            Label { text: root.fileProps.created  || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
-
-            Label { text: "Modificado:";    font.pixelSize: 11; color: "#555" }
-            Label { text: root.fileProps.modified || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
-
-            Label { text: "Último acceso:"; font.pixelSize: 11; color: "#555" }
-            Label { text: root.fileProps.accessed || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
-
-        // ── Atributos ──────────────────────────────────────────────
-        RowLayout {
-            Layout.fillWidth: true; spacing: 16
-            Label { text: "Atributos:"; font.pixelSize: 11; color: "#555" }
-            CheckBox { text: "Sólo lectura"; checked: root.fileProps.readonly || false; font.pixelSize: 11; enabled: false }
-            CheckBox { text: "Oculto";       checked: root.fileProps.hidden   || false; font.pixelSize: 11; enabled: false }
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
-
-        // ── Permisos ───────────────────────────────────────────────
+        // ══════════════ DRIVE VIEW ════════════════════════════════════════
         ColumnLayout {
+            visible: root.isDrive
             Layout.fillWidth: true
-            spacing: 4
+            spacing: 8
 
-            Label { text: "Permisos:"; font.pixelSize: 11; color: "#555" }
+            // Space usage bar
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
 
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 24
+                    color: "#e8e8e8"
+                    border.color: "#aaa"
+                    radius: 2
+                    clip: true
+
+                    Rectangle {
+                        width: parent.width * Math.min(root.driveProps.usedRatio || 0, 1.0)
+                        height: parent.height
+                        radius: 2
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: "#4a90d9" }
+                            GradientStop { position: 1.0; color: "#1e6abf" }
+                        }
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: root.driveProps.usedFormatted
+                              ? (root.driveProps.usedFormatted + " de " + root.driveProps.totalFormatted)
+                              : ""
+                        font.pixelSize: 10
+                        color: (root.driveProps.usedRatio || 0) > 0.5 ? "white" : "#333"
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Rectangle { width: 12; height: 12; color: "#4a90d9"; border.color: "#aaa"; radius: 1 }
+                    Label { text: "Usado";  font.pixelSize: 10; color: "#555"; Layout.fillWidth: true }
+                    Rectangle { width: 12; height: 12; color: "#e8e8e8"; border.color: "#aaa"; radius: 1 }
+                    Label { text: "Libre"; font.pixelSize: 10; color: "#555" }
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Space details
             GridLayout {
-                columns: 4
-                columnSpacing: 10; rowSpacing: 2
+                columns: 2; columnSpacing: 12; rowSpacing: 4
+                Layout.fillWidth: true
 
-                Label { text: "" }
-                Label { text: "Lectura";   font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
-                Label { text: "Escritura"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
-                Label { text: "Ejecución"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                Label { text: "Espacio usado:";     font.pixelSize: 11; color: "#555" }
+                Label {
+                    text: root.driveProps.usedFormatted
+                          ? (root.driveProps.usedFormatted + "  (" + (root.driveProps.usedBytes || "") + ")")
+                          : "N/D"
+                    font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
+                }
 
-                Label { text: "Propietario"; font.pixelSize: 11; color: "#555" }
-                CheckBox { id: ownerRead;   checked: root.fileProps.ownerRead  || false; font.pixelSize: 11 }
-                CheckBox { id: ownerWrite;  checked: root.fileProps.ownerWrite || false; font.pixelSize: 11 }
-                CheckBox { id: ownerExec;   checked: root.fileProps.ownerExec  || false; font.pixelSize: 11 }
+                Label { text: "Espacio libre:";     font.pixelSize: 11; color: "#555" }
+                Label {
+                    text: root.driveProps.freeFormatted
+                          ? (root.driveProps.freeFormatted + "  (" + (root.driveProps.freeBytes || "") + ")")
+                          : "N/D"
+                    font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
+                }
 
-                Label { text: "Grupo"; font.pixelSize: 11; color: "#555" }
-                CheckBox { id: groupRead;   checked: root.fileProps.groupRead  || false; font.pixelSize: 11 }
-                CheckBox { id: groupWrite;  checked: root.fileProps.groupWrite || false; font.pixelSize: 11 }
-                CheckBox { id: groupExec;   checked: root.fileProps.groupExec  || false; font.pixelSize: 11 }
+                Label { text: "Capacidad:";         font.pixelSize: 11; color: "#555" }
+                Label {
+                    text: root.driveProps.totalFormatted
+                          ? (root.driveProps.totalFormatted + "  (" + (root.driveProps.totalBytes || "") + ")")
+                          : "N/D"
+                    font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
+                }
+            }
 
-                Label { text: "Otros"; font.pixelSize: 11; color: "#555" }
-                CheckBox { id: othersRead;  checked: root.fileProps.othersRead  || false; font.pixelSize: 11 }
-                CheckBox { id: othersWrite; checked: root.fileProps.othersWrite || false; font.pixelSize: 11 }
-                CheckBox { id: othersExec;  checked: root.fileProps.othersExec  || false; font.pixelSize: 11 }
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Drive info
+            GridLayout {
+                columns: 2; columnSpacing: 12; rowSpacing: 4
+                Layout.fillWidth: true
+
+                Label { text: "Punto de montaje:";  font.pixelSize: 11; color: "#555" }
+                Label { text: root.driveProps.mountPoint || ""; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+
+                Label { text: "Dispositivo:";       font.pixelSize: 11; color: "#555" }
+                Label { text: root.driveProps.device || ""; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+
+                Label { text: "Sistema de archivos:"; font.pixelSize: 11; color: "#555" }
+                Label { text: (root.driveProps.fsType || "").toUpperCase() || ""; font.pixelSize: 11; Layout.fillWidth: true }
+
+                Label { text: "Etiqueta:";          font.pixelSize: 11; color: "#555" }
+                Label { text: root.driveProps.label || ""; font.pixelSize: 11; Layout.fillWidth: true }
+
+                Label { text: "Solo lectura:";      font.pixelSize: 11; color: "#555" }
+                Label { text: root.driveProps.isReadOnly ? "Sí" : "No"; font.pixelSize: 11 }
+            }
+        }
+
+        // ══════════════ FILE / FOLDER VIEW ════════════════════════════════
+        ColumnLayout {
+            visible: !root.isDrive
+            Layout.fillWidth: true
+            spacing: 6
+
+            // Tipo + Se abre con
+            GridLayout {
+                columns: 2; columnSpacing: 12; rowSpacing: 4
+                Layout.fillWidth: true
+
+                Label { text: "Tipo de archivo:"; font.pixelSize: 11; color: "#555" }
+                Label { text: root.fileProps.type || root.item?.typeStr || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
+
+                Label { visible: !(root.fileProps.isDir || false); text: "Se abre con:"; font.pixelSize: 11; color: "#555" }
+                Label { visible: !(root.fileProps.isDir || false); text: "Aplicación predeterminada"; font.pixelSize: 11; Layout.fillWidth: true }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Ubicación + tamaños
+            GridLayout {
+                columns: 2; columnSpacing: 12; rowSpacing: 4
+                Layout.fillWidth: true
+
+                Label { text: "Ubicación:"; font.pixelSize: 11; color: "#555" }
+                Label { text: root.fileProps.location || ""; font.pixelSize: 11; Layout.fillWidth: true; elide: Text.ElideRight }
+
+                Label { visible: !(root.fileProps.isDir || false); text: "Tamaño:"; font.pixelSize: 11; color: "#555" }
+                Label {
+                    visible: !(root.fileProps.isDir || false)
+                    text: root.fileProps.sizeFormatted
+                          ? (root.fileProps.sizeFormatted + " (" + root.fileProps.size + " bytes)")
+                          : ""
+                    font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
+                }
+
+                Label { visible: !(root.fileProps.isDir || false); text: "Tamaño en disco:"; font.pixelSize: 11; color: "#555" }
+                Label {
+                    visible: !(root.fileProps.isDir || false)
+                    text: root.fileProps.diskSizeFormatted
+                          ? (root.fileProps.diskSizeFormatted + " (" + root.fileProps.diskSize + " bytes)")
+                          : ""
+                    font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Fechas
+            GridLayout {
+                columns: 2; columnSpacing: 12; rowSpacing: 4
+                Layout.fillWidth: true
+
+                Label { text: "Creado:";        font.pixelSize: 11; color: "#555" }
+                Label { text: root.fileProps.created  || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
+
+                Label { text: "Modificado:";    font.pixelSize: 11; color: "#555" }
+                Label { text: root.fileProps.modified || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
+
+                Label { text: "Último acceso:"; font.pixelSize: 11; color: "#555" }
+                Label { text: root.fileProps.accessed || ""; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.Wrap }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Atributos
+            RowLayout {
+                Layout.fillWidth: true; spacing: 16
+                Label { text: "Atributos:"; font.pixelSize: 11; color: "#555" }
+                CheckBox { text: "Sólo lectura"; checked: root.fileProps.readonly || false; font.pixelSize: 11; enabled: false }
+                CheckBox { text: "Oculto";       checked: root.fileProps.hidden   || false; font.pixelSize: 11; enabled: false }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
+            // Permisos
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 4
+
+                Label { text: "Permisos:"; font.pixelSize: 11; color: "#555" }
+
+                GridLayout {
+                    columns: 4; columnSpacing: 10; rowSpacing: 2
+
+                    Label { text: "" }
+                    Label { text: "Lectura";   font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                    Label { text: "Escritura"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+                    Label { text: "Ejecución"; font.pixelSize: 10; color: "#555"; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+
+                    Label { text: "Propietario"; font.pixelSize: 11; color: "#555" }
+                    CheckBox { id: ownerRead;   checked: root.fileProps.ownerRead  || false; font.pixelSize: 11 }
+                    CheckBox { id: ownerWrite;  checked: root.fileProps.ownerWrite || false; font.pixelSize: 11 }
+                    CheckBox { id: ownerExec;   checked: root.fileProps.ownerExec  || false; font.pixelSize: 11 }
+
+                    Label { text: "Grupo"; font.pixelSize: 11; color: "#555" }
+                    CheckBox { id: groupRead;   checked: root.fileProps.groupRead  || false; font.pixelSize: 11 }
+                    CheckBox { id: groupWrite;  checked: root.fileProps.groupWrite || false; font.pixelSize: 11 }
+                    CheckBox { id: groupExec;   checked: root.fileProps.groupExec  || false; font.pixelSize: 11 }
+
+                    Label { text: "Otros"; font.pixelSize: 11; color: "#555" }
+                    CheckBox { id: othersRead;  checked: root.fileProps.othersRead  || false; font.pixelSize: 11 }
+                    CheckBox { id: othersWrite; checked: root.fileProps.othersWrite || false; font.pixelSize: 11 }
+                    CheckBox { id: othersExec;  checked: root.fileProps.othersExec  || false; font.pixelSize: 11 }
+                }
             }
         }
 
         Item { Layout.fillHeight: true }
 
-        // ── Buttons ────────────────────────────────────────────────
+        // ── Buttons ────────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             Item { Layout.fillWidth: true }
             Button {
                 text: "Aceptar"
-                onClicked: { applyPermissions(); root.close() }
+                onClicked: { if (!root.isDrive) applyPermissions(); root.close() }
             }
             Button {
                 text: "Cancelar"
@@ -166,6 +289,7 @@ Window {
             }
             Button {
                 text: "Aplicar"
+                visible: !root.isDrive
                 onClicked: applyPermissions()
             }
         }

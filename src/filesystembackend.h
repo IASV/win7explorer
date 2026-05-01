@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QStack>
 #include <QFileSystemWatcher>
+#include <QTimer>
 
 class FileSystemBackend : public QObject
 {
@@ -100,12 +101,16 @@ public:
 
     // Full file properties for the Properties dialog
     Q_INVOKABLE QVariantMap getFileProperties(const QString &path) const;
+    Q_INVOKABLE QVariantMap getDriveProperties(const QString &path) const;
 
     // Trash support
     Q_INVOKABLE bool restoreFromTrash(const QString &path);
 
     // File permissions
     Q_INVOKABLE bool setFilePermissions(const QString &path, const QVariantMap &perms);
+
+    // Auto-mount any unmounted MTP volumes detected by GVFS
+    Q_INVOKABLE void mountMtpDevices();
 
 signals:
     void currentPathChanged();

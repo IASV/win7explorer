@@ -62,8 +62,9 @@ static QString qrcIconPath(const QString &id)
 // Maps internal icon names to standard FreeDesktop icon names for system theme lookup.
 static QString themeIconName(const QString &id)
 {
-    if (id == u"drive-local" || id == u"drive-system")         return u"drive-harddisk"_s;
-    if (id.startsWith(u"drive-removable") || id == u"drive-mtp") return u"drive-removable-media"_s;
+    if (id == u"drive-local" || id == u"drive-system") return u"drive-harddisk"_s;
+    if (id == u"drive-mtp" || id == u"phone")          return u"phone"_s;
+    if (id.startsWith(u"drive-removable"))              return u"drive-removable-media"_s;
     if (id.contains(u"dvd", Qt::CaseInsensitive) ||
         id.contains(u"cd",  Qt::CaseInsensitive))               return u"media-optical"_s;
     if (id == u"document")                                       return u"folder-documents"_s;

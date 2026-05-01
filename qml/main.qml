@@ -43,6 +43,10 @@ ApplicationWindow {
         }
     }
 
+    // Incremented every time fsBackend reports a device change, forcing
+    // groupedItems (which calls plain functions) to re-evaluate.
+    property int _devicesVersion: 0
+
     // ── Theme ──────────────────────────────────────────────────────────────
     property string themeName: "glass"
     readonly property var pal: Palettes.all[themeName]
@@ -239,6 +243,7 @@ ApplicationWindow {
             }
         }
         function onErrorOccurred(msg) { win.showToast(msg) }
+        function onDevicesChanged() { win._devicesVersion++ }
     }
 
     onCurrentIdChanged: { /* navigation is driven by navigate/goBack/goForward */ }
@@ -299,6 +304,7 @@ ApplicationWindow {
     }
 
     readonly property var groupedItems: {
+        var _v = _devicesVersion // trigger re-evaluation when devices change
         if (!useGroupedView) return []
         var n = currentNode
         var arr = []

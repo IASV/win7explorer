@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Win7 Explorer
+Name[es]=Win7 Explorador
+Comment=Explorador de archivos estilo Windows 7
+Comment[es]=Explorador de archivos estilo Windows 7
+Exec=win7explorer %u
+Icon=system-file-manager
+Terminal=false
+Type=Application
+Categories=System;FileManager;Qt;
+MimeType=inode/directory;application/x-gnome-saved-search;
+StartupNotify=true
+X-KDE-StartupNotify=true

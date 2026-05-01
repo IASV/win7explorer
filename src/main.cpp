@@ -4,6 +4,8 @@
 #include <QQuickStyle>
 #include <QIcon>
 #include <QLoggingCategory>
+#include <QFileInfo>
+#include <QUrl>
 #include "iconprovider.h"
 #include "filesystembackend.h"
 #include "nativemenu.h"
@@ -42,6 +44,19 @@ int main(int argc, char *argv[])
 
     const QUrl url(u"qrc:/Win7Explorer/qml/main.qml"_s);
     engine.load(url);
+
+    // Open path passed as command-line argument (e.g. launched by file manager association)
+    if (app.arguments().size() > 1) {
+        QString argPath = app.arguments().at(1);
+        // Handle file:// URLs from desktop environment
+        if (argPath.startsWith(u"file://"_s))
+            argPath = QUrl(argPath).toLocalFile();
+        if (!argPath.isEmpty()) {
+            QFileInfo fi(argPath);
+            if (fi.exists())
+                fsBackend->navigateTo(fi.isDir() ? argPath : fi.absolutePath());
+        }
+    }
 
     return app.exec();
 }
