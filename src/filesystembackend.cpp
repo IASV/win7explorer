@@ -171,7 +171,16 @@ void FileSystemBackend::navigateTo(const QString &path)
     QFileInfo fi(path);
 
     if (!fi.exists()) {
-        emit errorOccurred("La ruta no existe: " + path);
+        if (path.contains(QLatin1String("/gvfs/mtp:"))) {
+            // MTP device detected but not yet mounted — trigger mount and let user retry
+            emit errorOccurred(QStringLiteral(
+                "Montando dispositivo... Asegúrate de que el teléfono esté desbloqueado "
+                "y en modo 'Transferencia de archivos', luego vuelve a hacer clic."));
+            mountMtpDevices();
+            QTimer::singleShot(3500, this, [this] { emit devicesChanged(); });
+        } else {
+            emit errorOccurred("La ruta no existe: " + path);
+        }
         return;
     }
 
@@ -392,43 +401,41 @@ QVariantList FileSystemBackend::getStorageDevices() const {
         result.append(m);
     }
 
-    // Scan GVFS for MTP devices (Android phones, cameras, etc.)
+    // ── GVFS MTP: already-mounted devices ────────────────────────────────────
     const QString gvfsPath = QStringLiteral("/run/user/%1/gvfs").arg(::getuid());
     QDir gvfsDir(gvfsPath);
+    QSet<QString> gvfsMtpRoots; // track which roots we've added
     if (gvfsDir.exists()) {
         const QStringList mtpDirs = gvfsDir.entryList({QStringLiteral("mtp:*")},
                                                        QDir::Dirs | QDir::NoDotAndDotDot);
         for (const QString &mtpDir : mtpDirs) {
-            // Decode device name from "host=..." part (URL-encoded)
             QString deviceName;
             const int hostIdx = mtpDir.indexOf(QLatin1String("host="));
             if (hostIdx != -1) {
                 deviceName = QUrl::fromPercentEncoding(mtpDir.mid(hostIdx + 5).toUtf8());
                 deviceName.replace(u'_', u' ');
-                // Strip trailing [usb:X,Y] suffix if present
                 const int bracketIdx = deviceName.indexOf(u'[');
                 if (bracketIdx > 0) deviceName = deviceName.left(bracketIdx).trimmed();
             }
             if (deviceName.isEmpty()) deviceName = QStringLiteral("Dispositivo MTP");
 
             const QString mtpFullPath = gvfsDir.absoluteFilePath(mtpDir);
+            gvfsMtpRoots.insert(mtpFullPath);
 
-            // Enumerate storage volumes inside the device (e.g. "Internal storage", "SD card")
             const QStringList storages = QDir(mtpFullPath)
                 .entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
             if (storages.isEmpty()) {
-                // Device visible but not yet populated
                 QVariantMap m;
-                m["displayName"] = deviceName;
-                m["label"]       = deviceName;
-                m["path"]        = mtpFullPath;
-                m["totalGb"]     = 0.0;
-                m["freeGb"]      = 0.0;
-                m["usedGb"]      = 0.0;
-                m["kind"]        = QStringLiteral("mtp");
-                m["fsType"]      = QStringLiteral("mtp");
-                m["device"]      = mtpDir;
+                m[QStringLiteral("displayName")] = deviceName;
+                m[QStringLiteral("label")]       = deviceName;
+                m[QStringLiteral("path")]        = mtpFullPath;
+                m[QStringLiteral("totalGb")]     = 0.0;
+                m[QStringLiteral("freeGb")]      = 0.0;
+                m[QStringLiteral("usedGb")]      = 0.0;
+                m[QStringLiteral("kind")]        = QStringLiteral("mtp");
+                m[QStringLiteral("fsType")]      = QStringLiteral("mtp");
+                m[QStringLiteral("device")]      = mtpDir;
                 result.append(m);
             } else {
                 for (const QString &storage : storages) {
@@ -439,18 +446,74 @@ QVariantList FileSystemBackend::getStorageDevices() const {
                     const double freeGb  = (si.isValid() && si.bytesTotal() > 0)
                         ? si.bytesFree()  / 1073741824.0 : 0.0;
                     QVariantMap m;
-                    m["displayName"] = deviceName + QStringLiteral(" – ") + storage;
-                    m["label"]       = storage;
-                    m["path"]        = storagePath;
-                    m["totalGb"]     = totalGb;
-                    m["freeGb"]      = freeGb;
-                    m["usedGb"]      = totalGb - freeGb;
-                    m["kind"]        = QStringLiteral("mtp");
-                    m["fsType"]      = QStringLiteral("mtp");
-                    m["device"]      = mtpDir;
+                    m[QStringLiteral("displayName")] = deviceName + QStringLiteral(" – ") + storage;
+                    m[QStringLiteral("label")]       = storage;
+                    m[QStringLiteral("path")]        = storagePath;
+                    m[QStringLiteral("totalGb")]     = totalGb;
+                    m[QStringLiteral("freeGb")]      = freeGb;
+                    m[QStringLiteral("usedGb")]      = totalGb - freeGb;
+                    m[QStringLiteral("kind")]        = QStringLiteral("mtp");
+                    m[QStringLiteral("fsType")]      = QStringLiteral("mtp");
+                    m[QStringLiteral("device")]      = mtpDir;
                     result.append(m);
                 }
             }
+        }
+    }
+
+    // ── GVFS MTP: detected-but-not-yet-mounted volumes (e.g. blocked by kiod6) ──
+    // Parse `gio mount -li` to find MTP volumes GVFS knows about but hasn't mounted.
+    // This makes the device appear in the sidebar immediately.
+    {
+        QProcess gioProc;
+        gioProc.start(QStringLiteral("gio"), {QStringLiteral("mount"), QStringLiteral("-li")});
+        if (gioProc.waitForFinished(2000)) {
+            bool isMtp = false;
+            QString volName, uri;
+
+            auto addIfMissing = [&] {
+                if (!isMtp || uri.isEmpty()) return;
+                QString gvfsName = uri;
+                if (gvfsName.endsWith(u'/')) gvfsName.chop(1);
+                if (gvfsName.startsWith(QLatin1String("mtp://")))
+                    gvfsName = QStringLiteral("mtp:host=") + gvfsName.mid(6);
+                const QString expected = QStringLiteral("/run/user/%1/gvfs/%2")
+                    .arg(::getuid()).arg(gvfsName);
+                // Skip if already added as a mounted volume
+                if (gvfsMtpRoots.contains(expected)) return;
+                for (const QVariant &v : result) {
+                    if (v.toMap()[QStringLiteral("path")].toString().startsWith(expected))
+                        return;
+                }
+                const QString label = volName.isEmpty()
+                    ? QStringLiteral("Dispositivo MTP") : volName;
+                QVariantMap m;
+                m[QStringLiteral("displayName")] = label;
+                m[QStringLiteral("label")]       = label;
+                m[QStringLiteral("path")]        = expected; // may not exist yet
+                m[QStringLiteral("totalGb")]     = 0.0;
+                m[QStringLiteral("freeGb")]      = 0.0;
+                m[QStringLiteral("usedGb")]      = 0.0;
+                m[QStringLiteral("kind")]        = QStringLiteral("mtp");
+                m[QStringLiteral("fsType")]      = QStringLiteral("mtp");
+                m[QStringLiteral("device")]      = uri;
+                result.append(m);
+            };
+
+            for (const QString &rawLine : gioProc.readAllStandardOutput().split(u'\n')) {
+                const QString line = rawLine.trimmed();
+                if (line.startsWith(QLatin1String("Volume("))) {
+                    addIfMissing();
+                    isMtp = false; uri.clear();
+                    const int ci = line.indexOf(QLatin1String(": "));
+                    volName = ci >= 0 ? line.mid(ci + 2) : QString();
+                } else if (line.contains(QLatin1String("GProxyVolumeMonitorMTP"))) {
+                    isMtp = true;
+                } else if (isMtp && line.startsWith(QLatin1String("activation_root="))) {
+                    uri = line.mid(16);
+                }
+            }
+            addIfMissing();
         }
     }
 
@@ -1024,43 +1087,71 @@ bool FileSystemBackend::restoreFromTrash(const QString &path)
 
 void FileSystemBackend::mountMtpDevices()
 {
-    // Ask gio to list all drives/volumes including unmounted ones
-    QProcess proc;
-    proc.start(QStringLiteral("gio"), {QStringLiteral("mount"), QStringLiteral("-li")});
-    if (!proc.waitForFinished(4000)) return;
+    // Collect unmounted MTP volumes from gio
+    QProcess listProc;
+    listProc.start(QStringLiteral("gio"), {QStringLiteral("mount"), QStringLiteral("-li")});
+    if (!listProc.waitForFinished(3000)) return;
+
+    struct MtpVol { QString uri, expected; };
+    QList<MtpVol> toMount;
 
     bool isMtp = false;
     QString uri;
 
-    auto tryMount = [&] {
+    auto collect = [&] {
         if (!isMtp || uri.isEmpty()) return;
-        // Derive expected gvfs subdirectory from the MTP URI
-        // "mtp://vivo_V2302_XYZ/" → "mtp:host=vivo_V2302_XYZ"
         QString gvfsName = uri;
         if (gvfsName.endsWith(u'/')) gvfsName.chop(1);
         if (gvfsName.startsWith(QLatin1String("mtp://")))
             gvfsName = QStringLiteral("mtp:host=") + gvfsName.mid(6);
-        const QString expected = QStringLiteral("/run/user/%1/gvfs/%2")
-            .arg(::getuid()).arg(gvfsName);
-        if (!QDir(expected).exists()) {
-            QProcess::startDetached(QStringLiteral("gio"),
-                                    {QStringLiteral("mount"), uri});
-        }
+        const QString expected = QStringLiteral("/run/user/%1/gvfs/%2").arg(::getuid()).arg(gvfsName);
+        if (!QDir(expected).exists())
+            toMount.append({uri, expected});
     };
 
-    for (const QString &rawLine : proc.readAllStandardOutput().split(u'\n')) {
+    for (const QString &rawLine : listProc.readAllStandardOutput().split(u'\n')) {
         const QString line = rawLine.trimmed();
         if (line.startsWith(QLatin1String("Volume("))) {
-            tryMount();
-            isMtp = false;
-            uri.clear();
+            collect(); isMtp = false; uri.clear();
         } else if (line.contains(QLatin1String("GProxyVolumeMonitorMTP"))) {
             isMtp = true;
         } else if (isMtp && line.startsWith(QLatin1String("activation_root="))) {
-            uri = line.mid(16); // skip "activation_root="
+            uri = line.mid(16);
         }
     }
-    tryMount(); // flush last entry
+    collect();
+
+    if (toMount.isEmpty()) return;
+
+    for (const MtpVol &vol : toMount) {
+        // Try async mount; on kiod6 conflict → stop kiod6 and retry
+        auto *proc = new QProcess(this);
+        proc->start(QStringLiteral("gio"), {QStringLiteral("mount"), vol.uri});
+
+        const QString capturedUri  = vol.uri;
+        const QString capturedPath = vol.expected;
+
+        connect(proc,
+                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this,
+                [this, proc, capturedUri, capturedPath](int code, QProcess::ExitStatus) {
+            const QString err = QString::fromUtf8(proc->readAllStandardError());
+            proc->deleteLater();
+
+            if (code == 0) return; // mounted OK — gvfs watcher will fire devicesChanged
+
+            if (err.contains(QLatin1String("Unable to open MTP device"))) {
+                // kiod6 (KDE IO daemon) has the device locked — release it and retry
+                QProcess::startDetached(QStringLiteral("kquitapp6"),
+                                        {QStringLiteral("kiod6")});
+                QTimer::singleShot(900, this, [this, capturedUri, capturedPath] {
+                    if (QDir(capturedPath).exists()) return; // already mounted meanwhile
+                    QProcess::startDetached(QStringLiteral("gio"),
+                                            {QStringLiteral("mount"), capturedUri});
+                });
+            }
+        });
+    }
 }
 
 bool FileSystemBackend::saveFileMetadata(const QString &path, const QVariantMap &metadata)
