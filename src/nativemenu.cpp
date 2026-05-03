@@ -67,11 +67,27 @@ static QPair<QString, QString> defaultAppInfo(const QString &mimeType)
 }
 
 // Adds type-specific actions to `menu` for a real file at `filePath`.
-// These actions execute directly via QProcess / QDesktopServices (no result string).
+// `result` is set for actions that should be handled by the caller.
 static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
-                                   const QString &mimeName)
+                                   const QString &mimeName, QString &result)
 {
     const QString cat = mimeName.section(u'/', 0, 0);
+    const QFileInfo fex(filePath);
+
+    // ── Executables / .desktop ───────────────────────────────────────────────
+    if (filePath.endsWith(u".desktop"_s)) {
+        menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
+                       [filePath]{ QProcess::startDetached(u"gio"_s, {u"launch"_s, filePath}); });
+    } else if (fex.isExecutable() && !fex.isDir() && cat == u"application"_s) {
+        const QString term = firstExec({"konsole", "gnome-terminal", "xterm", "alacritty", "kitty", "tilix"});
+        if (!term.isEmpty())
+            menu.addAction(ti(u"utilities-terminal"_s), u"Ejecutar en terminal"_s,
+                           [filePath, term]{
+                               QProcess::startDetached(term, {u"-e"_s, filePath});
+                           });
+        menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
+                       [filePath]{ QProcess::startDetached(filePath, {}); });
+    }
 
     // ── Images ───────────────────────────────────────────────────────────────
     if (cat == u"image"_s) {
@@ -138,25 +154,14 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
                mimeName.contains(u"xz"_s)  || mimeName.contains(u"7z"_s)   ||
                mimeName.contains(u"rar"_s) || mimeName.contains(u"archive"_s)) {
 
-        const QFileInfo fi(filePath);
-        const QString dir = fi.absolutePath();
-        const QString ark = firstExec({"ark", "file-roller", "xarchiver", "peazip", "engrampa"});
-        if (!ark.isEmpty()) {
-            if (ark == u"ark"_s) {
-                menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s,
-                               [filePath, dir]{ QProcess::startDetached(u"ark"_s, {u"-b"_s, u"-o"_s, dir, filePath}); });
-                menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
-                               [filePath]{ QProcess::startDetached(u"ark"_s, {filePath}); });
-            } else if (ark == u"file-roller"_s || ark == u"engrampa"_s) {
-                menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s,
-                               [filePath, dir, ark]{ QProcess::startDetached(ark, {u"--extract-to="_s + dir, filePath}); });
-                menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
-                               [filePath, ark]{ QProcess::startDetached(ark, {u"--extract"_s, filePath}); });
-            } else {
-                menu.addAction(ti(u"archive-extract"_s), u"Abrir archivo comprimido"_s,
-                               [filePath, ark]{ QProcess::startDetached(ark, {filePath}); });
-            }
+        {
+            QAction *a = menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s);
+            QObject::connect(a, &QAction::triggered, [&result]{ result = u"extract-here"_s; });
         }
+        const QString ark = firstExec({"ark", "file-roller", "xarchiver", "engrampa"});
+        if (!ark.isEmpty())
+            menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
+                           [filePath, ark]{ QProcess::startDetached(ark, {filePath}); });
     }
 }
 
@@ -221,7 +226,7 @@ QString NativeMenu::showMenu(const QVariantMap &params)
             menu.addSeparator();
 
             // Type-specific section
-            addTypeSpecificActions(menu, filePath, mimeName);
+            addTypeSpecificActions(menu, filePath, mimeName, result);
 
             const bool hasTypeActions = !menu.actions().isEmpty();
             if (hasTypeActions) menu.addSeparator();
@@ -374,6 +379,7 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
     const bool showStatusBar       = params.value(u"showStatusBar"_s).toBool();
     const bool showContentPreviews = params.value(u"showContentPreviews"_s).toBool();
     const QString themeName        = params.value(u"themeName"_s).toString();
+    const bool deleteToTrash       = params.value(u"deleteToTrash"_s, true).toBool();
     const bool hasSel              = selectedCount > 0;
 
     QMenu menu;
@@ -456,6 +462,8 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
         act(u"Desconectar de unidad de red…"_s, u"disconnect-drive"_s, ti(u"network-disconnect"_s));
         menu.addSeparator();
         act(u"Abrir símbolo del sistema"_s, u"terminal"_s, ti(u"utilities-terminal"_s));
+        menu.addSeparator();
+        checkAct(&menu, u"Mover a papelera al eliminar"_s, u"toggle:trash"_s, deleteToTrash);
         menu.addSeparator();
         QMenu *themeMenu = menu.addMenu(u"Tema"_s);
         checkAct(themeMenu, u"Glass (predeterminado)"_s, u"theme:glass"_s, themeName == u"glass"_s);

@@ -14,6 +14,7 @@ ListView {
     signal emptyAreaClicked()
     signal renameCommitted(string id, string newName)
     signal renameCancelled()
+    signal itemDroppedOnFolder(string srcPath, string destFolder)
 
     TapHandler {
         acceptedButtons: Qt.LeftButton
@@ -30,10 +31,39 @@ ListView {
     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
     delegate: Rectangle {
+        id: cvDelegate
         width:  ListView.view.width
         height: 64
         color:  root.selectedIds[modelData.id] ? root.pal.selection
-              : cvArea.containsMouse           ? root.pal.accentSoft : "transparent"
+              : cvDrop.containsDrag             ? root.pal.accentSoft
+              : cvArea.containsMouse            ? root.pal.accentSoft : "transparent"
+        border.color: cvDrop.containsDrag ? root.pal.accent : "transparent"
+        border.width: 1
+
+        Drag.active:           cvDrag.active
+        Drag.dragType:         Drag.Automatic
+        Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+        Drag.mimeData:         ({ "text/uri-list": "file://" + modelData.id })
+
+        DragHandler {
+            id: cvDrag
+            dragThreshold: 8
+            onActiveChanged: if (active) parent.grabToImage(function(r) { parent.Drag.imageSource = r.url })
+        }
+
+        DropArea {
+            id: cvDrop
+            anchors.fill: parent
+            enabled: modelData.type === "folder" && !cvDrag.active
+            keys: ["text/uri-list"]
+            onDropped: function(drop) {
+                var url = drop.urls && drop.urls.length > 0 ? drop.urls[0].toString() : ""
+                var src = url.replace(/^file:\/\//, "")
+                if (src && src !== modelData.id)
+                    root.itemDroppedOnFolder(src, modelData.id)
+                drop.accept(Qt.MoveAction)
+            }
+        }
 
         Rectangle {
             anchors.bottom: parent.bottom
@@ -76,7 +106,7 @@ ListView {
                         padding: 0; leftPadding: 3; selectByMouse: true
                         Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
                         Keys.onEscapePressed: root.renameCancelled()
-                        onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                        onActiveFocusChanged: if (!activeFocus && visible) { var n = text; root.renameCommitted(modelData.id, n) }
                         onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
                     }
                 }

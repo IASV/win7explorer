@@ -112,6 +112,12 @@ public:
     // Auto-mount any unmounted MTP volumes detected by GVFS
     Q_INVOKABLE void mountMtpDevices();
 
+    // Extract archive in-place using CLI tools
+    Q_INVOKABLE void extractHere(const QString &archivePath);
+
+    // Move item to system trash via gio
+    Q_INVOKABLE bool trashItem(const QString &path);
+
 signals:
     void currentPathChanged();
     void currentFilesChanged();

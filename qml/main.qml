@@ -29,6 +29,7 @@ ApplicationWindow {
         property alias showStatusBar:       win.showStatusBar
         property alias showContentPreviews: win.showContentPreviews
         property alias themeName:           win.themeName
+        property alias deleteToTrash:       win.deleteToTrash
         property alias sidebarWidth:        win.sidebarWidth
         property alias previewWidth:        win.previewWidth
         property alias windowWidth:         win.width
@@ -46,6 +47,9 @@ ApplicationWindow {
     // Incremented every time fsBackend reports a device change, forcing
     // groupedItems (which calls plain functions) to re-evaluate.
     property int _devicesVersion: 0
+
+    // ── Preferences ───────────────────────────────────────────────────────
+    property bool deleteToTrash: true
 
     // ── Theme ──────────────────────────────────────────────────────────────
     property string themeName: "glass"
@@ -440,7 +444,10 @@ ApplicationWindow {
         var keys = Object.keys(selectedIds)
         if (keys.length === 0) return
         if (isRealPath) {
-            for (var i = 0; i < keys.length; i++) fsBackend.removeItem(keys[i])
+            for (var i = 0; i < keys.length; i++) {
+                if (win.deleteToTrash) fsBackend.trashItem(keys[i])
+                else                   fsBackend.removeItem(keys[i])
+            }
             fsBackend.refresh()
         } else {
             showToast("Eliminar: solo disponible en modo sistema de archivos real")
@@ -495,6 +502,7 @@ ApplicationWindow {
         if (action === "new-folder")       { win.handleNewFolder(); return }
         if (action === "open")             { win.handleOpen(win.selectedItem); return }
         if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
+        if (action === "extract-here")     { if (win.selectedItem) fsBackend.extractHere(win.selectedItem.id); return }
         if (action === "refresh")          { if (win.isRealPath) fsBackend.refresh(); return }
         if (action === "select-all")       { win.selectAll(); return }
         if (action === "invert-selection") { win.invertSelection(); return }
@@ -511,6 +519,7 @@ ApplicationWindow {
         if (action.startsWith("sort:"))    { var col = action.substring(5); if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" }; return }
         if (action.startsWith("sortdir:")) { win.sortDir = action.substring(8); return }
         if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
+        if (action === "toggle:trash")     { win.deleteToTrash = !win.deleteToTrash; return }
         if (action.startsWith("theme:"))   { win.themeName = action.substring(6); return }
         if (action.startsWith("layout:"))  {
             var layout = action.substring(7)
@@ -535,7 +544,8 @@ ApplicationWindow {
             showSidebar:         win.showSidebar,
             showStatusBar:       win.showStatusBar,
             showContentPreviews: win.showContentPreviews,
-            themeName:           win.themeName
+            themeName:           win.themeName,
+            deleteToTrash:       win.deleteToTrash
         }
     }
 
@@ -650,6 +660,10 @@ ApplicationWindow {
                 fsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 
@@ -666,6 +680,10 @@ ApplicationWindow {
                 win.showContextMenu(item)
             }
             onEmptyAreaClicked: win.selectedIds = ({})
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 
@@ -696,6 +714,10 @@ ApplicationWindow {
                 fsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 
@@ -719,6 +741,10 @@ ApplicationWindow {
                 fsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 
@@ -741,6 +767,10 @@ ApplicationWindow {
                 fsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 

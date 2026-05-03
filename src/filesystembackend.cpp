@@ -1154,6 +1154,83 @@ void FileSystemBackend::mountMtpDevices()
     }
 }
 
+void FileSystemBackend::extractHere(const QString &archivePath)
+{
+    const QFileInfo fi(archivePath);
+    const QString dir = fi.absolutePath();
+    const QString name = fi.fileName().toLower();
+
+    auto found = [](const QString &exe) {
+        return !QStandardPaths::findExecutable(exe).isEmpty();
+    };
+
+    QString program;
+    QStringList args;
+
+    if (name.endsWith(QLatin1String(".zip"))) {
+        if (found(QStringLiteral("unzip"))) {
+            program = QStringLiteral("unzip");
+            args = {QStringLiteral("-o"), archivePath, QStringLiteral("-d"), dir};
+        }
+    } else if (name.endsWith(QLatin1String(".tar.gz"))  || name.endsWith(QLatin1String(".tgz"))
+            || name.endsWith(QLatin1String(".tar.bz2")) || name.endsWith(QLatin1String(".tar.xz"))
+            || name.endsWith(QLatin1String(".tar.zst")) || name.endsWith(QLatin1String(".tar"))
+            || name.endsWith(QLatin1String(".gz"))) {
+        if (found(QStringLiteral("tar"))) {
+            program = QStringLiteral("tar");
+            args = {QStringLiteral("-xf"), archivePath, QStringLiteral("-C"), dir};
+        }
+    } else if (name.endsWith(QLatin1String(".7z"))) {
+        if (found(QStringLiteral("7z"))) {
+            program = QStringLiteral("7z");
+            args = {QStringLiteral("x"), QStringLiteral("-o") + dir, QStringLiteral("-y"), archivePath};
+        } else if (found(QStringLiteral("7zz"))) {
+            program = QStringLiteral("7zz");
+            args = {QStringLiteral("x"), QStringLiteral("-o") + dir, QStringLiteral("-y"), archivePath};
+        }
+    } else if (name.endsWith(QLatin1String(".rar"))) {
+        if (found(QStringLiteral("unrar"))) {
+            program = QStringLiteral("unrar");
+            args = {QStringLiteral("x"), QStringLiteral("-y"), archivePath, dir + QLatin1Char('/')};
+        }
+    }
+
+    if (program.isEmpty()) {
+        // Fall back to GUI archiver
+        const QString ark = []() -> QString {
+            for (auto *c : {"ark", "file-roller", "xarchiver", "engrampa"})
+                if (!QStandardPaths::findExecutable(QLatin1String(c)).isEmpty())
+                    return QLatin1String(c);
+            return {};
+        }();
+        if (!ark.isEmpty())
+            QProcess::startDetached(ark, {archivePath});
+        else
+            emit errorOccurred(QStringLiteral("No se encontró una herramienta para extraer el archivo."));
+        return;
+    }
+
+    auto *proc = new QProcess(this);
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, proc](int exitCode, QProcess::ExitStatus) {
+        proc->deleteLater();
+        if (exitCode == 0)
+            refresh();
+        else
+            emit errorOccurred(QStringLiteral("Error al extraer el archivo."));
+    });
+    proc->start(program, args);
+}
+
+bool FileSystemBackend::trashItem(const QString &path)
+{
+    if (!QFileInfo::exists(path)) return false;
+    QProcess proc;
+    proc.start(QStringLiteral("gio"), {QStringLiteral("trash"), path});
+    if (!proc.waitForFinished(5000)) return false;
+    return proc.exitCode() == 0;
+}
+
 bool FileSystemBackend::saveFileMetadata(const QString &path, const QVariantMap &metadata)
 {
     if (!QFileInfo::exists(path)) return false;

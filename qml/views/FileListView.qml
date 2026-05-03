@@ -13,6 +13,7 @@ Item {
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
     signal emptyAreaClicked()
+    signal itemDroppedOnFolder(string srcPath, string destFolder)
 
     readonly property int cellW: 220
     readonly property int cellH: 22
@@ -44,10 +45,39 @@ Item {
         model: root.model
 
         delegate: Rectangle {
+            id: listDelegate
             width:  root.cellW - 2
             height: root.cellH
             color:  root.selectedIds[modelData.id] ? root.pal.selection
-                  : rowArea.containsMouse           ? root.pal.accentSoft : "transparent"
+                  : listDrop.containsDrag            ? root.pal.accentSoft
+                  : rowArea.containsMouse            ? root.pal.accentSoft : "transparent"
+            border.color: listDrop.containsDrag ? root.pal.accent : "transparent"
+            border.width: 1
+
+            Drag.active:           listDrag.active
+            Drag.dragType:         Drag.Automatic
+            Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+            Drag.mimeData:         ({ "text/uri-list": "file://" + modelData.id })
+
+            DragHandler {
+                id: listDrag
+                dragThreshold: 8
+                onActiveChanged: if (active) parent.grabToImage(function(r) { parent.Drag.imageSource = r.url })
+            }
+
+            DropArea {
+                id: listDrop
+                anchors.fill: parent
+                enabled: modelData.type === "folder" && !listDrag.active
+                keys: ["text/uri-list"]
+                onDropped: function(drop) {
+                    var url = drop.urls && drop.urls.length > 0 ? drop.urls[0].toString() : ""
+                    var src = url.replace(/^file:\/\//, "")
+                    if (src && src !== modelData.id)
+                        root.itemDroppedOnFolder(src, modelData.id)
+                    drop.accept(Qt.MoveAction)
+                }
+            }
 
             RowLayout {
                 anchors.fill: parent

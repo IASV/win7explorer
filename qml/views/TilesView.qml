@@ -15,6 +15,7 @@ ScrollView {
     signal emptyAreaClicked()
     signal renameCommitted(string id, string newName)
     signal renameCancelled()
+    signal itemDroppedOnFolder(string srcPath, string destFolder)
 
     clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -38,13 +39,41 @@ ScrollView {
             model: root.model
 
             delegate: Rectangle {
+                id: tileDelegate
                 width:  190
                 height: 55
                 radius: 2
                 color: root.selectedIds[modelData.id] ? root.pal.selection
-                     : tileArea.containsMouse          ? root.pal.accentSoft : "transparent"
-                border.color: root.selectedIds[modelData.id] ? root.pal.selectionBorder
+                     : tileDrop.containsDrag            ? root.pal.accentSoft
+                     : tileArea.containsMouse           ? root.pal.accentSoft : "transparent"
+                border.color: tileDrop.containsDrag          ? root.pal.accent
+                            : root.selectedIds[modelData.id] ? root.pal.selectionBorder
                             : tileArea.containsMouse          ? root.pal.border : "transparent"
+
+                Drag.active:           tileDrag.active
+                Drag.dragType:         Drag.Automatic
+                Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+                Drag.mimeData:         ({ "text/uri-list": "file://" + modelData.id })
+
+                DragHandler {
+                    id: tileDrag
+                    dragThreshold: 8
+                    onActiveChanged: if (active) parent.grabToImage(function(r) { parent.Drag.imageSource = r.url })
+                }
+
+                DropArea {
+                    id: tileDrop
+                    anchors.fill: parent
+                    enabled: modelData.type === "folder" && !tileDrag.active
+                    keys: ["text/uri-list"]
+                    onDropped: function(drop) {
+                        var url = drop.urls && drop.urls.length > 0 ? drop.urls[0].toString() : ""
+                        var src = url.replace(/^file:\/\//, "")
+                        if (src && src !== modelData.id)
+                            root.itemDroppedOnFolder(src, modelData.id)
+                        drop.accept(Qt.MoveAction)
+                    }
+                }
 
                 RowLayout {
                     anchors.fill: parent
@@ -88,7 +117,7 @@ ScrollView {
                                 padding: 0; leftPadding: 2; selectByMouse: true
                                 Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
                                 Keys.onEscapePressed: root.renameCancelled()
-                                onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                                onActiveFocusChanged: if (!activeFocus && visible) { var n = text; root.renameCommitted(modelData.id, n) }
                                 onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
                             }
                         }

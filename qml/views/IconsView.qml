@@ -16,6 +16,7 @@ GridView {
     signal emptyAreaClicked()
     signal renameCommitted(string id, string newName)
     signal renameCancelled()
+    signal itemDroppedOnFolder(string srcPath, string destFolder)
 
     TapHandler {
         acceptedButtons: Qt.LeftButton
@@ -40,12 +41,40 @@ GridView {
     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
     delegate: Rectangle {
+        id: iconDelegate
         width:  GridView.view.cellWidth  - 6
         height: GridView.view.cellHeight - 6
         color:  root.selectedIds[modelData.id] ? root.pal.selection
-              : tileArea.containsMouse          ? root.pal.accentSoft : "transparent"
-        border.color: root.selectedIds[modelData.id] ? root.pal.selectionBorder : "transparent"
+              : dropTarget.containsDrag         ? root.pal.accentSoft
+              : tileArea.containsMouse           ? root.pal.accentSoft : "transparent"
+        border.color: dropTarget.containsDrag       ? root.pal.accent
+                    : root.selectedIds[modelData.id] ? root.pal.selectionBorder : "transparent"
         radius: 3
+
+        Drag.active:           iconDrag.active
+        Drag.dragType:         Drag.Automatic
+        Drag.supportedActions: Qt.MoveAction | Qt.CopyAction
+        Drag.mimeData:         ({ "text/uri-list": "file://" + modelData.id })
+
+        DragHandler {
+            id: iconDrag
+            dragThreshold: 8
+            onActiveChanged: if (active) parent.grabToImage(function(r) { parent.Drag.imageSource = r.url })
+        }
+
+        DropArea {
+            id: dropTarget
+            anchors.fill: parent
+            enabled: modelData.type === "folder" && !iconDrag.active
+            keys: ["text/uri-list"]
+            onDropped: function(drop) {
+                var url = drop.urls && drop.urls.length > 0 ? drop.urls[0].toString() : ""
+                var src = url.replace(/^file:\/\//, "")
+                if (src && src !== modelData.id)
+                    root.itemDroppedOnFolder(src, modelData.id)
+                drop.accept(Qt.MoveAction)
+            }
+        }
 
         // Normal layout: icon on top, label below (xlarge/large/medium)
         ColumnLayout {
@@ -91,7 +120,7 @@ GridView {
                     padding: 1; selectByMouse: true
                     Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
                     Keys.onEscapePressed: root.renameCancelled()
-                    onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                    onActiveFocusChanged: if (!activeFocus && visible) { var n = text; root.renameCommitted(modelData.id, n) }
                     onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
                 }
             }
@@ -134,7 +163,7 @@ GridView {
                     padding: 0; leftPadding: 2; selectByMouse: true
                     Keys.onReturnPressed: { var n = text; root.renameCommitted(modelData.id, n) }
                     Keys.onEscapePressed: root.renameCancelled()
-                    onActiveFocusChanged: if (!activeFocus && visible) root.renameCancelled()
+                    onActiveFocusChanged: if (!activeFocus && visible) { var n = text; root.renameCommitted(modelData.id, n) }
                     onVisibleChanged: if (visible) { text = modelData.name; selectAll(); forceActiveFocus() }
                 }
             }
