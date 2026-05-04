@@ -331,8 +331,7 @@ ApplicationWindow {
                     typeStr: d.fsType || "Unidad local"
                 })
             }
-        }
-        if (n.kind === "network") {
+        } else if (n.kind === "network") {
             var netDevs = fsBackend.getNetworkDevices()
             for (var j = 0; j < netDevs.length; j++) {
                 var nd = netDevs[j]

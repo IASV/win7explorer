@@ -286,8 +286,39 @@ Item {
 
     Connections {
         target: fsBackend
-        function onDevicesChanged() { loadTree() }
+        function onDevicesChanged() { refreshDevices() }
     }
 
-    Component.onCompleted: loadTree()
+    // Refresh only the Equipo / Red sections without touching Favorites or Libraries.
+    function refreshDevices() {
+        // Collect device sections in reverse order so index arithmetic stays valid
+        // after we start removing children (modifying from bottom up).
+        var toRefresh = []
+        for (var i = 0; i < treeModel.count; i++) {
+            var sType = treeModel.get(i).sectionType || ""
+            if (sType === "equipo" || sType === "network")
+                toRefresh.push(i)
+        }
+        for (var j = toRefresh.length - 1; j >= 0; j--) {
+            var idx  = toRefresh[j]
+            var item = treeModel.get(idx)
+            if (!item.expanded) continue
+
+            // Collapse: remove all children of this header
+            var parentLevel = item.level
+            var start = idx + 1
+            var cnt = 0
+            while (start + cnt < treeModel.count &&
+                   treeModel.get(start + cnt).level > parentLevel)
+                cnt++
+            for (var r = 0; r < cnt; r++) treeModel.remove(start)
+            treeModel.setProperty(idx, "expanded", false)
+
+            // Re-expand with fresh data
+            toggleNode(treeModel.get(idx).path, idx, treeModel.get(idx).sectionType)
+        }
+    }
+
+    // Defer initial tree build so the window renders its first frame first.
+    Component.onCompleted: Qt.callLater(loadTree)
 }

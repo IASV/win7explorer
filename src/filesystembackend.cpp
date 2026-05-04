@@ -41,7 +41,9 @@ FileSystemBackend::FileSystemBackend(QObject *parent)
     : QObject(parent)
 {
     m_currentPath = QDir::homePath();
-    loadDirectory(m_currentPath);
+    // Defer first directory scan so the window can render its first frame
+    // before any filesystem I/O blocks the main thread.
+    QTimer::singleShot(0, this, [this]{ loadDirectory(m_currentPath); });
 
     // Watch /proc/mounts for USB/removable drive plug/unplug events
     m_mountWatcher = new QFileSystemWatcher(this);
