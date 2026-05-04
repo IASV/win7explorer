@@ -792,6 +792,25 @@ bool FileSystemBackend::createFolder(const QString &parentPath, const QString &n
     return true;
 }
 
+bool FileSystemBackend::createFile(const QString &parentPath, const QString &name, const QString &content)
+{
+    const QString base = parentPath.isEmpty() ? m_currentPath : parentPath;
+    QFile file(base + "/" + name);
+    if (file.exists()) {
+        emit errorOccurred("Ya existe un archivo con ese nombre.");
+        return false;
+    }
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        emit errorOccurred("No se pudo crear el archivo \"" + name + "\".");
+        return false;
+    }
+    if (!content.isEmpty())
+        file.write(content.toUtf8());
+    file.close();
+    refresh();
+    return true;
+}
+
 void FileSystemBackend::loadDirectory(const QString &path)
 {
     m_currentFiles.clear();

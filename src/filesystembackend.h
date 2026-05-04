@@ -94,6 +94,7 @@ public:
     Q_INVOKABLE bool removeItem(const QString &path);
     Q_INVOKABLE bool renameItem(const QString &oldPath, const QString &newPath);
     Q_INVOKABLE bool createFolder(const QString &parentPath, const QString &name);
+    Q_INVOKABLE bool createFile(const QString &parentPath, const QString &name, const QString &content = "");
 
     // Rich file metadata (image dims, audio tags via ffprobe)
     Q_INVOKABLE QVariantMap getFileMetadata(const QString &path) const;

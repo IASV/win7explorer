@@ -271,6 +271,7 @@ ColumnLayout {
                         source: modelData.iconSrc || ""
                         Layout.preferredWidth: 16; Layout.preferredHeight: 16
                         fillMode: Image.PreserveAspectFit
+                        opacity: modelData.isHidden ? 0.45 : 1.0
                     }
                     Item {
                         Layout.fillWidth: true

@@ -235,7 +235,8 @@ ApplicationWindow {
                     modified:   f.modified || "",
                     iconSrc:    "image://fileicons/" + iconName,
                     typeStr:    f.type || "",
-                    previewSrc: isImg ? ("image://fileicons/" + encodeURIComponent(f.path)) : ""
+                    previewSrc: isImg ? ("image://fileicons/" + encodeURIComponent(f.path)) : "",
+                    isHidden:   (f.name || "").startsWith(".")
                 })
             }
             win.realFiles = arr
@@ -503,6 +504,16 @@ ApplicationWindow {
         if (action === "restore")          { if (win.selectedItem) fsBackend.restoreFromTrash(win.selectedItem.id); return }
         if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
+        if (action.startsWith("new-file:")) {
+            if (!win.isRealPath) { win.showToast("Solo disponible en el sistema de archivos real"); return }
+            var nfExt = action.substring(9)
+            var nfName, nfContent
+            if      (nfExt === "txt")   { nfName = "Nuevo archivo de texto.txt"; nfContent = "" }
+            else if (nfExt === "html")  { nfName = "Nuevo documento.html"; nfContent = "<!DOCTYPE html>\n<html>\n<head><title></title></head>\n<body>\n\n</body>\n</html>\n" }
+            else                        { nfName = "Nuevo archivo"; nfContent = "" }
+            fsBackend.createFile(win.currentId, nfName, nfContent)
+            return
+        }
         if (action === "open")             { win.handleOpen(win.selectedItem); return }
         if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
         if (action === "extract-here")     { if (win.selectedItem) fsBackend.extractHere(win.selectedItem.id); return }

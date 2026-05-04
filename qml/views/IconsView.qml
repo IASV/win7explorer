@@ -94,6 +94,7 @@ GridView {
                 sourceSize.width:  root.iconSize
                 sourceSize.height: root.iconSize
                 fillMode: Image.PreserveAspectFit
+                opacity: modelData.isHidden ? 0.45 : 1.0
             }
 
             Item {
@@ -141,6 +142,7 @@ GridView {
                 sourceSize.height: 16
                 fillMode: Image.PreserveAspectFit
                 Layout.alignment: Qt.AlignVCenter
+                opacity: modelData.isHidden ? 0.45 : 1.0
             }
 
             Item {

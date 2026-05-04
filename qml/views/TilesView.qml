@@ -88,6 +88,7 @@ ScrollView {
                         fillMode: Image.PreserveAspectFit
                         sourceSize.width:  40
                         sourceSize.height: 40
+                        opacity: modelData.isHidden ? 0.45 : 1.0
                     }
 
                     ColumnLayout {

@@ -80,6 +80,7 @@ ListView {
                 source: modelData.previewSrc || modelData.iconSrc || ""
                 Layout.preferredWidth: 44; Layout.preferredHeight: 44
                 fillMode: Image.PreserveAspectFit
+                opacity: modelData.isHidden ? 0.45 : 1.0
             }
 
             ColumnLayout {

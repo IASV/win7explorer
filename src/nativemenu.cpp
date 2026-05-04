@@ -248,6 +248,9 @@ QString NativeMenu::showMenu(const QVariantMap &params)
         } else {
             // Folder / drive / mock item
             act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
+            if (isFolder && filePath.startsWith(u'/'))
+                menu.addAction(ti(u"utilities-terminal"_s), u"Abrir terminal aquí"_s,
+                               [this, filePath]{ openTerminalAt(filePath); });
             menu.addSeparator();
         }
 
@@ -312,9 +315,12 @@ QString NativeMenu::showMenu(const QVariantMap &params)
                        [&result]{ result = u"paste-shortcut"_s; });
         menu.addSeparator();
         QMenu *newMenu = menu.addMenu(u"Nuevo"_s);
-        newMenu->addAction(ti(u"folder-new"_s), u"Carpeta"_s, [&result]{ result = u"new-folder"_s; });
-        newMenu->addAction(ti(u"insert-link"_s), u"Acceso directo"_s,
-                           [&result]{ result = u"new-shortcut"_s; });
+        newMenu->addAction(ti(u"folder-new"_s),   u"Carpeta"_s,          [&result]{ result = u"new-folder"_s;       });
+        newMenu->addAction(ti(u"insert-link"_s),  u"Acceso directo"_s,   [&result]{ result = u"new-shortcut"_s;     });
+        newMenu->addSeparator();
+        newMenu->addAction(ti(u"text-x-generic"_s), u"Archivo de texto (.txt)"_s, [&result]{ result = u"new-file:txt"_s;   });
+        newMenu->addAction(ti(u"text-html"_s),      u"Documento HTML (.html)"_s,  [&result]{ result = u"new-file:html"_s;  });
+        newMenu->addAction(ti(u"text-x-generic"_s), u"Archivo vacío"_s,           [&result]{ result = u"new-file:empty"_s; });
         menu.addSeparator();
         act(u"Propiedades"_s, u"properties"_s, ti(u"document-properties"_s),
             QKeySequence(Qt::ALT | Qt::Key_Return));
