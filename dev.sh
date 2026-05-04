@@ -95,6 +95,7 @@ DESKTOP
 
     echo -e "${C_OK}==> Generando AppImage...${C_RST}"
     export QML_SOURCES_PATHS="$SCRIPT_DIR/qml"
+    export NO_STRIP=1
     export QMAKE
     QMAKE="$(command -v qmake6 2>/dev/null || command -v qmake-qt6 2>/dev/null || command -v qmake 2>/dev/null)"
 

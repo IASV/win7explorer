@@ -35,6 +35,10 @@ win7explorer
 .qml_cache/
 qmlcache/
 
+# AppImage packaging (generated)
+AppDir/
+*.AppImage
+
 # OS
 .DS_Store
 Thumbs.db
