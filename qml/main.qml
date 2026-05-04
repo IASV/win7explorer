@@ -607,7 +607,8 @@ ApplicationWindow {
             sortBy:        win.sortBy,
             sortDir:       win.sortDir,
             groupBy:       win.groupBy,
-            inTrash:       win.currentId === "trash"
+            inTrash:       win.currentId === "trash",
+            currentPath:   win.isRealPath ? win.currentId : ""
         })
         if (action === "open" && item) { win.handleOpen(item); return }
         win.handleMenuAction(action)

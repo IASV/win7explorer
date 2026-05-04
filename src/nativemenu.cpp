@@ -188,8 +188,9 @@ QString NativeMenu::showMenu(const QVariantMap &params)
     const QString sortDir    = params.value(u"sortDir"_s).toString();
     const QString groupBy    = params.value(u"groupBy"_s).toString();
 
-    const bool isEmpty  = type == u"empty"_s;
-    const bool inTrash  = params.value(u"inTrash"_s).toBool();
+    const bool isEmpty      = type == u"empty"_s;
+    const bool inTrash      = params.value(u"inTrash"_s).toBool();
+    const QString currentPath = params.value(u"currentPath"_s).toString();
     const QString filePath = item.value(u"id"_s).toString();
     const bool isFolder = !isEmpty && (item.value(u"type"_s).toString() == u"folder"_s ||
                                        item.value(u"type"_s).toString() == u"drive"_s);
@@ -309,6 +310,9 @@ QString NativeMenu::showMenu(const QVariantMap &params)
                                           [&result]{ result = u"refresh"_s; });
         refresh->setShortcut(QKeySequence(Qt::Key_F5));
         refresh->setShortcutVisibleInContextMenu(true);
+        if (!currentPath.isEmpty())
+            menu.addAction(ti(u"utilities-terminal"_s), u"Abrir terminal aquí"_s,
+                           [this, currentPath]{ openTerminalAt(currentPath); });
         menu.addSeparator();
         act(u"Pegar"_s, u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
         menu.addAction(ti(u"insert-link"_s), u"Pegar acceso directo"_s,
