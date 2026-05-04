@@ -35,6 +35,12 @@ win7explorer
 .qml_cache/
 qmlcache/
 
+# Local dev notes
+.claude/
+COMO_USAR.md
+PENDING_FEATURES.md
+WIN7_EXPLORER_ANALYSIS.md
+
 # AppImage packaging (generated)
 AppDir/
 *.AppImage
