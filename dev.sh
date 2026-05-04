@@ -8,6 +8,7 @@ APPDIR="$SCRIPT_DIR/AppDir"
 BINARY="$BUILD_DIR/win7explorer"
 LINUXDEPLOY="$HOME/linuxdeploy-x86_64.AppImage"
 LINUXDEPLOY_QT="$HOME/linuxdeploy-plugin-qt-x86_64.AppImage"
+APPIMAGETOOL="$HOME/appimagetool-x86_64.AppImage"
 
 cd "$SCRIPT_DIR"
 
@@ -72,6 +73,13 @@ generate_appimage() {
         return
     fi
 
+    # Descargar appimagetool si no existe
+    if [[ ! -f "$APPIMAGETOOL" ]]; then
+        echo -e "${C_OK}==> Descargando appimagetool...${C_RST}"
+        wget -q --show-progress "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" -O "$APPIMAGETOOL"
+        chmod +x "$APPIMAGETOOL"
+    fi
+
     echo -e "\n${C_OK}==> Compilando Release para AppImage...${C_RST}"
     cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
         -G Ninja 2>/dev/null || cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
@@ -93,23 +101,32 @@ Type=Application
 Categories=System;FileManager;
 DESKTOP
 
-    echo -e "${C_OK}==> Generando AppImage...${C_RST}"
     export QML_SOURCES_PATHS="$SCRIPT_DIR/qml"
     export NO_STRIP=1
     export QMAKE
     QMAKE="$(command -v qmake6 2>/dev/null || command -v qmake-qt6 2>/dev/null || command -v qmake 2>/dev/null)"
 
+    echo -e "${C_OK}==> Desplegando dependencias Qt...${C_RST}"
     "$LINUXDEPLOY" \
         --appdir "$APPDIR" \
         --plugin qt \
-        --output appimage \
         "--desktop-file=$APPDIR/usr/share/applications/win7explorer.desktop" \
         "--icon-file=$APPDIR/usr/share/icons/hicolor/256x256/apps/win7explorer.png"
 
-    local APPIMAGE
-    APPIMAGE="$(ls "$SCRIPT_DIR"/Win7_Explorer*.AppImage 2>/dev/null | head -1)"
-    if [[ -n "$APPIMAGE" ]]; then
-        echo -e "${C_OK}✓ AppImage generado: $APPIMAGE${C_RST}"
+    # Fedora 43 compila TODAS las libs con .relr.dyn — crashean en _dl_init dentro del AppImage.
+    # Eliminamos todos los .so del bundle; el AppImage sigue siendo útil por sus plugins Qt.
+    echo -e "${C_OK}==> Eliminando libs bundleadas (Fedora 43 requiere las del sistema)...${C_RST}"
+    rm -f "$APPDIR"/usr/lib/*.so*
+
+    echo -e "${C_OK}==> Empaquetando con appimagetool...${C_RST}"
+    OUTPUT="$SCRIPT_DIR/Win7_Explorer-x86_64.AppImage"
+    rm -f "$OUTPUT"
+    "$APPIMAGETOOL" "$APPDIR" "$OUTPUT"
+
+    if [[ -f "$OUTPUT" ]]; then
+        echo -e "${C_OK}✓ AppImage generado: $OUTPUT${C_RST}"
+    else
+        echo -e "${C_ERR}Error: no se generó el AppImage${C_RST}"
     fi
 }
 
