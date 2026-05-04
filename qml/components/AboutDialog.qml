@@ -8,9 +8,9 @@ Window {
 
     title:         "Acerca de Win7 Explorer"
     width:         480
-    height:        540
+    height:        620
     minimumWidth:  440
-    minimumHeight: 480
+    minimumHeight: 560
     modality:      Qt.ApplicationModal
     flags:         Qt.Dialog
 
@@ -85,6 +85,31 @@ Window {
 
         Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
 
+        // ── Licencia ──────────────────────────────────────────────────────
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 6
+
+            Label {
+                text: "Licencia"
+                font.pixelSize: 11; font.bold: true
+                color: root.pal ? root.pal.text : "#000"
+            }
+
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                font.pixelSize: 10
+                color: root.pal ? root.pal.muted : "#666"
+                text:
+                    "Distribuido bajo la licencia MIT. Puedes usar, copiar, modificar y " +
+                    "distribuir este software libremente. Este repositorio es de solo lectura: " +
+                    "no se aceptan pull requests, issues ni contribuciones externas."
+            }
+        }
+
+        Rectangle { Layout.fillWidth: true; height: 1; color: "#c0c0c0" }
+
         // ── Aviso legal ───────────────────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true
@@ -102,17 +127,14 @@ Window {
                 font.pixelSize: 10
                 color: root.pal ? root.pal.muted : "#666"
                 text:
-                    "Windows 7 y Windows Explorer son marcas registradas de Microsoft " +
-                    "Corporation. Win7 Explorer es una adaptación visual independiente, " +
-                    "de código abierto, inspirada en el diseño del Explorador de Windows 7. " +
-                    "Este proyecto no tiene afiliación, patrocinio ni respaldo oficial " +
-                    "por parte de Microsoft Corporation.\n\n" +
-                    "Todos los derechos sobre Windows, Windows Explorer y su interfaz " +
-                    "gráfica pertenecen a Microsoft Corporation. Win7 Explorer no pretende " +
-                    "reemplazar, competir ni infringir ningún producto o marca de Microsoft. " +
-                    "Los iconos del sistema operativo utilizados pertenecen a sus respectivos " +
-                    "autores.\n\n" +
-                    "© IASUAREZ. Todos los derechos reservados."
+                    "ESTE SOFTWARE SE PROPORCIONA «TAL CUAL», SIN GARANTÍA DE NINGÚN TIPO. " +
+                    "El autor (IASUAREZ) no se hace responsable de ningún daño al sistema, " +
+                    "pérdida de datos ni problema que pueda derivarse de su uso. " +
+                    "Úsalo bajo tu propia responsabilidad.\n\n" +
+                    "Windows 7 y Windows Explorer son marcas registradas de Microsoft Corporation. " +
+                    "Win7 Explorer es una adaptación visual independiente y de código abierto, " +
+                    "sin afiliación ni respaldo de Microsoft Corporation.\n\n" +
+                    "© 2026 IASUAREZ"
             }
         }
 
