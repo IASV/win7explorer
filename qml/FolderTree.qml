@@ -202,6 +202,19 @@ Item {
                         icon: "drive-" + drives[c].kind, path: drives[c].path,
                         hasChildren: drives[c].path !== "", expanded: false, sectionType: ""
                     })
+            } else if (sType === "network") {
+                var nets = fsBackend.getNetworkDevices()
+                treeModel.insert(idx + 1, {
+                    name: "Conectar a servidor…", type: "special", level: childLevel,
+                    icon: "network-connect", path: "network:connect",
+                    hasChildren: false, expanded: false, sectionType: ""
+                })
+                for (var e = nets.length - 1; e >= 0; e--)
+                    treeModel.insert(idx + 1, {
+                        name: nets[e].displayName, type: "special", level: childLevel,
+                        icon: "network-workgroup", path: nets[e].path,
+                        hasChildren: false, expanded: false, sectionType: ""
+                    })
             } else {
                 // Real filesystem folder
                 var subs = fsBackend.getSubdirectories(path)
@@ -261,7 +274,7 @@ Item {
         // Red
         treeModel.append({
             name: "Red", type: "header", level: 0, icon: "network-workgroup",
-            path: "network", hasChildren: false, expanded: false, sectionType: ""
+            path: "network", hasChildren: true, expanded: false, sectionType: "network"
         })
 
         // Papelera de reciclaje

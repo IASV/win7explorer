@@ -11,6 +11,7 @@ ScrollView {
     signal itemClicked(var item, bool ctrl, bool shift)
     signal itemDoubleClicked(var item)
     signal contextMenuRequested(var item)
+    signal itemDroppedOnFolder(string srcPath, string destFolder)
 
     clip: true
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
@@ -228,6 +229,16 @@ ScrollView {
                                         root.contextMenuRequested(modelData)
                                 }
                                 onDoubleClicked: root.itemDoubleClicked(modelData)
+                            }
+
+                            DropArea {
+                                anchors.fill: parent
+                                keys: ["text/uri-list", "application/x-filepath"]
+                                onDropped: function(drop) {
+                                    var src = drop.text || (drop.urls.length > 0 ? drop.urls[0].toString().replace("file://", "") : "")
+                                    if (src && modelData.path)
+                                        root.itemDroppedOnFolder(src, modelData.path)
+                                }
                             }
                         }
                     }

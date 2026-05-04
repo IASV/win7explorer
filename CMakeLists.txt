@@ -28,6 +28,9 @@ qt_add_qml_module(win7explorer
         qml/components/AboutDialog.qml
         qml/components/AddressBar.qml
         qml/components/CommandBar.qml
+        qml/components/ConnectDriveDialog.qml
+        qml/components/FolderOptionsDialog.qml
+        qml/components/FolderPickerDialog.qml
         qml/components/DetailsPanel.qml
         qml/components/NavigationPanel.qml
         qml/components/PreviewPanel.qml

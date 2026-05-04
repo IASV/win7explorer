@@ -118,6 +118,18 @@ public:
     // Move item to system trash via gio
     Q_INVOKABLE bool trashItem(const QString &path);
 
+    // Create a symbolic link (acceso directo)
+    Q_INVOKABLE bool createSymlink(const QString &target, const QString &linkPath);
+
+    // Network drive connect / disconnect
+    Q_INVOKABLE bool connectToServer(const QString &uri);
+    Q_INVOKABLE bool disconnectFromServer(const QString &mountPath);
+
+    // Show/hide hidden files (persisted by caller)
+    Q_PROPERTY(bool showHiddenFiles READ showHiddenFiles WRITE setShowHiddenFiles NOTIFY showHiddenFilesChanged)
+    bool showHiddenFiles() const { return m_showHiddenFiles; }
+    void setShowHiddenFiles(bool v) { if (m_showHiddenFiles != v) { m_showHiddenFiles = v; emit showHiddenFilesChanged(); refresh(); } }
+
 signals:
     void currentPathChanged();
     void currentFilesChanged();
@@ -125,6 +137,7 @@ signals:
     void navigationChanged();
     void errorOccurred(const QString &message);
     void devicesChanged();
+    void showHiddenFilesChanged();
 
 private:
     void loadDirectory(const QString &path);
@@ -139,6 +152,7 @@ private:
     QStack<QString> m_backStack;
     QStack<QString> m_forwardStack;
     bool m_navigatingHistory = false;
+    bool m_showHiddenFiles   = false;
 
     QFileSystemWatcher *m_mountWatcher = nullptr;
 };

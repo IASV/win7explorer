@@ -30,6 +30,7 @@ ApplicationWindow {
         property alias showContentPreviews: win.showContentPreviews
         property alias themeName:           win.themeName
         property alias deleteToTrash:       win.deleteToTrash
+        property alias showHiddenFiles:     win.showHiddenFiles
         property alias sidebarWidth:        win.sidebarWidth
         property alias previewWidth:        win.previewWidth
         property alias windowWidth:         win.width
@@ -49,7 +50,9 @@ ApplicationWindow {
     property int _devicesVersion: 0
 
     // ── Preferences ───────────────────────────────────────────────────────
-    property bool deleteToTrash: true
+    property bool deleteToTrash:   true
+    property bool showHiddenFiles: false
+    onShowHiddenFilesChanged: fsBackend.showHiddenFiles = showHiddenFiles
 
     // ── Theme ──────────────────────────────────────────────────────────────
     property string themeName: "glass"
@@ -508,13 +511,47 @@ ApplicationWindow {
         if (action === "invert-selection") { win.invertSelection(); return }
         if (action === "close")            { Qt.quit(); return }
         if (action === "about")            { aboutDialog.open(); return }
-        if (action === "help")             { win.showToast("Ayuda no disponible"); return }
-        if (action === "copy-to-folder")   { win.showToast("Copiar a la carpeta: no disponible"); return }
-        if (action === "move-to-folder")   { win.showToast("Mover a la carpeta: no disponible"); return }
-        if (action === "connect-drive")    { win.showToast("Conectar a unidad de red: no disponible"); return }
-        if (action === "disconnect-drive") { win.showToast("Desconectar unidad de red: no disponible"); return }
-        if (action === "terminal")         { win.showToast("Abriendo terminal…"); return }
-        if (action === "folder-options")   { win.showToast("Opciones de carpeta: no disponible"); return }
+        if (action === "help")             { Qt.openUrlExternally("https://github.com/"); return }
+        if (action === "open-window")      { nativeMenu.openNewWindow(win.isRealPath ? win.currentId : ""); return }
+        if (action === "terminal")         { nativeMenu.openTerminalAt(win.isRealPath ? win.currentId : ""); return }
+        if (action === "connect-drive")    { connectDriveDialog.open(); return }
+        if (action === "disconnect-drive") { if (win.selectedItem) { fsBackend.disconnectFromServer(win.selectedItem.id); win.showToast("Desconectando…") }; return }
+        if (action === "folder-options")   { folderOptionsDialog.showHiddenFiles = win.showHiddenFiles; folderOptionsDialog.open(); return }
+        if (action === "toggle:hidden")    { win.showHiddenFiles = !win.showHiddenFiles; return }
+        if (action === "copy-to-folder")   { folderPickerDialog.operation = "copy"; folderPickerDialog.open(win.isRealPath ? win.currentId : ""); return }
+        if (action === "move-to-folder")   { folderPickerDialog.operation = "move"; folderPickerDialog.open(win.isRealPath ? win.currentId : ""); return }
+        if (action === "send-to:desktop") {
+            if (win.selectedItem) {
+                var desktopDest = fsBackend.desktopPath() + "/" + win.selectedItem.name
+                fsBackend.createSymlink(win.selectedItem.id, desktopDest)
+                win.showToast("Acceso directo creado en el Escritorio")
+            }
+            return
+        }
+        if (action === "send-to:mail") {
+            if (win.selectedItem) Qt.openUrlExternally("mailto:?attach=" + encodeURIComponent(win.selectedItem.id))
+            return
+        }
+        if (action === "other-app") {
+            if (win.selectedItem) Qt.openUrlExternally("file://" + win.selectedItem.id)
+            return
+        }
+        if (action === "paste-shortcut") {
+            if (win.clipboardPath && win.isRealPath) {
+                var fn = win.clipboardPath.split("/").pop()
+                fsBackend.createSymlink(win.clipboardPath, win.currentId + "/" + fn)
+                fsBackend.refresh()
+            }
+            return
+        }
+        if (action === "new-shortcut") {
+            if (win.selectedItem && win.isRealPath) {
+                var shortcutName = win.selectedItem.name + " (acceso directo)"
+                fsBackend.createSymlink(win.selectedItem.id, win.currentId + "/" + shortcutName)
+                fsBackend.refresh()
+            }
+            return
+        }
         if (action.startsWith("view:"))    { win.viewMode = action.substring(5); return }
         if (action.startsWith("sort:"))    { var col = action.substring(5); if (win.sortBy === col) win.sortDir = (win.sortDir === "asc" ? "desc" : "asc"); else { win.sortBy = col; win.sortDir = "asc" }; return }
         if (action.startsWith("sortdir:")) { win.sortDir = action.substring(8); return }
@@ -587,6 +624,41 @@ ApplicationWindow {
     AboutDialog {
         id: aboutDialog
         pal: win.pal
+    }
+
+    // ── Connect drive dialog ───────────────────────────────────────────────
+    ConnectDriveDialog {
+        id: connectDriveDialog
+        pal: win.pal
+        onConnectRequested: function(uri) {
+            fsBackend.connectToServer(uri)
+            win.showToast("Conectando a " + uri + "…")
+        }
+    }
+
+    // ── Folder picker dialog ───────────────────────────────────────────────
+    FolderPickerDialog {
+        id: folderPickerDialog
+        pal: win.pal
+        onFolderSelected: function(destPath, op) {
+            var keys = Object.keys(win.selectedIds)
+            if (keys.length === 0) return
+            for (var i = 0; i < keys.length; i++) {
+                var fn = keys[i].split("/").pop()
+                if (op === "move") fsBackend.moveItem(keys[i], destPath + "/" + fn)
+                else               fsBackend.copyItem(keys[i], destPath + "/" + fn)
+            }
+            fsBackend.refresh()
+        }
+    }
+
+    // ── Folder options dialog ──────────────────────────────────────────────
+    FolderOptionsDialog {
+        id: folderOptionsDialog
+        pal: win.pal
+        onOptionsChanged: function(showHidden) {
+            win.showHiddenFiles = showHidden
+        }
     }
 
     // ── View components ────────────────────────────────────────────────────
@@ -786,6 +858,10 @@ ApplicationWindow {
                 if (!win.selectedIds[item.id]) { var s = {}; s[item.id] = true; win.selectedIds = s }
                 win.showContextMenu(item)
             }
+            onItemDroppedOnFolder: function(srcPath, destFolder) {
+                var fileName = srcPath.split("/").pop()
+                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+            }
         }
     }
 
@@ -862,7 +938,10 @@ ApplicationWindow {
                 pal:         win.pal
                 currentPath: win.currentId
                 favorites:   win.favorites
-                onFolderActivated: function(path) { win.navigate(path) }
+                onFolderActivated: function(path) {
+                    if (path === "network:connect") { connectDriveDialog.open(); return }
+                    win.navigate(path)
+                }
             }
 
             // Sidebar splitter

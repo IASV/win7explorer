@@ -3,6 +3,7 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QIcon>
+#include <QCoreApplication>
 #include <QCursor>
 #include <QKeySequence>
 #include <QPixmap>
@@ -24,6 +25,19 @@ using namespace Qt::StringLiterals;
 NativeMenu::NativeMenu(QObject *parent) : QObject(parent) {}
 
 static QIcon ti(const QString &name) { return QIcon::fromTheme(name); }
+
+// Launches a program fully detached: new session + I/O to /dev/null
+static void launchDetached(const QString &program, const QStringList &args = {})
+{
+    QProcess proc;
+    proc.setStandardInputFile(QProcess::nullDevice());
+    proc.setStandardOutputFile(QProcess::nullDevice());
+    proc.setStandardErrorFile(QProcess::nullDevice());
+    proc.setUnixProcessParameters(QProcess::UnixProcessFlag::CreateNewSession);
+    proc.setProgram(program);
+    proc.setArguments(args);
+    proc.startDetached();
+}
 
 // Returns first executable found from the candidate list
 static QString firstExec(std::initializer_list<const char *> apps)
@@ -77,16 +91,14 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
     // ── Executables / .desktop ───────────────────────────────────────────────
     if (filePath.endsWith(u".desktop"_s)) {
         menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
-                       [filePath]{ QProcess::startDetached(u"gio"_s, {u"launch"_s, filePath}); });
+                       [filePath]{ launchDetached(u"gio"_s, {u"launch"_s, filePath}); });
     } else if (fex.isExecutable() && !fex.isDir() && cat == u"application"_s) {
         const QString term = firstExec({"konsole", "gnome-terminal", "xterm", "alacritty", "kitty", "tilix"});
         if (!term.isEmpty())
             menu.addAction(ti(u"utilities-terminal"_s), u"Ejecutar en terminal"_s,
-                           [filePath, term]{
-                               QProcess::startDetached(term, {u"-e"_s, filePath});
-                           });
+                           [filePath, term]{ launchDetached(term, {u"-e"_s, filePath}); });
         menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
-                       [filePath]{ QProcess::startDetached(filePath, {}); });
+                       [filePath]{ launchDetached(filePath); });
     }
 
     // ── Images ───────────────────────────────────────────────────────────────
@@ -94,17 +106,17 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
         const QString editor = firstExec({"gimp", "krita", "pinta", "inkscape"});
         if (!editor.isEmpty())
             menu.addAction(ti(u"gimp"_s), u"Editar imagen"_s,
-                           [filePath, editor]{ QProcess::startDetached(editor, {filePath}); });
+                           [filePath, editor]{ launchDetached(editor, {filePath}); });
 
         const QString wallSetter = firstExec({"plasma-apply-wallpaperimage", "feh", "nitrogen", "xwallpaper"});
         if (!wallSetter.isEmpty()) {
             QStringList wallArgs;
-            if (wallSetter == u"feh"_s)       wallArgs = {u"--bg-scale"_s, filePath};
-            else if (wallSetter == u"nitrogen"_s) wallArgs = {u"--set-zoom-fill"_s, u"--save"_s, filePath};
+            if (wallSetter == u"feh"_s)           wallArgs = {u"--bg-scale"_s, filePath};
+            else if (wallSetter == u"nitrogen"_s)  wallArgs = {u"--set-zoom-fill"_s, u"--save"_s, filePath};
             else if (wallSetter == u"xwallpaper"_s) wallArgs = {u"--zoom"_s, filePath};
             else wallArgs = {filePath};
             menu.addAction(ti(u"preferences-desktop-wallpaper"_s), u"Establecer como fondo de escritorio"_s,
-                           [wallSetter, wallArgs]{ QProcess::startDetached(wallSetter, wallArgs); });
+                           [wallSetter, wallArgs]{ launchDetached(wallSetter, wallArgs); });
         }
 
     // ── Audio / Video ─────────────────────────────────────────────────────────
@@ -112,10 +124,10 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
         const QString player = firstExec({"vlc", "mpv", "smplayer", "rhythmbox", "clementine", "elisa"});
         if (!player.isEmpty()) {
             menu.addAction(ti(u"media-playback-start"_s), u"Reproducir"_s,
-                           [filePath, player]{ QProcess::startDetached(player, {filePath}); });
+                           [filePath, player]{ launchDetached(player, {filePath}); });
             if (player == u"vlc"_s)
                 menu.addAction(ti(u"media-playlist-append"_s), u"Agregar a lista de reproducción"_s,
-                               [filePath]{ QProcess::startDetached(u"vlc"_s, {u"--playlist-enqueue"_s, filePath}); });
+                               [filePath]{ launchDetached(u"vlc"_s, {u"--playlist-enqueue"_s, filePath}); });
         }
 
     // ── Text / Code / Scripts ─────────────────────────────────────────────────
@@ -125,25 +137,25 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
         const QString editor = firstExec({"kate", "gedit", "kwrite", "mousepad", "geany", "pluma", "xed", "nano"});
         if (!editor.isEmpty())
             menu.addAction(ti(u"text-editor"_s), u"Abrir en editor de texto"_s,
-                           [filePath, editor]{ QProcess::startDetached(editor, {filePath}); });
+                           [filePath, editor]{ launchDetached(editor, {filePath}); });
 
         const bool isScript =
-            mimeName.contains(u"python"_s)    || mimeName.contains(u"shellscript"_s) ||
-            mimeName.contains(u"x-sh"_s)      || mimeName.contains(u"ruby"_s)        ||
-            mimeName.contains(u"javascript"_s) || filePath.endsWith(u".sh"_s)         ||
-            filePath.endsWith(u".py"_s)        || filePath.endsWith(u".rb"_s)         ||
+            mimeName.contains(u"python"_s)     || mimeName.contains(u"shellscript"_s) ||
+            mimeName.contains(u"x-sh"_s)       || mimeName.contains(u"ruby"_s)        ||
+            mimeName.contains(u"javascript"_s)  || filePath.endsWith(u".sh"_s)         ||
+            filePath.endsWith(u".py"_s)         || filePath.endsWith(u".rb"_s)         ||
             filePath.endsWith(u".js"_s);
 
         if (isScript) {
             const QString term = firstExec({"konsole", "gnome-terminal", "xterm", "alacritty", "kitty", "tilix"});
             QString runCmd = filePath;
-            if (filePath.endsWith(u".py"_s))  runCmd = u"python3 \""_s + filePath + u"\""_s;
+            if (filePath.endsWith(u".py"_s))      runCmd = u"python3 \""_s + filePath + u"\""_s;
             else if (filePath.endsWith(u".rb"_s)) runCmd = u"ruby \""_s + filePath + u"\""_s;
             else if (filePath.endsWith(u".js"_s)) runCmd = u"node \""_s + filePath + u"\""_s;
             if (!term.isEmpty()) {
                 const QString cmd = runCmd + u"; echo; read -p 'Presiona Enter para cerrar...'"_s;
                 menu.addAction(ti(u"system-run"_s), u"Ejecutar en terminal"_s, [term, cmd]{
-                    QProcess::startDetached(term, {u"-e"_s, u"bash"_s, u"-c"_s, cmd});
+                    launchDetached(term, {u"-e"_s, u"bash"_s, u"-c"_s, cmd});
                 });
             }
         }
@@ -161,7 +173,7 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
         const QString ark = firstExec({"ark", "file-roller", "xarchiver", "engrampa"});
         if (!ark.isEmpty())
             menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
-                           [filePath, ark]{ QProcess::startDetached(ark, {filePath}); });
+                           [filePath, ark]{ launchDetached(ark, {filePath}); });
     }
 }
 
@@ -201,7 +213,9 @@ QString NativeMenu::showMenu(const QVariantMap &params)
     };
 
     if (!isEmpty) {
-        // ── Open action ───────────────────────────────────────────────────────
+        // ── Open / open-in-new-window ─────────────────────────────────────────
+        if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
+
         if (isRealFile) {
             // Detect MIME and build "Open with <App>" label
             QMimeDatabase mimeDb;
@@ -221,7 +235,7 @@ QString NativeMenu::showMenu(const QVariantMap &params)
                 QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
             });
             owMenu->addSeparator();
-            owMenu->addAction(u"Otra aplicación…"_s);
+            owMenu->addAction(u"Otra aplicación…"_s, [&result]{ result = u"other-app"_s; });
 
             menu.addSeparator();
 
@@ -234,7 +248,6 @@ QString NativeMenu::showMenu(const QVariantMap &params)
         } else {
             // Folder / drive / mock item
             act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
-            if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
             menu.addSeparator();
         }
 
@@ -246,8 +259,10 @@ QString NativeMenu::showMenu(const QVariantMap &params)
 
         // ── Common actions ────────────────────────────────────────────────────
         QMenu *sendTo = menu.addMenu(u"Enviar a"_s);
-        sendTo->addAction(ti(u"user-desktop"_s), u"Escritorio (crear acceso directo)"_s);
-        sendTo->addAction(ti(u"mail-send"_s),    u"Destinatario de correo"_s);
+        sendTo->addAction(ti(u"user-desktop"_s), u"Escritorio (crear acceso directo)"_s,
+                          [&result]{ result = u"send-to:desktop"_s; });
+        sendTo->addAction(ti(u"mail-send"_s), u"Destinatario de correo"_s,
+                          [&result]{ result = u"send-to:mail"_s; });
         menu.addSeparator();
         act(u"Cortar"_s, u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
         act(u"Copiar"_s, u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
@@ -293,11 +308,13 @@ QString NativeMenu::showMenu(const QVariantMap &params)
         refresh->setShortcutVisibleInContextMenu(true);
         menu.addSeparator();
         act(u"Pegar"_s, u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
-        menu.addAction(u"Pegar acceso directo"_s);
+        menu.addAction(ti(u"insert-link"_s), u"Pegar acceso directo"_s,
+                       [&result]{ result = u"paste-shortcut"_s; });
         menu.addSeparator();
         QMenu *newMenu = menu.addMenu(u"Nuevo"_s);
         newMenu->addAction(ti(u"folder-new"_s), u"Carpeta"_s, [&result]{ result = u"new-folder"_s; });
-        newMenu->addAction(u"Acceso directo"_s);
+        newMenu->addAction(ti(u"insert-link"_s), u"Acceso directo"_s,
+                           [&result]{ result = u"new-shortcut"_s; });
         menu.addSeparator();
         act(u"Propiedades"_s, u"properties"_s, ti(u"document-properties"_s),
             QKeySequence(Qt::ALT | Qt::Key_Return));
@@ -631,4 +648,29 @@ QString NativeMenu::showSiblingsMenu(const QVariantList &siblings)
 
     menu.exec(QCursor::pos());
     return result;
+}
+
+void NativeMenu::openTerminalAt(const QString &path)
+{
+    struct { const char *exe; QStringList args; } candidates[] = {
+        {"konsole",        {u"--workdir"_s,           path}},
+        {"gnome-terminal", {u"--working-directory"_s, path}},
+        {"alacritty",      {u"--working-directory"_s, path}},
+        {"kitty",          {u"--directory"_s,          path}},
+        {"tilix",          {u"--working-directory"_s, path}},
+        {"xfce4-terminal", {u"--working-directory"_s, path}},
+    };
+    for (const auto &c : candidates) {
+        if (!QStandardPaths::findExecutable(QLatin1String(c.exe)).isEmpty()) {
+            launchDetached(QLatin1String(c.exe), c.args);
+            return;
+        }
+    }
+    if (!QStandardPaths::findExecutable(u"xterm"_s).isEmpty())
+        launchDetached(u"bash"_s, {u"-c"_s, u"cd \""_s + path + u"\" && xterm"_s});
+}
+
+void NativeMenu::openNewWindow(const QString &path)
+{
+    launchDetached(QCoreApplication::applicationFilePath(), {path});
 }

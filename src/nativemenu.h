@@ -31,4 +31,10 @@ public:
 
     // Address-bar sibling-folders popup — returns path string or ""
     Q_INVOKABLE QString showSiblingsMenu(const QVariantList &siblings);
+
+    // Open a terminal emulator at the given directory
+    Q_INVOKABLE void openTerminalAt(const QString &path);
+
+    // Open a new explorer window at the given path
+    Q_INVOKABLE void openNewWindow(const QString &path);
 };

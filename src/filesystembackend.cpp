@@ -798,7 +798,9 @@ void FileSystemBackend::loadDirectory(const QString &path)
     m_selectedFilePath.clear();
 
     QDir dir(path);
-    dir.setFilter(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
+    QDir::Filters f = QDir::AllEntries | QDir::NoDotAndDotDot;
+    if (m_showHiddenFiles) f |= QDir::Hidden;
+    dir.setFilter(f);
     dir.setSorting(QDir::DirsFirst | QDir::Name | QDir::IgnoreCase);
 
     const QFileInfoList entries = dir.entryInfoList();
@@ -1152,6 +1154,48 @@ void FileSystemBackend::mountMtpDevices()
             }
         });
     }
+}
+
+bool FileSystemBackend::createSymlink(const QString &target, const QString &linkPath)
+{
+    if (QFile::exists(linkPath)) {
+        emit errorOccurred(QStringLiteral("Ya existe un archivo con ese nombre en el destino."));
+        return false;
+    }
+    if (!QFile::link(target, linkPath)) {
+        emit errorOccurred(QStringLiteral("No se pudo crear el acceso directo."));
+        return false;
+    }
+    refresh();
+    return true;
+}
+
+bool FileSystemBackend::connectToServer(const QString &uri)
+{
+    auto *proc = new QProcess(this);
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, proc, uri](int code, QProcess::ExitStatus) {
+        const QString err = QString::fromUtf8(proc->readAllStandardError()).trimmed();
+        proc->deleteLater();
+        if (code == 0)
+            emit devicesChanged();
+        else
+            emit errorOccurred(QStringLiteral("No se pudo conectar a: ") + uri +
+                               (err.isEmpty() ? QString() : QStringLiteral("\n") + err));
+    });
+    proc->start(QStringLiteral("gio"), {QStringLiteral("mount"), uri});
+    return true;
+}
+
+bool FileSystemBackend::disconnectFromServer(const QString &mountPath)
+{
+    QProcess proc;
+    proc.start(QStringLiteral("gio"), {QStringLiteral("mount"), QStringLiteral("-u"), mountPath});
+    if (proc.waitForFinished(6000) && proc.exitCode() == 0) { emit devicesChanged(); return true; }
+    proc.start(QStringLiteral("umount"), {mountPath});
+    if (proc.waitForFinished(6000) && proc.exitCode() == 0) { emit devicesChanged(); return true; }
+    emit errorOccurred(QStringLiteral("No se pudo desconectar: ") + mountPath);
+    return false;
 }
 
 void FileSystemBackend::extractHere(const QString &archivePath)
