@@ -1,4 +1,5 @@
 #include "filesystembackend.h"
+#include "i18n.h"
 #include <QDirIterator>
 #include <QStorageInfo>
 #include <QFile>
@@ -132,12 +133,12 @@ QVariantMap FileSystemBackend::selectedFileInfo() const
     info["sizeFormatted"] = formatFileSize(fi.size());
     info["modified"] = fi.lastModified().toString("dd/MM/yyyy hh:mm");
     info["created"] = fi.birthTime().toString("dd/MM/yyyy hh:mm");
-    info["type"] = fi.isDir() ? "Carpeta de archivos"
+    info["type"] = fi.isDir() ? tr_(QStringLiteral("Carpeta de archivos"))
                               : m_mimeDb.mimeTypeForFile(fi).comment();
-    info["permissions"] = fi.isReadable() ? "Lectura" : "";
+    info["permissions"] = fi.isReadable() ? tr_(QStringLiteral("Lectura")) : "";
     if (fi.isWritable())
         info["permissions"] = info["permissions"].toString() +
-                              (info["permissions"].toString().isEmpty() ? "" : ", ") + "Escritura";
+                              (info["permissions"].toString().isEmpty() ? "" : ", ") + tr_(QStringLiteral("Escritura"));
 
     return info;
 }
@@ -175,13 +176,13 @@ void FileSystemBackend::navigateTo(const QString &path)
     if (!fi.exists()) {
         if (path.contains(QLatin1String("/gvfs/mtp:"))) {
             // MTP device detected but not yet mounted — trigger mount and let user retry
-            emit errorOccurred(QStringLiteral(
-                "Montando dispositivo... Asegúrate de que el teléfono esté desbloqueado "
-                "y en modo 'Transferencia de archivos', luego vuelve a hacer clic."));
+            emit errorOccurred(
+                tr_(QStringLiteral("Montando dispositivo... Asegúrate de que el teléfono esté desbloqueado "))
+                + tr_(QStringLiteral("y en modo 'Transferencia de archivos', luego vuelve a hacer clic.")));
             mountMtpDevices();
             QTimer::singleShot(3500, this, [this] { emit devicesChanged(); });
         } else {
-            emit errorOccurred("La ruta no existe: " + path);
+            emit errorOccurred(tr_(QStringLiteral("La ruta no existe: ")) + path);
         }
         return;
     }
@@ -194,7 +195,7 @@ void FileSystemBackend::navigateTo(const QString &path)
     }
 
     if (!fi.isReadable()) {
-        emit errorOccurred("No tiene permisos para acceder a: " + path);
+        emit errorOccurred(tr_(QStringLiteral("No tiene permisos para acceder a: ")) + path);
         return;
     }
 
@@ -375,7 +376,7 @@ QVariantList FileSystemBackend::getStorageDevices() const {
 
         QString label = si.name();
         if (label.isEmpty()) {
-            if (root == QLatin1String("/")) label = "Disco local";
+            if (root == QLatin1String("/")) label = tr_(QStringLiteral("Disco local"));
             else label = root.section('/', -1, -1);
             if (label.isEmpty()) label = root;
         }
@@ -419,7 +420,7 @@ QVariantList FileSystemBackend::getStorageDevices() const {
                 const int bracketIdx = deviceName.indexOf(u'[');
                 if (bracketIdx > 0) deviceName = deviceName.left(bracketIdx).trimmed();
             }
-            if (deviceName.isEmpty()) deviceName = QStringLiteral("Dispositivo MTP");
+            if (deviceName.isEmpty()) deviceName = tr_(QStringLiteral("Dispositivo MTP"));
 
             const QString mtpFullPath = gvfsDir.absoluteFilePath(mtpDir);
             gvfsMtpRoots.insert(mtpFullPath);
@@ -488,7 +489,7 @@ QVariantList FileSystemBackend::getStorageDevices() const {
                         return;
                 }
                 const QString label = volName.isEmpty()
-                    ? QStringLiteral("Dispositivo MTP") : volName;
+                    ? tr_(QStringLiteral("Dispositivo MTP")) : volName;
                 QVariantMap m;
                 m[QStringLiteral("displayName")] = label;
                 m[QStringLiteral("label")]       = label;
@@ -523,19 +524,19 @@ QVariantList FileSystemBackend::getStorageDevices() const {
 }
 
 QVariantList FileSystemBackend::getLibraries() const {
-    struct Lib { const char *name; const char *icon; QStandardPaths::StandardLocation loc; };
-    static const Lib libs[] = {
-        {"Documentos", "document", QStandardPaths::DocumentsLocation},
-        {"Música",     "music",    QStandardPaths::MusicLocation},
-        {"Imágenes",   "picture",  QStandardPaths::PicturesLocation},
-        {"Vídeos",     "video",    QStandardPaths::MoviesLocation},
+    struct Lib { QString name; const char *icon; QStandardPaths::StandardLocation loc; };
+    const Lib libs[] = {
+        {tr_(QStringLiteral("Documentos")), "document", QStandardPaths::DocumentsLocation},
+        {tr_(QStringLiteral("Música")),     "music",    QStandardPaths::MusicLocation},
+        {tr_(QStringLiteral("Imágenes")),   "picture",  QStandardPaths::PicturesLocation},
+        {tr_(QStringLiteral("Vídeos")),     "video",    QStandardPaths::MoviesLocation},
     };
     QVariantList result;
     for (const auto &lib : libs) {
         QString path = QStandardPaths::writableLocation(lib.loc);
         QDir dir(path);
         QVariantMap m;
-        m["name"]      = QString::fromUtf8(lib.name);
+        m["name"]      = lib.name;
         m["icon"]      = QString::fromLatin1(lib.icon);
         m["path"]      = path;
         m["itemCount"] = dir.exists()
@@ -617,7 +618,7 @@ QVariantList FileSystemBackend::searchFiles(const QString &rootPath, const QStri
         item["size"]          = fi.size();
         item["sizeFormatted"] = fi.isDir() ? QString() : formatFileSize(fi.size());
         item["modified"]      = fi.lastModified().toString("dd/MM/yyyy hh:mm");
-        item["type"]          = fi.isDir() ? QStringLiteral("Carpeta de archivos")
+        item["type"]          = fi.isDir() ? tr_(QStringLiteral("Carpeta de archivos"))
                                            : m_mimeDb.mimeTypeForFile(fi).comment();
         item["mimeIcon"]      = getMimeIcon(fi.absoluteFilePath());
         result.append(item);
@@ -697,7 +698,7 @@ bool FileSystemBackend::copyItem(const QString &sourcePath, const QString &desti
 {
     QFileInfo fi(sourcePath);
     if (!fi.exists()) {
-        emit errorOccurred("No se puede copiar: el origen no existe.");
+        emit errorOccurred(tr_(QStringLiteral("No se puede copiar: el origen no existe.")));
         return false;
     }
 
@@ -705,7 +706,7 @@ bool FileSystemBackend::copyItem(const QString &sourcePath, const QString &desti
                          : QFile::copy(sourcePath, destinationPath);
 
     if (!ok) {
-        emit errorOccurred("Error al copiar \"" + fi.fileName() + "\".");
+        emit errorOccurred(tr_(QStringLiteral("Error al copiar \"")) + fi.fileName() + "\".");
         return false;
     }
 
@@ -717,7 +718,7 @@ bool FileSystemBackend::moveItem(const QString &sourcePath, const QString &desti
 {
     QFileInfo fi(sourcePath);
     if (!fi.exists()) {
-        emit errorOccurred("No se puede mover: el origen no existe.");
+        emit errorOccurred(tr_(QStringLiteral("No se puede mover: el origen no existe.")));
         return false;
     }
 
@@ -727,7 +728,7 @@ bool FileSystemBackend::moveItem(const QString &sourcePath, const QString &desti
         bool ok = fi.isDir() ? copyDirRecursively(sourcePath, destinationPath)
                              : QFile::copy(sourcePath, destinationPath);
         if (!ok) {
-            emit errorOccurred("Error al mover \"" + fi.fileName() + "\".");
+            emit errorOccurred(tr_(QStringLiteral("Error al mover \"")) + fi.fileName() + "\".");
             return false;
         }
         fi.isDir() ? QDir(sourcePath).removeRecursively() : QFile::remove(sourcePath);
@@ -744,14 +745,14 @@ bool FileSystemBackend::removeItem(const QString &path)
 {
     QFileInfo fi(path);
     if (!fi.exists()) {
-        emit errorOccurred("No se puede eliminar: el elemento no existe.");
+        emit errorOccurred(tr_(QStringLiteral("No se puede eliminar: el elemento no existe.")));
         return false;
     }
 
     bool ok = fi.isDir() ? QDir(path).removeRecursively() : QFile::remove(path);
 
     if (!ok) {
-        emit errorOccurred("Error al eliminar \"" + fi.fileName() + "\".");
+        emit errorOccurred(tr_(QStringLiteral("Error al eliminar \"")) + fi.fileName() + "\".");
         return false;
     }
 
@@ -766,12 +767,12 @@ bool FileSystemBackend::renameItem(const QString &oldPath, const QString &newPat
 {
     QFileInfo fi(oldPath);
     if (!fi.exists()) {
-        emit errorOccurred("No se puede renombrar: el elemento no existe.");
+        emit errorOccurred(tr_(QStringLiteral("No se puede renombrar: el elemento no existe.")));
         return false;
     }
 
     if (!QFile::rename(oldPath, newPath)) {
-        emit errorOccurred("Error al renombrar \"" + fi.fileName() + "\".");
+        emit errorOccurred(tr_(QStringLiteral("Error al renombrar \"")) + fi.fileName() + "\".");
         return false;
     }
 
@@ -786,7 +787,7 @@ bool FileSystemBackend::createFolder(const QString &parentPath, const QString &n
 {
     QDir parent(parentPath.isEmpty() ? m_currentPath : parentPath);
     if (!parent.mkdir(name)) {
-        emit errorOccurred("Error al crear la carpeta \"" + name + "\".");
+        emit errorOccurred(tr_(QStringLiteral("Error al crear la carpeta \"")) + name + "\".");
         return false;
     }
 
@@ -799,11 +800,11 @@ bool FileSystemBackend::createFile(const QString &parentPath, const QString &nam
     const QString base = parentPath.isEmpty() ? m_currentPath : parentPath;
     QFile file(base + "/" + name);
     if (file.exists()) {
-        emit errorOccurred("Ya existe un archivo con ese nombre.");
+        emit errorOccurred(tr_(QStringLiteral("Ya existe un archivo con ese nombre.")));
         return false;
     }
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        emit errorOccurred("No se pudo crear el archivo \"" + name + "\".");
+        emit errorOccurred(tr_(QStringLiteral("No se pudo crear el archivo \"")) + name + "\".");
         return false;
     }
     if (!content.isEmpty())
@@ -834,7 +835,7 @@ void FileSystemBackend::loadDirectory(const QString &path)
         item["size"] = fi.size();
         item["sizeFormatted"] = fi.isDir() ? "" : formatFileSize(fi.size());
         item["modified"] = fi.lastModified().toString("dd/MM/yyyy hh:mm");
-        item["type"] = fi.isDir() ? "Carpeta de archivos"
+        item["type"] = fi.isDir() ? tr_(QStringLiteral("Carpeta de archivos"))
                                   : m_mimeDb.mimeTypeForFile(fi).comment();
         item["mimeIcon"] = getMimeIcon(fi.absoluteFilePath());
 
@@ -944,7 +945,7 @@ QVariantMap FileSystemBackend::getFileProperties(const QString &path) const
     props["location"]        = fi.absolutePath();
     props["size"]            = fi.size();
     props["sizeFormatted"]   = fi.isDir() ? "" : formatFileSize(fi.size());
-    props["type"]            = fi.isDir() ? "Carpeta de archivos" : mime.comment();
+    props["type"]            = fi.isDir() ? tr_(QStringLiteral("Carpeta de archivos")) : mime.comment();
     props["readonly"]        = !fi.isWritable();
     props["hidden"]          = fi.isHidden();
     props["created"]         = fi.birthTime().toString("dddd, d 'de' MMMM 'de' yyyy, hh:mm:ss");
@@ -1066,7 +1067,7 @@ bool FileSystemBackend::setFilePermissions(const QString &path, const QVariantMa
     if (perms.value(QStringLiteral("othersExec"),  false).toBool()) p |= QFile::ExeOther;
 
     if (!QFile::setPermissions(path, p)) {
-        emit errorOccurred("No se pudieron cambiar los permisos de: " + QFileInfo(path).fileName());
+        emit errorOccurred(tr_(QStringLiteral("No se pudieron cambiar los permisos de: ")) + QFileInfo(path).fileName());
         return false;
     }
     return true;
@@ -1099,7 +1100,7 @@ bool FileSystemBackend::restoreFromTrash(const QString &path)
     QDir().mkpath(destFi.absolutePath());
 
     if (!QFile::rename(path, originalPath)) {
-        emit errorOccurred("No se pudo restaurar: " + fi.fileName());
+        emit errorOccurred(tr_(QStringLiteral("No se pudo restaurar: ")) + fi.fileName());
         return false;
     }
 
@@ -1180,11 +1181,11 @@ void FileSystemBackend::mountMtpDevices()
 bool FileSystemBackend::createSymlink(const QString &target, const QString &linkPath)
 {
     if (QFile::exists(linkPath)) {
-        emit errorOccurred(QStringLiteral("Ya existe un archivo con ese nombre en el destino."));
+        emit errorOccurred(tr_(QStringLiteral("Ya existe un archivo con ese nombre en el destino.")));
         return false;
     }
     if (!QFile::link(target, linkPath)) {
-        emit errorOccurred(QStringLiteral("No se pudo crear el acceso directo."));
+        emit errorOccurred(tr_(QStringLiteral("No se pudo crear el acceso directo.")));
         return false;
     }
     refresh();
@@ -1201,7 +1202,7 @@ bool FileSystemBackend::connectToServer(const QString &uri)
         if (code == 0)
             emit devicesChanged();
         else
-            emit errorOccurred(QStringLiteral("No se pudo conectar a: ") + uri +
+            emit errorOccurred(tr_(QStringLiteral("No se pudo conectar a: ")) + uri +
                                (err.isEmpty() ? QString() : QStringLiteral("\n") + err));
     });
     proc->start(QStringLiteral("gio"), {QStringLiteral("mount"), uri});
@@ -1215,7 +1216,7 @@ bool FileSystemBackend::disconnectFromServer(const QString &mountPath)
     if (proc.waitForFinished(6000) && proc.exitCode() == 0) { emit devicesChanged(); return true; }
     proc.start(QStringLiteral("umount"), {mountPath});
     if (proc.waitForFinished(6000) && proc.exitCode() == 0) { emit devicesChanged(); return true; }
-    emit errorOccurred(QStringLiteral("No se pudo desconectar: ") + mountPath);
+    emit errorOccurred(tr_(QStringLiteral("No se pudo desconectar: ")) + mountPath);
     return false;
 }
 
@@ -1271,7 +1272,7 @@ void FileSystemBackend::extractHere(const QString &archivePath)
         if (!ark.isEmpty())
             QProcess::startDetached(ark, {archivePath});
         else
-            emit errorOccurred(QStringLiteral("No se encontró una herramienta para extraer el archivo."));
+            emit errorOccurred(tr_(QStringLiteral("No se encontró una herramienta para extraer el archivo.")));
         return;
     }
 
@@ -1282,7 +1283,7 @@ void FileSystemBackend::extractHere(const QString &archivePath)
         if (exitCode == 0)
             refresh();
         else
-            emit errorOccurred(QStringLiteral("Error al extraer el archivo."));
+            emit errorOccurred(tr_(QStringLiteral("Error al extraer el archivo.")));
     });
     proc->start(program, args);
 }

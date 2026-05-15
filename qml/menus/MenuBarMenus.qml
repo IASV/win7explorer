@@ -13,6 +13,7 @@ Item {
     property bool   showSidebar:      true
     property bool   showStatusBar:    true
     property string themeName:        "glass"
+    property string language:         "es"
 
     signal newFolderRequested
     signal deleteRequested
@@ -40,6 +41,7 @@ Item {
     signal terminalRequested
     signal helpRequested
     signal aboutRequested
+    signal languageChangeRequested(string lang)
 
     property alias archivoMenu:      _archivoMenu
     property alias edicionMenu:      _edicionMenu
@@ -105,97 +107,103 @@ Item {
     Menu {
         id: _archivoMenu
         background: W7Bg {}
-        W7Item { text: "Nueva carpeta";  onTriggered: root.newFolderRequested() }
+        W7Item { text: i18n.t("Nueva carpeta");  onTriggered: root.newFolderRequested() }
         W7Sep {}
-        W7Item { text: "Eliminar";       enabled: root.selectedCount > 0;   onTriggered: root.deleteRequested() }
-        W7Item { text: "Cambiar nombre"; enabled: root.selectedCount === 1; onTriggered: root.renameRequested() }
-        W7Item { text: "Propiedades";    enabled: root.selectedCount > 0;   onTriggered: root.propertiesRequested() }
+        W7Item { text: i18n.t("Eliminar");       enabled: root.selectedCount > 0;   onTriggered: root.deleteRequested() }
+        W7Item { text: i18n.t("Cambiar nombre"); enabled: root.selectedCount === 1; onTriggered: root.renameRequested() }
+        W7Item { text: i18n.t("Propiedades");    enabled: root.selectedCount > 0;   onTriggered: root.propertiesRequested() }
         W7Sep {}
-        W7Item { text: "Cerrar"; onTriggered: root.closeRequested() }
+        W7Item { text: i18n.t("Cerrar"); onTriggered: root.closeRequested() }
     }
 
     Menu {
         id: _edicionMenu
         background: W7Bg {}
-        W7Item { text: "Deshacer"; enabled: false }
-        W7Item { text: "Rehacer";  enabled: false }
+        W7Item { text: i18n.t("Deshacer"); enabled: false }
+        W7Item { text: i18n.t("Rehacer");  enabled: false }
         W7Sep {}
-        W7Item { text: "Cortar"; enabled: root.selectedCount > 0; onTriggered: root.cutRequested() }
-        W7Item { text: "Copiar"; enabled: root.selectedCount > 0; onTriggered: root.copyRequested() }
-        W7Item { text: "Pegar";  onTriggered: root.pasteRequested() }
+        W7Item { text: i18n.t("Cortar"); enabled: root.selectedCount > 0; onTriggered: root.cutRequested() }
+        W7Item { text: i18n.t("Copiar"); enabled: root.selectedCount > 0; onTriggered: root.copyRequested() }
+        W7Item { text: i18n.t("Pegar");  onTriggered: root.pasteRequested() }
         W7Sep {}
-        W7Item { text: "Copiar a la carpeta…"; enabled: root.selectedCount > 0; onTriggered: root.copyToFolderRequested() }
-        W7Item { text: "Mover a la carpeta…";  enabled: root.selectedCount > 0; onTriggered: root.moveToFolderRequested() }
+        W7Item { text: i18n.t("Copiar a la carpeta…"); enabled: root.selectedCount > 0; onTriggered: root.copyToFolderRequested() }
+        W7Item { text: i18n.t("Mover a la carpeta…");  enabled: root.selectedCount > 0; onTriggered: root.moveToFolderRequested() }
         W7Sep {}
-        W7Item { text: "Seleccionar todo";   onTriggered: root.selectAllRequested() }
-        W7Item { text: "Invertir selección"; onTriggered: root.invertSelectionRequested() }
+        W7Item { text: i18n.t("Seleccionar todo");   onTriggered: root.selectAllRequested() }
+        W7Item { text: i18n.t("Invertir selección"); onTriggered: root.invertSelectionRequested() }
     }
 
     Menu {
         id: _verMenu
         background: W7Bg {}
         Menu {
-            title: "Vista"
+            title: i18n.t("Vista")
             background: W7Bg {}
-            W7Item { text: "Iconos grandes";  checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
-            W7Item { text: "Iconos medianos"; checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
-            W7Item { text: "Lista";           checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
-            W7Item { text: "Detalles";        checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
-            W7Item { text: "Contenido";       checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
+            W7Item { text: i18n.t("Iconos grandes");  checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
+            W7Item { text: i18n.t("Iconos medianos"); checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
+            W7Item { text: i18n.t("Lista");           checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
+            W7Item { text: i18n.t("Detalles");        checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
+            W7Item { text: i18n.t("Contenido");       checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
         }
         Menu {
-            title: "Ordenar por"
+            title: i18n.t("Ordenar por")
             background: W7Bg {}
-            W7Item { text: "Nombre";                onTriggered: root.sortRequested("name") }
-            W7Item { text: "Fecha de modificación"; onTriggered: root.sortRequested("modified") }
-            W7Item { text: "Tipo";                  onTriggered: root.sortRequested("type") }
-            W7Item { text: "Tamaño";                onTriggered: root.sortRequested("size") }
+            W7Item { text: i18n.t("Nombre");                onTriggered: root.sortRequested("name") }
+            W7Item { text: i18n.t("Fecha de modificación"); onTriggered: root.sortRequested("modified") }
+            W7Item { text: i18n.t("Tipo");                  onTriggered: root.sortRequested("type") }
+            W7Item { text: i18n.t("Tamaño");                onTriggered: root.sortRequested("size") }
         }
         W7Sep {}
         Menu {
-            title: "Organizar"
+            title: i18n.t("Organizar")
             background: W7Bg {}
             Menu {
-                title: "Diseño"
+                title: i18n.t("Diseño")
                 background: W7Bg {}
-                W7Item { text: "Barra de menús";        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
-                W7Item { text: "Panel de detalles";     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
-                W7Item { text: "Panel de vista previa"; checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
-                W7Item { text: "Panel de navegación";   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
+                W7Item { text: i18n.t("Barra de menús");        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
+                W7Item { text: i18n.t("Panel de detalles");     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
+                W7Item { text: i18n.t("Panel de vista previa"); checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
+                W7Item { text: i18n.t("Panel de navegación");   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
                 W7Sep {}
-                W7Item { text: "Barra de estado"; checkable: true; checked: root.showStatusBar; onTriggered: root.statusBarToggled() }
+                W7Item { text: i18n.t("Barra de estado"); checkable: true; checked: root.showStatusBar; onTriggered: root.statusBarToggled() }
             }
         }
         W7Sep {}
-        W7Item { text: "Actualizar"; onTriggered: root.refreshRequested() }
+        W7Item { text: i18n.t("Actualizar"); onTriggered: root.refreshRequested() }
     }
 
     Menu {
         id: _herramientasMenu
         background: W7Bg {}
-        W7Item { text: "Conectar a unidad de red…";     onTriggered: root.connectDriveRequested() }
-        W7Item { text: "Desconectar de unidad de red…"; onTriggered: root.disconnectDriveRequested() }
+        W7Item { text: i18n.t("Conectar a unidad de red…");     onTriggered: root.connectDriveRequested() }
+        W7Item { text: i18n.t("Desconectar de unidad de red…"); onTriggered: root.disconnectDriveRequested() }
         W7Sep {}
-        W7Item { text: "Abrir símbolo del sistema"; onTriggered: root.terminalRequested() }
+        W7Item { text: i18n.t("Abrir símbolo del sistema"); onTriggered: root.terminalRequested() }
         W7Sep {}
         Menu {
-            title: "Tema"
+            title: i18n.t("Tema")
             background: W7Bg {}
-            W7Item { text: "Glass (predeterminado)"; checkable: true; checked: root.themeName==="glass"; onTriggered: root.themeChangeRequested("glass") }
-            W7Item { text: "Plano";                  checkable: true; checked: root.themeName==="flat";  onTriggered: root.themeChangeRequested("flat") }
-            W7Item { text: "Oscuro";                 checkable: true; checked: root.themeName==="dark";  onTriggered: root.themeChangeRequested("dark") }
-            W7Item { text: "Cálido";                 checkable: true; checked: root.themeName==="warm";  onTriggered: root.themeChangeRequested("warm") }
-            W7Item { text: "Neón";                   checkable: true; checked: root.themeName==="neon";  onTriggered: root.themeChangeRequested("neon") }
+            W7Item { text: i18n.t("Glass (predeterminado)"); checkable: true; checked: root.themeName==="glass"; onTriggered: root.themeChangeRequested("glass") }
+            W7Item { text: i18n.t("Plano");                  checkable: true; checked: root.themeName==="flat";  onTriggered: root.themeChangeRequested("flat") }
+            W7Item { text: i18n.t("Oscuro");                 checkable: true; checked: root.themeName==="dark";  onTriggered: root.themeChangeRequested("dark") }
+            W7Item { text: i18n.t("Cálido");                 checkable: true; checked: root.themeName==="warm";  onTriggered: root.themeChangeRequested("warm") }
+            W7Item { text: i18n.t("Neón");                   checkable: true; checked: root.themeName==="neon";  onTriggered: root.themeChangeRequested("neon") }
+        }
+        Menu {
+            title: i18n.t("Elegir idioma")
+            background: W7Bg {}
+            W7Item { text: i18n.t("Español"); checkable: true; checked: root.language==="es"; onTriggered: root.languageChangeRequested("es") }
+            W7Item { text: i18n.t("Inglés");  checkable: true; checked: root.language==="en"; onTriggered: root.languageChangeRequested("en") }
         }
         W7Sep {}
-        W7Item { text: "Opciones de carpeta…" }
+        W7Item { text: i18n.t("Opciones de carpeta…") }
     }
 
     Menu {
         id: _ayudaMenu
         background: W7Bg {}
-        W7Item { text: "Ver ayuda"; onTriggered: root.helpRequested() }
+        W7Item { text: i18n.t("Ver ayuda"); onTriggered: root.helpRequested() }
         W7Sep {}
-        W7Item { text: "Acerca de Win7 Explorer"; onTriggered: root.aboutRequested() }
+        W7Item { text: i18n.t("Acerca de Win7 Explorer"); onTriggered: root.aboutRequested() }
     }
 }

@@ -265,7 +265,7 @@ Rectangle {
             TextField {
                 id: searchFld
                 anchors.fill: parent; anchors.rightMargin: 26
-                placeholderText: root.currentFolderName ? "Buscar en " + root.currentFolderName : "Buscar"
+                placeholderText: (i18n.lang, root.currentFolderName ? i18n.t("Buscar en ") + root.currentFolderName : i18n.t("Buscar"))
                 background: Item {}
                 color: root.pal.text; font.pixelSize: 12; leftPadding: 8
                 onTextChanged: root.searchChanged(text)

@@ -7,7 +7,7 @@ Window {
     property var  pal
     property bool showHiddenFiles: false
 
-    title:         "Opciones de carpeta"
+    title:         (i18n.lang, i18n.t("Opciones de carpeta"))
     width:         380
     height:        200
     minimumWidth:  320
@@ -35,7 +35,7 @@ Window {
             spacing:         6
 
             Label {
-                text:           "General"
+                text:           (i18n.lang, i18n.t("General"))
                 font.pixelSize: 11
                 font.bold:      true
                 color:          root.pal ? root.pal.text : "#000"
@@ -49,18 +49,18 @@ Window {
 
             CheckBox {
                 id:             showHiddenCheckbox
-                text:           "Mostrar archivos y carpetas ocultos"
+                text:           (i18n.lang, i18n.t("Mostrar archivos y carpetas ocultos"))
                 font.pixelSize: 11
                 checked:        root.showHiddenFiles
             }
 
             CheckBox {
-                text:           "Mostrar archivos del sistema operativo"
+                text:           (i18n.lang, i18n.t("Mostrar archivos del sistema operativo"))
                 font.pixelSize: 11
                 enabled:        false
                 opacity:        0.5
                 ToolTip.visible: hovered
-                ToolTip.text:    "Próximamente"
+                ToolTip.text:    (i18n.lang, i18n.t("Próximamente"))
             }
 
             Item { Layout.fillHeight: true }
@@ -78,7 +78,7 @@ Window {
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text:      "Aceptar"
+                    text:      (i18n.lang, i18n.t("Aceptar"))
 
                     onClicked: {
                         root.optionsChanged(showHiddenCheckbox.checked)
@@ -87,7 +87,7 @@ Window {
                 }
 
                 Button {
-                    text:      "Cancelar"
+                    text:      (i18n.lang, i18n.t("Cancelar"))
                     onClicked: root.close()
                 }
             }

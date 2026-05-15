@@ -3,11 +3,14 @@
 #include <QVariantMap>
 #include <QVariantList>
 
+class I18n;
+
 class NativeMenu : public QObject
 {
     Q_OBJECT
 public:
     explicit NativeMenu(QObject *parent = nullptr);
+    void setI18n(I18n *i) { m_i18n = i; }
 
     // Context menu (right-click on file/empty area)
     Q_INVOKABLE QString showMenu(const QVariantMap &params);
@@ -37,4 +40,7 @@ public:
 
     // Open a new explorer window at the given path
     Q_INVOKABLE void openNewWindow(const QString &path);
+
+private:
+    I18n *m_i18n = nullptr;
 };

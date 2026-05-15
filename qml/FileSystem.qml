@@ -11,63 +11,63 @@ QtObject {
     // Árbol raíz
     property var root: ({
         id: "root",
-        name: "Equipo",
+        name: (i18n.lang, i18n.t("Equipo")),
         type: "folder",
         children: [
             {
-                id: "favorites", name: "Favoritos", type: "group", kind: "favorites",
+                id: "favorites", name: (i18n.lang, i18n.t("Favoritos")), type: "group", kind: "favorites",
                 children: [
-                    { id: "desktop", name: "Escritorio", type: "folder", kind: "desktop", children: [] },
-                    { id: "downloads", name: "Descargas", type: "folder", kind: "downloads", children: [
+                    { id: "desktop", name: (i18n.lang, i18n.t("Escritorio")), type: "folder", kind: "desktop", children: [] },
+                    { id: "downloads", name: (i18n.lang, i18n.t("Descargas")), type: "folder", kind: "downloads", children: [
                         { id: "dl1", name: "instalador-v2.1.exe", type: "file", ext: "exe", size: "24.3 MB", modified: "12/03/2026" },
                         { id: "dl2", name: "factura-marzo.pdf", type: "file", ext: "pdf", size: "312 KB", modified: "28/03/2026" },
                         { id: "dl3", name: "presupuesto.xlsx", type: "file", ext: "xlsx", size: "84 KB", modified: "15/04/2026" },
                         { id: "dl4", name: "foto-viaje.jpg", type: "file", ext: "jpg", size: "2.1 MB", modified: "02/04/2026", dim: "3840×2160" }
                     ]},
-                    { id: "recent", name: "Sitios recientes", type: "folder", kind: "recent", children: [] }
+                    { id: "recent", name: (i18n.lang, i18n.t("Sitios recientes")), type: "folder", kind: "recent", children: [] }
                 ]
             },
             {
-                id: "libraries", name: "Bibliotecas", type: "group", kind: "libraries",
+                id: "libraries", name: (i18n.lang, i18n.t("Bibliotecas")), type: "group", kind: "libraries",
                 children: [
-                    { id: "lib-docs", name: "Documentos", type: "folder", kind: "lib-docs", children: [
-                        { id: "d1", name: "Artículos", type: "folder", kind: "folder", children: [] },
-                        { id: "d2", name: "Libros", type: "folder", kind: "folder", children: [] },
-                        { id: "d3", name: "Proyectos", type: "folder", kind: "folder", children: [] },
+                    { id: "lib-docs", name: (i18n.lang, i18n.t("Documentos")), type: "folder", kind: "lib-docs", children: [
+                        { id: "d1", name: (i18n.lang, i18n.t("Artículos")), type: "folder", kind: "folder", children: [] },
+                        { id: "d2", name: (i18n.lang, i18n.t("Libros")), type: "folder", kind: "folder", children: [] },
+                        { id: "d3", name: (i18n.lang, i18n.t("Proyectos")), type: "folder", kind: "folder", children: [] },
                         { id: "d6", name: "carta-bienvenida.docx", type: "file", ext: "docx", size: "42 KB", modified: "05/04/2026" },
                         { id: "d7", name: "presupuesto-anual.xlsx", type: "file", ext: "xlsx", size: "96 KB", modified: "14/04/2026" },
                         { id: "d8", name: "plan-estratégico.pptx", type: "file", ext: "pptx", size: "3.4 MB", modified: "20/04/2026" },
                         { id: "d9", name: "contrato-2026.pdf", type: "file", ext: "pdf", size: "420 KB", modified: "03/03/2026" },
                         { id: "d10", name: "notas-personales.txt", type: "file", ext: "txt", size: "2 KB", modified: "23/04/2026" }
                     ]},
-                    { id: "lib-music", name: "Música", type: "folder", kind: "lib-music", children: [
+                    { id: "lib-music", name: (i18n.lang, i18n.t("Música")), type: "folder", kind: "lib-music", children: [
                         { id: "m3", name: "canción-relajante.mp3", type: "file", ext: "mp3", size: "4.2 MB", modified: "08/04/2026", duration: "3:42" },
                         { id: "m4", name: "podcast-episodio-12.mp3", type: "file", ext: "mp3", size: "32 MB", modified: "19/04/2026", duration: "45:10" }
                     ]},
-                    { id: "lib-pics", name: "Imágenes", type: "folder", kind: "lib-pics", children: [
+                    { id: "lib-pics", name: (i18n.lang, i18n.t("Imágenes")), type: "folder", kind: "lib-pics", children: [
                         { id: "pi3", name: "atardecer-playa.jpg", type: "file", ext: "jpg", size: "3.8 MB", modified: "02/04/2026", dim: "4000×3000" },
                         { id: "pi4", name: "montaña-niebla.jpg", type: "file", ext: "jpg", size: "2.9 MB", modified: "14/04/2026", dim: "3840×2560" },
                         { id: "pi6", name: "logo-empresa.png", type: "file", ext: "png", size: "84 KB", modified: "05/04/2026", dim: "512×512" }
                     ]},
-                    { id: "lib-video", name: "Vídeos", type: "folder", kind: "lib-video", children: [
+                    { id: "lib-video", name: (i18n.lang, i18n.t("Vídeos")), type: "folder", kind: "lib-video", children: [
                         { id: "v1", name: "presentación-producto.mp4", type: "file", ext: "mp4", size: "124 MB", modified: "16/04/2026", duration: "4:20" }
                     ]}
                 ]
             },
             {
-                id: "computer", name: "Equipo", type: "group", kind: "computer",
+                id: "computer", name: (i18n.lang, i18n.t("Equipo")), type: "group", kind: "computer",
                 children: [
-                    { id: "disk-c", name: "Disco local (C:)", type: "drive", kind: "system", total: 78.9, free: 44.3, children: [
-                        { id: "c1", name: "Programas", type: "folder", kind: "folder", children: [] },
-                        { id: "c2", name: "Sistema", type: "folder", kind: "folder", children: [] },
-                        { id: "c3", name: "Usuarios", type: "folder", kind: "folder", children: [] }
+                    { id: "disk-c", name: (i18n.lang, i18n.t("Disco local (C:)")), type: "drive", kind: "system", total: 78.9, free: 44.3, children: [
+                        { id: "c1", name: (i18n.lang, i18n.t("Programas")), type: "folder", kind: "folder", children: [] },
+                        { id: "c2", name: (i18n.lang, i18n.t("Sistema")), type: "folder", kind: "folder", children: [] },
+                        { id: "c3", name: (i18n.lang, i18n.t("Usuarios")), type: "folder", kind: "folder", children: [] }
                     ]},
-                    { id: "disk-d", name: "Disco local (D:)", type: "drive", kind: "disk", total: 69.9, free: 21.6, children: [] },
-                    { id: "disk-e", name: "Unidad DVD (E:)", type: "drive", kind: "disc", children: [] }
+                    { id: "disk-d", name: (i18n.lang, i18n.t("Disco local (D:)")), type: "drive", kind: "disk", total: 69.9, free: 21.6, children: [] },
+                    { id: "disk-e", name: (i18n.lang, i18n.t("Unidad DVD (E:)")), type: "drive", kind: "disc", children: [] }
                 ]
             },
             {
-                id: "network", name: "Red", type: "group", kind: "network",
+                id: "network", name: (i18n.lang, i18n.t("Red")), type: "group", kind: "network",
                 children: [
                     { id: "nw1", name: "SERVIDOR-01", type: "folder", kind: "pc", children: [] },
                     { id: "nw2", name: "IMPRESORA-HP", type: "folder", kind: "printer", children: [] }
@@ -199,20 +199,21 @@ QtObject {
     // Etiqueta de tipo
     function typeLabel(item) {
         if (!item) return ""
-        if (item.type === "drive") return "Unidad local"
-        if (item.type === "folder") return "Carpeta de archivos"
-        if (item.type === "group") return "Grupo"
+        var _l = i18n.lang
+        if (item.type === "drive") return i18n.t("Unidad local")
+        if (item.type === "folder") return i18n.t("Carpeta de archivos")
+        if (item.type === "group") return i18n.t("Grupo")
         var map = {
-            pdf: "Documento PDF", docx: "Documento de Word", doc: "Documento de Word",
-            xlsx: "Hoja de cálculo", xls: "Hoja de cálculo",
-            pptx: "Presentación", ppt: "Presentación",
-            txt: "Documento de texto",
-            jpg: "Imagen JPEG", jpeg: "Imagen JPEG", png: "Imagen PNG",
-            gif: "Imagen GIF", svg: "Gráfico vectorial",
-            mp3: "Audio MP3", wav: "Audio WAV",
-            mp4: "Vídeo MP4", mov: "Vídeo QuickTime", avi: "Vídeo AVI",
-            exe: "Aplicación", dll: "Biblioteca", zip: "Archivo comprimido"
+            pdf: i18n.t("Documento PDF"), docx: i18n.t("Documento de Word"), doc: i18n.t("Documento de Word"),
+            xlsx: i18n.t("Hoja de cálculo"), xls: i18n.t("Hoja de cálculo"),
+            pptx: i18n.t("Presentación"), ppt: i18n.t("Presentación"),
+            txt: i18n.t("Documento de texto"),
+            jpg: i18n.t("Imagen JPEG"), jpeg: i18n.t("Imagen JPEG"), png: i18n.t("Imagen PNG"),
+            gif: i18n.t("Imagen GIF"), svg: i18n.t("Gráfico vectorial"),
+            mp3: i18n.t("Audio MP3"), wav: i18n.t("Audio WAV"),
+            mp4: i18n.t("Vídeo MP4"), mov: i18n.t("Vídeo QuickTime"), avi: i18n.t("Vídeo AVI"),
+            exe: i18n.t("Aplicación"), dll: i18n.t("Biblioteca"), zip: i18n.t("Archivo comprimido")
         }
-        return map[item.ext] || ("Archivo " + (item.ext || "").toUpperCase())
+        return map[item.ext] || (i18n.t("Archivo ") + (item.ext || "").toUpperCase())
     }
 }

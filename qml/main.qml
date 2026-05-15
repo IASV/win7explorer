@@ -60,7 +60,8 @@ ApplicationWindow {
     color: pal.bg1
 
     title: {
-        if (currentId === "libraries") return "Bibliotecas — Win7 Explorer"
+        var _l = i18n.lang
+        if (currentId === "libraries") return i18n.t("Bibliotecas — Win7 Explorer")
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name + " — Win7 Explorer"
         if (currentNode) return currentNode.name + " — Win7 Explorer"
@@ -77,28 +78,28 @@ ApplicationWindow {
 
     // ── Favorites ──────────────────────────────────────────────────────────
     property var favorites: [
-        { name: "Escritorio", path: fsBackend.desktopPath(),   icon: "folder-closed" },
-        { name: "Descargas",  path: fsBackend.downloadsPath(), icon: "folder-blue" }
+        { name: (i18n.lang, i18n.t("Escritorio")), path: fsBackend.desktopPath(),   icon: "folder-closed" },
+        { name: (i18n.lang, i18n.t("Descargas")),  path: fsBackend.downloadsPath(), icon: "folder-blue" }
     ]
     onFavoritesChanged: if (win._settingsReady) appSettings.favoritesJson = JSON.stringify(favorites)
 
     function addToFavorites(item) {
         if (!item || item.type !== "folder") return
         for (var i = 0; i < favorites.length; i++)
-            if (favorites[i].path === item.id) { showToast("Ya está en Favoritos"); return }
+            if (favorites[i].path === item.id) { showToast(i18n.t("Ya está en Favoritos")); return }
         var copy = favorites.slice()
         copy.push({ name: item.name, path: item.id, icon: "folder-closed" })
         favorites = copy
-        showToast("'" + item.name + "' agregado a Favoritos")
+        showToast("'" + item.name + "' " + i18n.t("agregado a Favoritos"))
     }
 
     readonly property bool isRealPath: currentId.startsWith("/")
     readonly property var  currentNode: isRealPath ? null : fs.findNode(currentId)
     readonly property var  pathToCurrent: {
         if (currentId === "libraries")
-            return [{ name: "Bibliotecas", id: "libraries", path: "libraries" }]
+            return [{ name: (i18n.lang, i18n.t("Bibliotecas")), id: "libraries", path: "libraries" }]
         if (currentId === "trash")
-            return [{ name: "Papelera de reciclaje", id: "trash", path: "trash" }]
+            return [{ name: (i18n.lang, i18n.t("Papelera de reciclaje")), id: "trash", path: "trash" }]
         if (isRealPath) {
             var segs = fsBackend.pathSegments
             var result = []
@@ -157,8 +158,9 @@ ApplicationWindow {
     }
 
     readonly property string currentFolderName: {
-        if (currentId === "libraries") return "Bibliotecas"
-        if (currentId === "trash")     return "Papelera de reciclaje"
+        var _l = i18n.lang
+        if (currentId === "libraries") return i18n.t("Bibliotecas")
+        if (currentId === "trash")     return i18n.t("Papelera de reciclaje")
         if (isRealPath && fsBackend.pathSegments.length > 0)
             return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
         if (currentNode) return currentNode.name
@@ -268,7 +270,7 @@ ApplicationWindow {
                     id: lib.path, name: lib.name, type: "folder",
                     size: "", sizeBytes: 0, modified: "",
                     iconSrc:    "image://fileicons/" + lib.icon,
-                    typeStr:    "Biblioteca",
+                    typeStr:    i18n.t("Biblioteca"),
                     previewSrc: ""
                 })
             }
@@ -328,7 +330,7 @@ ApplicationWindow {
                     total:   d.totalGb,
                     free:    d.freeGb,
                     iconSrc: "image://fileicons/drive-" + d.kind,
-                    typeStr: d.fsType || "Unidad local"
+                    typeStr: d.fsType || i18n.t("Unidad local")
                 })
             }
         } else if (n.kind === "network") {
@@ -343,7 +345,7 @@ ApplicationWindow {
                     total:   nd.totalGb || 0,
                     free:    nd.freeGb  || 0,
                     iconSrc: "image://fileicons/network",
-                    typeStr: nd.kind ? (nd.kind.toUpperCase() + " Share") : "Recurso de red"
+                    typeStr: nd.kind ? (nd.kind.toUpperCase() + " Share") : i18n.t("Recurso de red")
                 })
             }
         }
@@ -453,7 +455,7 @@ ApplicationWindow {
             }
             fsBackend.refresh()
         } else {
-            showToast("Eliminar: solo disponible en modo sistema de archivos real")
+            showToast(i18n.t("Eliminar: solo disponible en modo sistema de archivos real"))
         }
     }
 
@@ -461,16 +463,17 @@ ApplicationWindow {
 
     function handleNewFolder() {
         if (isRealPath) {
-            win.pendingRenameOnRefresh = currentId.replace(/\/$/, '') + "/Nueva carpeta"
-            fsBackend.createFolder(currentId, "Nueva carpeta")
+            var newFolderName = i18n.t("Nueva carpeta")
+            win.pendingRenameOnRefresh = currentId.replace(/\/$/, '') + "/" + newFolderName
+            fsBackend.createFolder(currentId, newFolderName)
             // createFolder calls refresh() internally; no need to call again
         } else {
-            showToast("Nueva carpeta: solo disponible en modo sistema de archivos real")
+            showToast(i18n.t("Nueva carpeta: solo disponible en modo sistema de archivos real"))
         }
     }
 
     function handlePaste() {
-        if (!clipboardPath || !isRealPath) { showToast("No hay nada que pegar"); return }
+        if (!clipboardPath || !isRealPath) { showToast(i18n.t("No hay nada que pegar")); return }
         var dest = currentId + "/" + clipboardPath.split("/").pop()
         if (clipboardMode === "cut") { fsBackend.moveItem(clipboardPath, dest); clipboardPath = "" }
         else fsBackend.copyItem(clipboardPath, dest)
@@ -504,12 +507,12 @@ ApplicationWindow {
         if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
         if (action.startsWith("new-file:")) {
-            if (!win.isRealPath) { win.showToast("Solo disponible en el sistema de archivos real"); return }
+            if (!win.isRealPath) { win.showToast(i18n.t("Solo disponible en el sistema de archivos real")); return }
             var nfExt = action.substring(9)
             var nfName, nfContent
-            if      (nfExt === "txt")   { nfName = "Nuevo archivo de texto.txt"; nfContent = "" }
-            else if (nfExt === "html")  { nfName = "Nuevo documento.html"; nfContent = "<!DOCTYPE html>\n<html>\n<head><title></title></head>\n<body>\n\n</body>\n</html>\n" }
-            else                        { nfName = "Nuevo archivo"; nfContent = "" }
+            if      (nfExt === "txt")   { nfName = i18n.t("Nuevo archivo de texto.txt"); nfContent = "" }
+            else if (nfExt === "html")  { nfName = i18n.t("Nuevo documento.html"); nfContent = "<!DOCTYPE html>\n<html>\n<head><title></title></head>\n<body>\n\n</body>\n</html>\n" }
+            else                        { nfName = i18n.t("Nuevo archivo"); nfContent = "" }
             fsBackend.createFile(win.currentId, nfName, nfContent)
             return
         }
@@ -525,7 +528,7 @@ ApplicationWindow {
         if (action === "open-window")      { nativeMenu.openNewWindow(win.isRealPath ? win.currentId : ""); return }
         if (action === "terminal")         { nativeMenu.openTerminalAt(win.isRealPath ? win.currentId : ""); return }
         if (action === "connect-drive")    { connectDriveDialog.open(); return }
-        if (action === "disconnect-drive") { if (win.selectedItem) { fsBackend.disconnectFromServer(win.selectedItem.id); win.showToast("Desconectando…") }; return }
+        if (action === "disconnect-drive") { if (win.selectedItem) { fsBackend.disconnectFromServer(win.selectedItem.id); win.showToast(i18n.t("Desconectando…")) }; return }
         if (action === "folder-options")   { folderOptionsDialog.showHiddenFiles = win.showHiddenFiles; folderOptionsDialog.open(); return }
         if (action === "toggle:hidden")    { win.showHiddenFiles = !win.showHiddenFiles; return }
         if (action === "copy-to-folder")   { folderPickerDialog.operation = "copy"; folderPickerDialog.open(win.isRealPath ? win.currentId : ""); return }
@@ -534,7 +537,7 @@ ApplicationWindow {
             if (win.selectedItem) {
                 var desktopDest = fsBackend.desktopPath() + "/" + win.selectedItem.name
                 fsBackend.createSymlink(win.selectedItem.id, desktopDest)
-                win.showToast("Acceso directo creado en el Escritorio")
+                win.showToast(i18n.t("Acceso directo creado en el Escritorio"))
             }
             return
         }
@@ -556,7 +559,7 @@ ApplicationWindow {
         }
         if (action === "new-shortcut") {
             if (win.selectedItem && win.isRealPath) {
-                var shortcutName = win.selectedItem.name + " (acceso directo)"
+                var shortcutName = win.selectedItem.name + " " + i18n.t("(acceso directo)")
                 fsBackend.createSymlink(win.selectedItem.id, win.currentId + "/" + shortcutName)
                 fsBackend.refresh()
             }
@@ -568,6 +571,7 @@ ApplicationWindow {
         if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
         if (action === "toggle:trash")     { win.deleteToTrash = !win.deleteToTrash; return }
         if (action.startsWith("theme:"))   { win.themeName = action.substring(6); return }
+        if (action.startsWith("language:")){ i18n.lang = action.substring(9); return }
         if (action.startsWith("layout:"))  {
             var layout = action.substring(7)
             if (layout === "menu-bar")      { win.showMenuBar      = !win.showMenuBar;      return }
@@ -592,6 +596,7 @@ ApplicationWindow {
             showStatusBar:       win.showStatusBar,
             showContentPreviews: win.showContentPreviews,
             themeName:           win.themeName,
+            language:            i18n.lang,
             deleteToTrash:       win.deleteToTrash
         }
     }
@@ -643,7 +648,7 @@ ApplicationWindow {
         pal: win.pal
         onConnectRequested: function(uri) {
             fsBackend.connectToServer(uri)
-            win.showToast("Conectando a " + uri + "…")
+            win.showToast(i18n.t("Conectando a ") + uri + "…")
         }
     }
 
@@ -686,12 +691,12 @@ ApplicationWindow {
                 }
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "No se detectaron dispositivos de red"
+                    text: (i18n.lang, i18n.t("No se detectaron dispositivos de red"))
                     color: win.pal.muted; font.pixelSize: 13
                 }
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Comprueba que estés conectado a una red local"
+                    text: (i18n.lang, i18n.t("Comprueba que estés conectado a una red local"))
                     color: win.pal.muted; font.pixelSize: 11; opacity: 0.7
                 }
             }
@@ -716,7 +721,7 @@ ApplicationWindow {
                         ctx.moveTo(20,32); ctx.lineTo(44,32); ctx.moveTo(20,40); ctx.lineTo(36,40); ctx.stroke()
                     }
                 }
-                Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Esta carpeta está vacía"; color: win.pal.muted; font.pixelSize: 13 }
+                Label { anchors.horizontalCenter: parent.horizontalCenter; text: (i18n.lang, i18n.t("Esta carpeta está vacía")); color: win.pal.muted; font.pixelSize: 13 }
             }
         }
     }

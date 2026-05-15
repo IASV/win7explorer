@@ -53,16 +53,17 @@ ColumnLayout {
         if (root.groupBy === "none") return fm
         return fm.map(function(it) {
             var copy = Object.assign({}, it)
+            var _l = i18n.lang
             var gk
             if (root.groupBy === "name")
                 gk = copy.name ? copy.name[0].toUpperCase() : "#"
             else if (root.groupBy === "type")
-                gk = copy.typeStr || "Desconocido"
+                gk = copy.typeStr || i18n.t("Desconocido")
             else if (root.groupBy === "modified")
-                gk = copy.modified ? copy.modified.split(" ")[0] : "Sin fecha"
+                gk = copy.modified ? copy.modified.split(" ")[0] : i18n.t("Sin fecha")
             else if (root.groupBy === "size") {
-                if (!copy.size || copy.type === "folder") gk = "Carpetas"
-                else { var s = copy.size; gk = s.indexOf("KB") >= 0 ? "Pequeño" : s.indexOf("MB") >= 0 ? "Mediano" : "Grande" }
+                if (!copy.size || copy.type === "folder") gk = i18n.t("Carpetas")
+                else { var s = copy.size; gk = s.indexOf("KB") >= 0 ? i18n.t("Pequeño") : s.indexOf("MB") >= 0 ? i18n.t("Mediano") : i18n.t("Grande") }
             } else gk = ""
             copy.groupKey = gk
             return copy
@@ -124,10 +125,10 @@ ColumnLayout {
 
             Repeater {
                 model: [
-                    { id: "name",     label: "Nombre",                stretch: 3 },
-                    { id: "modified", label: "Fecha de modificación", stretch: 2 },
-                    { id: "type",     label: "Tipo",                  stretch: 1 },
-                    { id: "size",     label: "Tamaño",                stretch: 1 }
+                    { id: "name",     label: (i18n.lang, i18n.t("Nombre")),                stretch: 3 },
+                    { id: "modified", label: (i18n.lang, i18n.t("Fecha de modificación")), stretch: 2 },
+                    { id: "type",     label: (i18n.lang, i18n.t("Tipo")),                  stretch: 1 },
+                    { id: "size",     label: (i18n.lang, i18n.t("Tamaño")),                stretch: 1 }
                 ]
                 delegate: Rectangle {
                     id: headerCell

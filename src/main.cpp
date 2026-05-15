@@ -10,6 +10,7 @@
 #include "iconprovider.h"
 #include "filesystembackend.h"
 #include "nativemenu.h"
+#include "i18n.h"
 
 using namespace Qt::StringLiterals;
 
@@ -37,7 +38,11 @@ int main(int argc, char *argv[])
     FileSystemBackend *fsBackend = new FileSystemBackend(&app);
     engine.rootContext()->setContextProperty("fsBackend", fsBackend);
 
+    I18n *i18n = new I18n(&app);
+    engine.rootContext()->setContextProperty("i18n", i18n);
+
     NativeMenu *nativeMenu = new NativeMenu(&app);
+    nativeMenu->setI18n(i18n);
     engine.rootContext()->setContextProperty("nativeMenu", nativeMenu);
 
     // Register custom icon provider

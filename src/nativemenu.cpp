@@ -1,4 +1,5 @@
 #include "nativemenu.h"
+#include "i18n.h"
 #include <QMenu>
 #include <QAction>
 #include <QActionGroup>
@@ -90,14 +91,14 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
 
     // ── Executables / .desktop ───────────────────────────────────────────────
     if (filePath.endsWith(u".desktop"_s)) {
-        menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
+        menu.addAction(ti(u"system-run"_s), tr_(u"Ejecutar"_s),
                        [filePath]{ launchDetached(u"gio"_s, {u"launch"_s, filePath}); });
     } else if (fex.isExecutable() && !fex.isDir() && cat == u"application"_s) {
         const QString term = firstExec({"konsole", "gnome-terminal", "xterm", "alacritty", "kitty", "tilix"});
         if (!term.isEmpty())
-            menu.addAction(ti(u"utilities-terminal"_s), u"Ejecutar en terminal"_s,
+            menu.addAction(ti(u"utilities-terminal"_s), tr_(u"Ejecutar en terminal"_s),
                            [filePath, term]{ launchDetached(term, {u"-e"_s, filePath}); });
-        menu.addAction(ti(u"system-run"_s), u"Ejecutar"_s,
+        menu.addAction(ti(u"system-run"_s), tr_(u"Ejecutar"_s),
                        [filePath]{ launchDetached(filePath); });
     }
 
@@ -105,7 +106,7 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
     if (cat == u"image"_s) {
         const QString editor = firstExec({"gimp", "krita", "pinta", "inkscape"});
         if (!editor.isEmpty())
-            menu.addAction(ti(u"gimp"_s), u"Editar imagen"_s,
+            menu.addAction(ti(u"gimp"_s), tr_(u"Editar imagen"_s),
                            [filePath, editor]{ launchDetached(editor, {filePath}); });
 
         const QString wallSetter = firstExec({"plasma-apply-wallpaperimage", "feh", "nitrogen", "xwallpaper"});
@@ -115,7 +116,7 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
             else if (wallSetter == u"nitrogen"_s)  wallArgs = {u"--set-zoom-fill"_s, u"--save"_s, filePath};
             else if (wallSetter == u"xwallpaper"_s) wallArgs = {u"--zoom"_s, filePath};
             else wallArgs = {filePath};
-            menu.addAction(ti(u"preferences-desktop-wallpaper"_s), u"Establecer como fondo de escritorio"_s,
+            menu.addAction(ti(u"preferences-desktop-wallpaper"_s), tr_(u"Establecer como fondo de escritorio"_s),
                            [wallSetter, wallArgs]{ launchDetached(wallSetter, wallArgs); });
         }
 
@@ -123,10 +124,10 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
     } else if (cat == u"audio"_s || cat == u"video"_s) {
         const QString player = firstExec({"vlc", "mpv", "smplayer", "rhythmbox", "clementine", "elisa"});
         if (!player.isEmpty()) {
-            menu.addAction(ti(u"media-playback-start"_s), u"Reproducir"_s,
+            menu.addAction(ti(u"media-playback-start"_s), tr_(u"Reproducir"_s),
                            [filePath, player]{ launchDetached(player, {filePath}); });
             if (player == u"vlc"_s)
-                menu.addAction(ti(u"media-playlist-append"_s), u"Agregar a lista de reproducción"_s,
+                menu.addAction(ti(u"media-playlist-append"_s), tr_(u"Agregar a lista de reproducción"_s),
                                [filePath]{ launchDetached(u"vlc"_s, {u"--playlist-enqueue"_s, filePath}); });
         }
 
@@ -136,7 +137,7 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
 
         const QString editor = firstExec({"kate", "gedit", "kwrite", "mousepad", "geany", "pluma", "xed", "nano"});
         if (!editor.isEmpty())
-            menu.addAction(ti(u"text-editor"_s), u"Abrir en editor de texto"_s,
+            menu.addAction(ti(u"text-editor"_s), tr_(u"Abrir en editor de texto"_s),
                            [filePath, editor]{ launchDetached(editor, {filePath}); });
 
         const bool isScript =
@@ -153,8 +154,8 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
             else if (filePath.endsWith(u".rb"_s)) runCmd = u"ruby \""_s + filePath + u"\""_s;
             else if (filePath.endsWith(u".js"_s)) runCmd = u"node \""_s + filePath + u"\""_s;
             if (!term.isEmpty()) {
-                const QString cmd = runCmd + u"; echo; read -p 'Presiona Enter para cerrar...'"_s;
-                menu.addAction(ti(u"system-run"_s), u"Ejecutar en terminal"_s, [term, cmd]{
+                const QString cmd = runCmd + u"; echo; read -p '"_s + tr_(u"Presiona Enter para cerrar..."_s) + u"'"_s;
+                menu.addAction(ti(u"system-run"_s), tr_(u"Ejecutar en terminal"_s), [term, cmd]{
                     launchDetached(term, {u"-e"_s, u"bash"_s, u"-c"_s, cmd});
                 });
             }
@@ -167,12 +168,12 @@ static void addTypeSpecificActions(QMenu &menu, const QString &filePath,
                mimeName.contains(u"rar"_s) || mimeName.contains(u"archive"_s)) {
 
         {
-            QAction *a = menu.addAction(ti(u"archive-extract"_s), u"Extraer aquí"_s);
+            QAction *a = menu.addAction(ti(u"archive-extract"_s), tr_(u"Extraer aquí"_s));
             QObject::connect(a, &QAction::triggered, [&result]{ result = u"extract-here"_s; });
         }
         const QString ark = firstExec({"ark", "file-roller", "xarchiver", "engrampa"});
         if (!ark.isEmpty())
-            menu.addAction(ti(u"archive-extract"_s), u"Extraer en…"_s,
+            menu.addAction(ti(u"archive-extract"_s), tr_(u"Extraer en…"_s),
                            [filePath, ark]{ launchDetached(ark, {filePath}); });
     }
 }
@@ -215,7 +216,7 @@ QString NativeMenu::showMenu(const QVariantMap &params)
 
     if (!isEmpty) {
         // ── Open / open-in-new-window ─────────────────────────────────────────
-        if (isFolder) act(u"Abrir en nueva ventana"_s, u"open-window"_s, ti(u"window-new"_s));
+        if (isFolder) act(tr_(u"Abrir en nueva ventana"_s), u"open-window"_s, ti(u"window-new"_s));
 
         if (isRealFile) {
             // Detect MIME and build "Open with <App>" label
@@ -225,18 +226,18 @@ QString NativeMenu::showMenu(const QVariantMap &params)
 
             auto [appName, appIcon] = defaultAppInfo(mimeName);
             const QString openLabel = appName.isEmpty()
-                                      ? u"Abrir"_s
-                                      : u"Abrir con "_s + appName;
+                                      ? tr_(u"Abrir"_s)
+                                      : tr_(u"Abrir con "_s) + appName;
             QAction *openAct = act(openLabel, u"open"_s,
                                    appIcon.isEmpty() ? ti(u"document-open"_s) : ti(appIcon));
 
             // "Abrir con" submenu
-            QMenu *owMenu = menu.addMenu(ti(u"document-open"_s), u"Abrir con"_s);
-            owMenu->addAction(ti(u"document-open"_s), u"Aplicación predeterminada"_s, [filePath]{
+            QMenu *owMenu = menu.addMenu(ti(u"document-open"_s), tr_(u"Abrir con"_s));
+            owMenu->addAction(ti(u"document-open"_s), tr_(u"Aplicación predeterminada"_s), [filePath]{
                 QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
             });
             owMenu->addSeparator();
-            owMenu->addAction(u"Otra aplicación…"_s, [&result]{ result = u"other-app"_s; });
+            owMenu->addAction(tr_(u"Otra aplicación…"_s), [&result]{ result = u"other-app"_s; });
 
             menu.addSeparator();
 
@@ -248,85 +249,85 @@ QString NativeMenu::showMenu(const QVariantMap &params)
 
         } else {
             // Folder / drive / mock item
-            act(u"Abrir"_s, u"open"_s, ti(u"document-open"_s));
+            act(tr_(u"Abrir"_s), u"open"_s, ti(u"document-open"_s));
             if (isFolder && filePath.startsWith(u'/'))
-                menu.addAction(ti(u"utilities-terminal"_s), u"Abrir terminal aquí"_s,
+                menu.addAction(ti(u"utilities-terminal"_s), tr_(u"Abrir terminal aquí"_s),
                                [this, filePath]{ openTerminalAt(filePath); });
             menu.addSeparator();
         }
 
         // ── Restore from trash ────────────────────────────────────────────────
         if (inTrash) {
-            act(u"Restaurar"_s, u"restore"_s, ti(u"edit-undo"_s));
+            act(tr_(u"Restaurar"_s), u"restore"_s, ti(u"edit-undo"_s));
             menu.addSeparator();
         }
 
         // ── Common actions ────────────────────────────────────────────────────
-        QMenu *sendTo = menu.addMenu(u"Enviar a"_s);
-        sendTo->addAction(ti(u"user-desktop"_s), u"Escritorio (crear acceso directo)"_s,
+        QMenu *sendTo = menu.addMenu(tr_(u"Enviar a"_s));
+        sendTo->addAction(ti(u"user-desktop"_s), tr_(u"Escritorio (crear acceso directo)"_s),
                           [&result]{ result = u"send-to:desktop"_s; });
-        sendTo->addAction(ti(u"mail-send"_s), u"Destinatario de correo"_s,
+        sendTo->addAction(ti(u"mail-send"_s), tr_(u"Destinatario de correo"_s),
                           [&result]{ result = u"send-to:mail"_s; });
         menu.addSeparator();
-        act(u"Cortar"_s, u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
-        act(u"Copiar"_s, u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
-        act(u"Pegar"_s,  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
+        act(tr_(u"Cortar"_s), u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
+        act(tr_(u"Copiar"_s), u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
+        act(tr_(u"Pegar"_s),  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
         menu.addSeparator();
-        if (isFolder) act(u"Agregar a Favoritos"_s, u"favorites"_s, ti(u"bookmark-new"_s));
-        act(u"Eliminar"_s,       u"delete"_s, ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
-        act(u"Cambiar nombre"_s, u"rename"_s, ti(u"edit-rename"_s), QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
+        if (isFolder) act(tr_(u"Agregar a Favoritos"_s), u"favorites"_s, ti(u"bookmark-new"_s));
+        act(tr_(u"Eliminar"_s),       u"delete"_s, ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
+        act(tr_(u"Cambiar nombre"_s), u"rename"_s, ti(u"edit-rename"_s), QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
         menu.addSeparator();
-        act(u"Propiedades"_s, u"properties"_s, ti(u"document-properties"_s),
+        act(tr_(u"Propiedades"_s), u"properties"_s, ti(u"document-properties"_s),
             QKeySequence(Qt::ALT | Qt::Key_Return));
     } else {
-        QMenu *viewMenu = menu.addMenu(u"Ver"_s);
-        checkAct(viewMenu, u"Iconos muy grandes"_s, u"view:xlarge"_s,  viewMode == u"xlarge"_s);
-        checkAct(viewMenu, u"Iconos grandes"_s,     u"view:large"_s,   viewMode == u"large"_s);
-        checkAct(viewMenu, u"Iconos medianos"_s,    u"view:medium"_s,  viewMode == u"medium"_s);
-        checkAct(viewMenu, u"Iconos pequeños"_s,    u"view:small"_s,   viewMode == u"small"_s);
-        checkAct(viewMenu, u"Lista"_s,              u"view:list"_s,    viewMode == u"list"_s);
-        checkAct(viewMenu, u"Detalles"_s,           u"view:details"_s, viewMode == u"details"_s);
-        checkAct(viewMenu, u"Mosaicos"_s,           u"view:tiles"_s,   viewMode == u"tiles"_s);
-        checkAct(viewMenu, u"Contenido"_s,          u"view:content"_s, viewMode == u"content"_s);
+        QMenu *viewMenu = menu.addMenu(tr_(u"Ver"_s));
+        checkAct(viewMenu, tr_(u"Iconos muy grandes"_s), u"view:xlarge"_s,  viewMode == u"xlarge"_s);
+        checkAct(viewMenu, tr_(u"Iconos grandes"_s),     u"view:large"_s,   viewMode == u"large"_s);
+        checkAct(viewMenu, tr_(u"Iconos medianos"_s),    u"view:medium"_s,  viewMode == u"medium"_s);
+        checkAct(viewMenu, tr_(u"Iconos pequeños"_s),    u"view:small"_s,   viewMode == u"small"_s);
+        checkAct(viewMenu, tr_(u"Lista"_s),              u"view:list"_s,    viewMode == u"list"_s);
+        checkAct(viewMenu, tr_(u"Detalles"_s),           u"view:details"_s, viewMode == u"details"_s);
+        checkAct(viewMenu, tr_(u"Mosaicos"_s),           u"view:tiles"_s,   viewMode == u"tiles"_s);
+        checkAct(viewMenu, tr_(u"Contenido"_s),          u"view:content"_s, viewMode == u"content"_s);
 
-        QMenu *sortMenu = menu.addMenu(u"Ordenar por"_s);
-        checkAct(sortMenu, u"Nombre"_s,                u"sort:name"_s,     sortBy == u"name"_s);
-        checkAct(sortMenu, u"Fecha de modificación"_s, u"sort:modified"_s, sortBy == u"modified"_s);
-        checkAct(sortMenu, u"Tipo"_s,                  u"sort:type"_s,     sortBy == u"type"_s);
-        checkAct(sortMenu, u"Tamaño"_s,                u"sort:size"_s,     sortBy == u"size"_s);
+        QMenu *sortMenu = menu.addMenu(tr_(u"Ordenar por"_s));
+        checkAct(sortMenu, tr_(u"Nombre"_s),                u"sort:name"_s,     sortBy == u"name"_s);
+        checkAct(sortMenu, tr_(u"Fecha de modificación"_s), u"sort:modified"_s, sortBy == u"modified"_s);
+        checkAct(sortMenu, tr_(u"Tipo"_s),                  u"sort:type"_s,     sortBy == u"type"_s);
+        checkAct(sortMenu, tr_(u"Tamaño"_s),                u"sort:size"_s,     sortBy == u"size"_s);
         sortMenu->addSeparator();
-        checkAct(sortMenu, u"Ascendente"_s,  u"sortdir:asc"_s,  sortDir == u"asc"_s);
-        checkAct(sortMenu, u"Descendente"_s, u"sortdir:desc"_s, sortDir == u"desc"_s);
+        checkAct(sortMenu, tr_(u"Ascendente"_s),  u"sortdir:asc"_s,  sortDir == u"asc"_s);
+        checkAct(sortMenu, tr_(u"Descendente"_s), u"sortdir:desc"_s, sortDir == u"desc"_s);
 
-        QMenu *groupMenu = menu.addMenu(u"Agrupar por"_s);
-        checkAct(groupMenu, u"(Ninguno)"_s,            u"group:none"_s,     groupBy == u"none"_s);
+        QMenu *groupMenu = menu.addMenu(tr_(u"Agrupar por"_s));
+        checkAct(groupMenu, tr_(u"(Ninguno)"_s),            u"group:none"_s,     groupBy == u"none"_s);
         groupMenu->addSeparator();
-        checkAct(groupMenu, u"Nombre"_s,                u"group:name"_s,     groupBy == u"name"_s);
-        checkAct(groupMenu, u"Fecha de modificación"_s, u"group:modified"_s, groupBy == u"modified"_s);
-        checkAct(groupMenu, u"Tipo"_s,                  u"group:type"_s,     groupBy == u"type"_s);
-        checkAct(groupMenu, u"Tamaño"_s,                u"group:size"_s,     groupBy == u"size"_s);
+        checkAct(groupMenu, tr_(u"Nombre"_s),                u"group:name"_s,     groupBy == u"name"_s);
+        checkAct(groupMenu, tr_(u"Fecha de modificación"_s), u"group:modified"_s, groupBy == u"modified"_s);
+        checkAct(groupMenu, tr_(u"Tipo"_s),                  u"group:type"_s,     groupBy == u"type"_s);
+        checkAct(groupMenu, tr_(u"Tamaño"_s),                u"group:size"_s,     groupBy == u"size"_s);
 
-        QAction *refresh = menu.addAction(ti(u"view-refresh"_s), u"Actualizar"_s,
+        QAction *refresh = menu.addAction(ti(u"view-refresh"_s), tr_(u"Actualizar"_s),
                                           [&result]{ result = u"refresh"_s; });
         refresh->setShortcut(QKeySequence(Qt::Key_F5));
         refresh->setShortcutVisibleInContextMenu(true);
         if (!currentPath.isEmpty())
-            menu.addAction(ti(u"utilities-terminal"_s), u"Abrir terminal aquí"_s,
+            menu.addAction(ti(u"utilities-terminal"_s), tr_(u"Abrir terminal aquí"_s),
                            [this, currentPath]{ openTerminalAt(currentPath); });
         menu.addSeparator();
-        act(u"Pegar"_s, u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
-        menu.addAction(ti(u"insert-link"_s), u"Pegar acceso directo"_s,
+        act(tr_(u"Pegar"_s), u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
+        menu.addAction(ti(u"insert-link"_s), tr_(u"Pegar acceso directo"_s),
                        [&result]{ result = u"paste-shortcut"_s; });
         menu.addSeparator();
-        QMenu *newMenu = menu.addMenu(u"Nuevo"_s);
-        newMenu->addAction(ti(u"folder-new"_s),   u"Carpeta"_s,          [&result]{ result = u"new-folder"_s;       });
-        newMenu->addAction(ti(u"insert-link"_s),  u"Acceso directo"_s,   [&result]{ result = u"new-shortcut"_s;     });
+        QMenu *newMenu = menu.addMenu(tr_(u"Nuevo"_s));
+        newMenu->addAction(ti(u"folder-new"_s),   tr_(u"Carpeta"_s),          [&result]{ result = u"new-folder"_s;       });
+        newMenu->addAction(ti(u"insert-link"_s),  tr_(u"Acceso directo"_s),   [&result]{ result = u"new-shortcut"_s;     });
         newMenu->addSeparator();
-        newMenu->addAction(ti(u"text-x-generic"_s), u"Archivo de texto (.txt)"_s, [&result]{ result = u"new-file:txt"_s;   });
-        newMenu->addAction(ti(u"text-html"_s),      u"Documento HTML (.html)"_s,  [&result]{ result = u"new-file:html"_s;  });
-        newMenu->addAction(ti(u"text-x-generic"_s), u"Archivo vacío"_s,           [&result]{ result = u"new-file:empty"_s; });
+        newMenu->addAction(ti(u"text-x-generic"_s), tr_(u"Archivo de texto (.txt)"_s), [&result]{ result = u"new-file:txt"_s;   });
+        newMenu->addAction(ti(u"text-html"_s),      tr_(u"Documento HTML (.html)"_s),  [&result]{ result = u"new-file:html"_s;  });
+        newMenu->addAction(ti(u"text-x-generic"_s), tr_(u"Archivo vacío"_s),           [&result]{ result = u"new-file:empty"_s; });
         menu.addSeparator();
-        act(u"Propiedades"_s, u"properties"_s, ti(u"document-properties"_s),
+        act(tr_(u"Propiedades"_s), u"properties"_s, ti(u"document-properties"_s),
             QKeySequence(Qt::ALT | Qt::Key_Return));
     }
 
@@ -356,37 +357,37 @@ QString NativeMenu::showOrganizeMenu(const QVariantMap &params)
         return a;
     };
 
-    menu.addAction(u"Deshacer"_s)->setEnabled(false);
-    menu.addAction(u"Rehacer"_s)->setEnabled(false);
+    menu.addAction(tr_(u"Deshacer"_s))->setEnabled(false);
+    menu.addAction(tr_(u"Rehacer"_s))->setEnabled(false);
     menu.addSeparator();
-    act(u"Cortar"_s, u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
-    act(u"Copiar"_s, u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
-    act(u"Pegar"_s,  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
+    act(tr_(u"Cortar"_s), u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
+    act(tr_(u"Copiar"_s), u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
+    act(tr_(u"Pegar"_s),  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
     menu.addSeparator();
-    QAction *selAll = act(u"Seleccionar todo"_s, u"select-all"_s,
+    QAction *selAll = act(tr_(u"Seleccionar todo"_s), u"select-all"_s,
                           {}, QKeySequence::SelectAll);
     selAll->setShortcutVisibleInContextMenu(true);
     menu.addSeparator();
 
-    QMenu *layout = menu.addMenu(u"Diseño"_s);
+    QMenu *layout = menu.addMenu(tr_(u"Diseño"_s));
     auto layoutAct = [&](const QString &text, const QString &ret, bool on) {
         QAction *a = layout->addAction(text, [&result, ret]{ result = ret; });
         a->setCheckable(true); a->setChecked(on);
     };
-    layoutAct(u"Barra de menús"_s,        u"layout:menu-bar"_s,      showMenuBar);
-    layoutAct(u"Panel de detalles"_s,     u"layout:details-panel"_s, showDetails);
-    layoutAct(u"Panel de vista previa"_s, u"layout:preview"_s,       showPreview);
-    layoutAct(u"Panel de navegación"_s,   u"layout:sidebar"_s,       showSidebar);
+    layoutAct(tr_(u"Barra de menús"_s),        u"layout:menu-bar"_s,      showMenuBar);
+    layoutAct(tr_(u"Panel de detalles"_s),     u"layout:details-panel"_s, showDetails);
+    layoutAct(tr_(u"Panel de vista previa"_s), u"layout:preview"_s,       showPreview);
+    layoutAct(tr_(u"Panel de navegación"_s),   u"layout:sidebar"_s,       showSidebar);
     layout->addSeparator();
-    layoutAct(u"Miniaturas de archivos"_s, u"layout:content-previews"_s, showContentPreviews);
+    layoutAct(tr_(u"Miniaturas de archivos"_s), u"layout:content-previews"_s, showContentPreviews);
 
     menu.addSeparator();
-    act(u"Eliminar"_s,       u"delete"_s,     ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
-    act(u"Cambiar nombre"_s, u"rename"_s,     {}, QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
+    act(tr_(u"Eliminar"_s),       u"delete"_s,     ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
+    act(tr_(u"Cambiar nombre"_s), u"rename"_s,     {}, QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
     menu.addSeparator();
-    act(u"Propiedades"_s,    u"properties"_s, ti(u"document-properties"_s))->setEnabled(hasSel);
+    act(tr_(u"Propiedades"_s),    u"properties"_s, ti(u"document-properties"_s))->setEnabled(hasSel);
     menu.addSeparator();
-    act(u"Cerrar"_s,         u"close"_s,      ti(u"window-close"_s));
+    act(tr_(u"Cerrar"_s),         u"close"_s,      ti(u"window-close"_s));
 
     menu.exec(QCursor::pos());
     return result;
@@ -406,6 +407,7 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
     const bool showStatusBar       = params.value(u"showStatusBar"_s).toBool();
     const bool showContentPreviews = params.value(u"showContentPreviews"_s).toBool();
     const QString themeName        = params.value(u"themeName"_s).toString();
+    const QString language         = params.value(u"language"_s, u"es"_s).toString();
     const bool deleteToTrash       = params.value(u"deleteToTrash"_s, true).toBool();
     const bool hasSel              = selectedCount > 0;
 
@@ -426,87 +428,92 @@ QString NativeMenu::showMenuBarMenu(const QString &name, const QVariantMap &para
     };
 
     if (name == u"archivo"_s) {
-        act(u"Nueva carpeta"_s,   u"new-folder"_s,  ti(u"folder-new"_s));
+        act(tr_(u"Nueva carpeta"_s),   u"new-folder"_s,  ti(u"folder-new"_s));
         menu.addSeparator();
-        act(u"Eliminar"_s,       u"delete"_s,     ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
-        act(u"Cambiar nombre"_s, u"rename"_s,     {}, QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
-        act(u"Propiedades"_s,    u"properties"_s, ti(u"document-properties"_s))->setEnabled(hasSel);
+        act(tr_(u"Eliminar"_s),       u"delete"_s,     ti(u"edit-delete"_s), QKeySequence::Delete)->setEnabled(hasSel);
+        act(tr_(u"Cambiar nombre"_s), u"rename"_s,     {}, QKeySequence(Qt::Key_F2))->setEnabled(hasSel && selectedCount == 1);
+        act(tr_(u"Propiedades"_s),    u"properties"_s, ti(u"document-properties"_s))->setEnabled(hasSel);
         menu.addSeparator();
-        act(u"Cerrar"_s, u"close"_s, ti(u"window-close"_s));
+        act(tr_(u"Cerrar"_s), u"close"_s, ti(u"window-close"_s));
 
     } else if (name == u"edicion"_s) {
-        menu.addAction(u"Deshacer"_s)->setEnabled(false);
-        menu.addAction(u"Rehacer"_s)->setEnabled(false);
+        menu.addAction(tr_(u"Deshacer"_s))->setEnabled(false);
+        menu.addAction(tr_(u"Rehacer"_s))->setEnabled(false);
         menu.addSeparator();
-        act(u"Cortar"_s, u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
-        act(u"Copiar"_s, u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
-        act(u"Pegar"_s,  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
+        act(tr_(u"Cortar"_s), u"cut"_s,  ti(u"edit-cut"_s),  QKeySequence::Cut)->setEnabled(hasSel);
+        act(tr_(u"Copiar"_s), u"copy"_s, ti(u"edit-copy"_s), QKeySequence::Copy)->setEnabled(hasSel);
+        act(tr_(u"Pegar"_s),  u"paste"_s, ti(u"edit-paste"_s), QKeySequence::Paste);
         menu.addSeparator();
-        act(u"Copiar a la carpeta…"_s, u"copy-to-folder"_s, {})->setEnabled(hasSel);
-        act(u"Mover a la carpeta…"_s,  u"move-to-folder"_s, {})->setEnabled(hasSel);
+        act(tr_(u"Copiar a la carpeta…"_s), u"copy-to-folder"_s, {})->setEnabled(hasSel);
+        act(tr_(u"Mover a la carpeta…"_s),  u"move-to-folder"_s, {})->setEnabled(hasSel);
         menu.addSeparator();
-        act(u"Seleccionar todo"_s,   u"select-all"_s,        {}, QKeySequence::SelectAll);
-        act(u"Invertir selección"_s, u"invert-selection"_s);
+        act(tr_(u"Seleccionar todo"_s),   u"select-all"_s,        {}, QKeySequence::SelectAll);
+        act(tr_(u"Invertir selección"_s), u"invert-selection"_s);
 
     } else if (name == u"ver"_s) {
-        QMenu *viewMenu = menu.addMenu(u"Vista"_s);
-        checkAct(viewMenu, u"Iconos grandes"_s,  u"view:large"_s,   viewMode == u"large"_s);
-        checkAct(viewMenu, u"Iconos medianos"_s, u"view:medium"_s,  viewMode == u"medium"_s);
-        checkAct(viewMenu, u"Lista"_s,           u"view:list"_s,    viewMode == u"list"_s);
-        checkAct(viewMenu, u"Detalles"_s,        u"view:details"_s, viewMode == u"details"_s);
-        checkAct(viewMenu, u"Contenido"_s,       u"view:content"_s, viewMode == u"content"_s);
+        QMenu *viewMenu = menu.addMenu(tr_(u"Vista"_s));
+        checkAct(viewMenu, tr_(u"Iconos grandes"_s),  u"view:large"_s,   viewMode == u"large"_s);
+        checkAct(viewMenu, tr_(u"Iconos medianos"_s), u"view:medium"_s,  viewMode == u"medium"_s);
+        checkAct(viewMenu, tr_(u"Lista"_s),           u"view:list"_s,    viewMode == u"list"_s);
+        checkAct(viewMenu, tr_(u"Detalles"_s),        u"view:details"_s, viewMode == u"details"_s);
+        checkAct(viewMenu, tr_(u"Contenido"_s),       u"view:content"_s, viewMode == u"content"_s);
 
-        QMenu *sortMenu = menu.addMenu(u"Ordenar por"_s);
-        checkAct(sortMenu, u"Nombre"_s,                u"sort:name"_s,     sortBy == u"name"_s);
-        checkAct(sortMenu, u"Fecha de modificación"_s, u"sort:modified"_s, sortBy == u"modified"_s);
-        checkAct(sortMenu, u"Tipo"_s,                  u"sort:type"_s,     sortBy == u"type"_s);
-        checkAct(sortMenu, u"Tamaño"_s,                u"sort:size"_s,     sortBy == u"size"_s);
+        QMenu *sortMenu = menu.addMenu(tr_(u"Ordenar por"_s));
+        checkAct(sortMenu, tr_(u"Nombre"_s),                u"sort:name"_s,     sortBy == u"name"_s);
+        checkAct(sortMenu, tr_(u"Fecha de modificación"_s), u"sort:modified"_s, sortBy == u"modified"_s);
+        checkAct(sortMenu, tr_(u"Tipo"_s),                  u"sort:type"_s,     sortBy == u"type"_s);
+        checkAct(sortMenu, tr_(u"Tamaño"_s),                u"sort:size"_s,     sortBy == u"size"_s);
 
         menu.addSeparator();
-        QMenu *orgMenu = menu.addMenu(u"Organizar"_s);
-        QMenu *layoutMenu = orgMenu->addMenu(u"Diseño"_s);
+        QMenu *orgMenu = menu.addMenu(tr_(u"Organizar"_s));
+        QMenu *layoutMenu = orgMenu->addMenu(tr_(u"Diseño"_s));
         auto layoutChk = [&](const QString &text, const QString &ret, bool on) {
             QAction *a = layoutMenu->addAction(text, [&result, ret]{ result = ret; });
             a->setCheckable(true); a->setChecked(on);
         };
-        layoutChk(u"Barra de menús"_s,        u"layout:menu-bar"_s,      showMenuBar);
-        layoutChk(u"Panel de detalles"_s,     u"layout:details-panel"_s, showDetails);
-        layoutChk(u"Panel de vista previa"_s, u"layout:preview"_s,       showPreview);
-        layoutChk(u"Panel de navegación"_s,   u"layout:sidebar"_s,       showSidebar);
+        layoutChk(tr_(u"Barra de menús"_s),        u"layout:menu-bar"_s,      showMenuBar);
+        layoutChk(tr_(u"Panel de detalles"_s),     u"layout:details-panel"_s, showDetails);
+        layoutChk(tr_(u"Panel de vista previa"_s), u"layout:preview"_s,       showPreview);
+        layoutChk(tr_(u"Panel de navegación"_s),   u"layout:sidebar"_s,       showSidebar);
         layoutMenu->addSeparator();
-        layoutChk(u"Barra de estado"_s,       u"layout:status-bar"_s,    showStatusBar);
+        layoutChk(tr_(u"Barra de estado"_s),       u"layout:status-bar"_s,    showStatusBar);
         layoutMenu->addSeparator();
-        layoutChk(u"Miniaturas de archivos"_s, u"layout:content-previews"_s, showContentPreviews);
+        layoutChk(tr_(u"Miniaturas de archivos"_s), u"layout:content-previews"_s, showContentPreviews);
 
         menu.addSeparator();
-        QAction *ref = menu.addAction(ti(u"view-refresh"_s), u"Actualizar"_s,
+        QAction *ref = menu.addAction(ti(u"view-refresh"_s), tr_(u"Actualizar"_s),
                                       [&result]{ result = u"refresh"_s; });
         ref->setShortcut(QKeySequence(Qt::Key_F5));
         ref->setShortcutVisibleInContextMenu(true);
 
     } else if (name == u"herramientas"_s) {
-        act(u"Conectar a unidad de red…"_s,     u"connect-drive"_s,    ti(u"network-connect"_s));
-        act(u"Desconectar de unidad de red…"_s, u"disconnect-drive"_s, ti(u"network-disconnect"_s));
+        act(tr_(u"Conectar a unidad de red…"_s),     u"connect-drive"_s,    ti(u"network-connect"_s));
+        act(tr_(u"Desconectar de unidad de red…"_s), u"disconnect-drive"_s, ti(u"network-disconnect"_s));
         menu.addSeparator();
-        act(u"Abrir símbolo del sistema"_s, u"terminal"_s, ti(u"utilities-terminal"_s));
+        act(tr_(u"Abrir símbolo del sistema"_s), u"terminal"_s, ti(u"utilities-terminal"_s));
         menu.addSeparator();
-        checkAct(&menu, u"Mover a papelera al eliminar"_s, u"toggle:trash"_s, deleteToTrash);
+        checkAct(&menu, tr_(u"Mover a papelera al eliminar"_s), u"toggle:trash"_s, deleteToTrash);
         menu.addSeparator();
-        QMenu *themeMenu = menu.addMenu(u"Tema"_s);
-        checkAct(themeMenu, u"Glass (predeterminado)"_s, u"theme:glass"_s, themeName == u"glass"_s);
-        checkAct(themeMenu, u"Plano"_s,                  u"theme:flat"_s,  themeName == u"flat"_s);
-        checkAct(themeMenu, u"Oscuro"_s,                 u"theme:dark"_s,  themeName == u"dark"_s);
-        checkAct(themeMenu, u"Cálido"_s,                 u"theme:warm"_s,  themeName == u"warm"_s);
-        checkAct(themeMenu, u"Neón"_s,                   u"theme:neon"_s,  themeName == u"neon"_s);
+        QMenu *themeMenu = menu.addMenu(tr_(u"Tema"_s));
+        checkAct(themeMenu, tr_(u"Glass (predeterminado)"_s), u"theme:glass"_s, themeName == u"glass"_s);
+        checkAct(themeMenu, tr_(u"Plano"_s),                  u"theme:flat"_s,  themeName == u"flat"_s);
+        checkAct(themeMenu, tr_(u"Oscuro"_s),                 u"theme:dark"_s,  themeName == u"dark"_s);
+        checkAct(themeMenu, tr_(u"Cálido"_s),                 u"theme:warm"_s,  themeName == u"warm"_s);
+        checkAct(themeMenu, tr_(u"Neón"_s),                   u"theme:neon"_s,  themeName == u"neon"_s);
+
+        QMenu *langMenu = menu.addMenu(tr_(u"Elegir idioma"_s));
+        checkAct(langMenu, tr_(u"Español"_s), u"language:es"_s, language == u"es"_s);
+        checkAct(langMenu, tr_(u"Inglés"_s),  u"language:en"_s, language == u"en"_s);
+
         menu.addSeparator();
-        act(u"Opciones de carpeta…"_s, u"folder-options"_s);
+        act(tr_(u"Opciones de carpeta…"_s), u"folder-options"_s);
 
     } else if (name == u"ayuda"_s) {
-        QAction *helpAct = act(u"Ver ayuda"_s, u"help"_s, ti(u"help-contents"_s),
+        QAction *helpAct = act(tr_(u"Ver ayuda"_s), u"help"_s, ti(u"help-contents"_s),
                                QKeySequence(Qt::Key_F1));
         helpAct->setShortcutVisibleInContextMenu(true);
         menu.addSeparator();
-        act(u"Acerca de Win7 Explorer"_s, u"about"_s, ti(u"help-about"_s));
+        act(tr_(u"Acerca de Win7 Explorer"_s), u"about"_s, ti(u"help-about"_s));
     }
 
     menu.exec(QCursor::pos());
@@ -575,14 +582,14 @@ QString NativeMenu::showViewDropdown(const QString &currentMode)
     QString result;
 
     const QList<QPair<QString,QString>> modes = {
-        { u"Iconos muy grandes"_s, u"xlarge"_s  },
-        { u"Iconos grandes"_s,     u"large"_s   },
-        { u"Iconos medianos"_s,    u"medium"_s  },
-        { u"Iconos pequeños"_s,    u"small"_s   },
-        { u"Lista"_s,              u"list"_s    },
-        { u"Detalles"_s,           u"details"_s },
-        { u"Mosaicos"_s,           u"tiles"_s   },
-        { u"Contenido"_s,          u"content"_s },
+        { tr_(u"Iconos muy grandes"_s), u"xlarge"_s  },
+        { tr_(u"Iconos grandes"_s),     u"large"_s   },
+        { tr_(u"Iconos medianos"_s),    u"medium"_s  },
+        { tr_(u"Iconos pequeños"_s),    u"small"_s   },
+        { tr_(u"Lista"_s),              u"list"_s    },
+        { tr_(u"Detalles"_s),           u"details"_s },
+        { tr_(u"Mosaicos"_s),           u"tiles"_s   },
+        { tr_(u"Contenido"_s),          u"content"_s },
     };
 
     QActionGroup *group = new QActionGroup(&menu);
@@ -606,9 +613,9 @@ int NativeMenu::showDetailsPanelSizeMenu()
     QMenu menu;
     int result = -1;
 
-    menu.addAction(u"Pequeño"_s, [&result]{ result = 56;  });
-    menu.addAction(u"Mediano"_s, [&result]{ result = 80;  });
-    menu.addAction(u"Grande"_s,  [&result]{ result = 110; });
+    menu.addAction(tr_(u"Pequeño"_s), [&result]{ result = 56;  });
+    menu.addAction(tr_(u"Mediano"_s), [&result]{ result = 80;  });
+    menu.addAction(tr_(u"Grande"_s),  [&result]{ result = 110; });
 
     menu.exec(QCursor::pos());
     return result;
@@ -623,7 +630,7 @@ QString NativeMenu::showFilterMenu(const QString &column,
     QMenu menu;
     QString result;
 
-    menu.addAction(ti(u"edit-select-all"_s), u"Seleccionar todo"_s,
+    menu.addAction(ti(u"edit-select-all"_s), tr_(u"Seleccionar todo"_s),
                    [&result]{ result = u"clear"_s; });
     menu.addSeparator();
 

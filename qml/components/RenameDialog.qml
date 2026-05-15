@@ -9,7 +9,7 @@ Dialog {
 
     signal renameConfirmed(string oldPath, string newName)
 
-    title:  "Cambiar nombre"
+    title:  (i18n.lang, i18n.t("Cambiar nombre"))
     modal:  true
     standardButtons: Dialog.Ok | Dialog.Cancel
     width:  360
@@ -19,7 +19,7 @@ Dialog {
         spacing: 8
 
         Label {
-            text: "Nuevo nombre:"
+            text: (i18n.lang, i18n.t("Nuevo nombre:"))
             font.pixelSize: 12
             color: root.pal ? root.pal.text : "#000"
         }

@@ -6,7 +6,7 @@ Window {
     id: root
     property var pal
 
-    title:    "Conectar a unidad de red"
+    title:    (i18n.lang, i18n.t("Conectar a unidad de red"))
     width:    440
     height:   160
     modality: Qt.ApplicationModal
@@ -33,7 +33,7 @@ Window {
             spacing:         8
 
             Label {
-                text:           "Dirección del servidor:"
+                text:           (i18n.lang, i18n.t("Dirección del servidor:"))
                 font.pixelSize: 11
                 color:          root.pal ? root.pal.text : "#000"
             }
@@ -52,7 +52,7 @@ Window {
             }
 
             Label {
-                text:           "Protocolos: smb:// · sftp:// · ftp:// · dav:// · nfs://"
+                text:           (i18n.lang, i18n.t("Protocolos: smb:// · sftp:// · ftp:// · dav:// · nfs://"))
                 font.pixelSize: 10
                 color:          root.pal ? root.pal.muted : "#888"
             }
@@ -65,7 +65,7 @@ Window {
 
                 Button {
                     id:        connectButton
-                    text:      "Conectar"
+                    text:      (i18n.lang, i18n.t("Conectar"))
 
                     enabled:   uriField.text.indexOf("://") !== -1
                     onClicked: {
@@ -75,7 +75,7 @@ Window {
                 }
 
                 Button {
-                    text:      "Cancelar"
+                    text:      (i18n.lang, i18n.t("Cancelar"))
                     onClicked: root.close()
                 }
             }

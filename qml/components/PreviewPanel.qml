@@ -39,7 +39,7 @@ Rectangle {
                 }
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Selecciona un archivo\npara previsualizar"
+                    text: (i18n.lang, i18n.t("Selecciona un archivo\npara previsualizar"))
                     color: root.pal.muted; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 12
                 }
             }
@@ -74,11 +74,12 @@ Rectangle {
             Repeater {
                 model: {
                     var it = root.previewItem; if (!it) return []
+                    var _l = i18n.lang
                     var rows = []
-                    if (it.modified) rows.push({ lbl: "Modificado", val: it.modified })
-                    if (it.size)     rows.push({ lbl: "Tamaño",     val: it.size })
-                    if (it.dim)      rows.push({ lbl: "Dimensiones",val: it.dim })
-                    if (it.duration) rows.push({ lbl: "Duración",   val: it.duration })
+                    if (it.modified) rows.push({ lbl: i18n.t("Modificado"), val: it.modified })
+                    if (it.size)     rows.push({ lbl: i18n.t("Tamaño"),     val: it.size })
+                    if (it.dim)      rows.push({ lbl: i18n.t("Dimensiones"),val: it.dim })
+                    if (it.duration) rows.push({ lbl: i18n.t("Duración"),   val: it.duration })
                     return rows
                 }
                 delegate: RowLayout {

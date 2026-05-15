@@ -38,27 +38,27 @@ Rectangle {
 
         Repeater {
             model: [
-                { label: "Organizar",             chevron: true, always: true, visFor: null,
+                { label: (i18n.lang, i18n.t("Organizar")),             chevron: true, always: true, visFor: null,
                   action: function(){ root.organizeClicked() } },
                 { sep: true, visFor: null },
-                { label: "Incluir en biblioteca", chevron: true, visFor: ["folder","drive"],
+                { label: (i18n.lang, i18n.t("Incluir en biblioteca")), chevron: true, visFor: ["folder","drive"],
                   action: function(){ root.libraryClicked() } },
-                { label: "Abrir",                 chevron: true, visFor: ["document","generic"],
+                { label: (i18n.lang, i18n.t("Abrir")),                 chevron: true, visFor: ["document","generic"],
                   action: function(){ root.openClicked() } },
-                { label: "Compartir con",         visFor: ["folder","drive","document","generic"],
+                { label: (i18n.lang, i18n.t("Compartir con")),         visFor: ["folder","drive","document","generic"],
                   action: function(){ root.shareClicked() } },
-                { label: "Presentación",          visFor: ["image"],
+                { label: (i18n.lang, i18n.t("Presentación")),          visFor: ["image"],
                   action: function(){ root.slideShowClicked() } },
-                { label: "Reproducir",            visFor: ["audio","video"],
+                { label: (i18n.lang, i18n.t("Reproducir")),            visFor: ["audio","video"],
                   action: function(){ root.playClicked() } },
-                { label: "Imprimir",              visFor: ["image","document"],
+                { label: (i18n.lang, i18n.t("Imprimir")),              visFor: ["image","document"],
                   action: function(){ root.printClicked() } },
-                { label: "Correo",                visFor: ["image","audio","video","document","generic"],
+                { label: (i18n.lang, i18n.t("Correo")),                visFor: ["image","audio","video","document","generic"],
                   action: function(){ root.emailClicked() } },
-                { label: "Eliminar",              visFor: ["folder","drive","image","audio","video","document","generic"],
+                { label: (i18n.lang, i18n.t("Eliminar")),              visFor: ["folder","drive","image","audio","video","document","generic"],
                   action: function(){ root.deleteRequested() } },
                 { sep: true, visFor: null },
-                { label: "Nueva carpeta",         always: true, visFor: null,
+                { label: (i18n.lang, i18n.t("Nueva carpeta")),         always: true, visFor: null,
                   action: function(){ root.newFolderRequested() } }
             ]
             delegate: Loader {

@@ -112,143 +112,143 @@ Menu {
 
     // ── File / folder selected ────────────────────────────────────────────
     W7Item {
-        text: "Abrir"
+        text: (i18n.lang, i18n.t("Abrir"))
         enabled: root.targetItem !== null
         visible: !root.isEmpty
         onTriggered: root.openRequested(root.targetItem)
     }
     W7Item {
-        text: "Abrir en nueva ventana"
+        text: (i18n.lang, i18n.t("Abrir en nueva ventana"))
         enabled: root.isFolder; visible: root.isFolder
         onTriggered: {}
     }
 
     W7Menu {
-        title: "Incluir en biblioteca"
+        title: (i18n.lang, i18n.t("Incluir en biblioteca"))
         visible: root.isFolder; enabled: root.isFolder
-        W7Item { text: "Documentos" }
-        W7Item { text: "Imágenes" }
-        W7Item { text: "Música" }
-        W7Item { text: "Vídeos" }
+        W7Item { text: (i18n.lang, i18n.t("Documentos")) }
+        W7Item { text: (i18n.lang, i18n.t("Imágenes")) }
+        W7Item { text: (i18n.lang, i18n.t("Música")) }
+        W7Item { text: (i18n.lang, i18n.t("Vídeos")) }
         W7Sep {}
-        W7Item { text: "Nueva biblioteca…" }
+        W7Item { text: (i18n.lang, i18n.t("Nueva biblioteca…")) }
     }
 
     W7Menu {
-        title: "Abrir con"
+        title: (i18n.lang, i18n.t("Abrir con"))
         visible: root.isFile; enabled: root.isFile
-        W7Item { text: "Aplicación predeterminada"; onTriggered: {} }
+        W7Item { text: (i18n.lang, i18n.t("Aplicación predeterminada")); onTriggered: {} }
         W7Sep {}
-        W7Item { text: "Otra aplicación…"; onTriggered: {} }
+        W7Item { text: (i18n.lang, i18n.t("Otra aplicación…")); onTriggered: {} }
     }
 
     W7Sep { visible: !root.isEmpty }
 
     W7Menu {
-        title: "Enviar a"
+        title: (i18n.lang, i18n.t("Enviar a"))
         visible: !root.isEmpty; enabled: !root.isEmpty
-        W7Item { text: "Escritorio (crear acceso directo)" }
-        W7Item { text: "Destinatario de correo" }
-        W7Item { text: "Documentos" }
+        W7Item { text: (i18n.lang, i18n.t("Escritorio (crear acceso directo)")) }
+        W7Item { text: (i18n.lang, i18n.t("Destinatario de correo")) }
+        W7Item { text: (i18n.lang, i18n.t("Documentos")) }
     }
 
-    W7Item { text: "Cortar";  enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.cutRequested() }
-    W7Item { text: "Copiar";  enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.copyRequested() }
-    W7Item { text: "Pegar";   visible: !root.isEmpty;                             onTriggered: root.pasteRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Cortar"));  enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.cutRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Copiar"));  enabled: root.hasSelection; visible: !root.isEmpty; onTriggered: root.copyRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Pegar"));   visible: !root.isEmpty;                             onTriggered: root.pasteRequested() }
 
     W7Sep { visible: !root.isEmpty }
 
     W7Item {
-        text: "Agregar a Favoritos"
+        text: (i18n.lang, i18n.t("Agregar a Favoritos"))
         enabled: root.isFolder; visible: root.isFolder
         onTriggered: root.addToFavoritesRequested()
     }
     W7Menu {
-        title: "Compartir con"
+        title: (i18n.lang, i18n.t("Compartir con"))
         visible: root.isFolder; enabled: root.isFolder
-        W7Item { text: "Grupo en el hogar (Ver y modificar)" }
-        W7Item { text: "Grupo en el hogar (Ver)" }
-        W7Item { text: "Usuarios específicos…" }
+        W7Item { text: (i18n.lang, i18n.t("Grupo en el hogar (Ver y modificar)")) }
+        W7Item { text: (i18n.lang, i18n.t("Grupo en el hogar (Ver)")) }
+        W7Item { text: (i18n.lang, i18n.t("Usuarios específicos…")) }
         W7Sep {}
-        W7Item { text: "Sin conexión disponible"; enabled: false }
+        W7Item { text: (i18n.lang, i18n.t("Sin conexión disponible")); enabled: false }
     }
     W7Item {
-        text: "Personalizar esta carpeta…"
+        text: (i18n.lang, i18n.t("Personalizar esta carpeta…"))
         visible: root.isFolder; enabled: root.isFolder
         onTriggered: {}
     }
     W7Item {
-        text: "Crear acceso directo"
+        text: (i18n.lang, i18n.t("Crear acceso directo"))
         enabled: root.targetItem !== null; visible: !root.isEmpty
         onTriggered: root.shortcutRequested()
     }
     W7Item {
-        text: "Eliminar"
+        text: (i18n.lang, i18n.t("Eliminar"))
         enabled: root.hasSelection; visible: !root.isEmpty
         onTriggered: root.deleteRequested()
     }
     W7Item {
-        text: "Cambiar nombre"
+        text: (i18n.lang, i18n.t("Cambiar nombre"))
         enabled: root.targetItem !== null; visible: !root.isEmpty
         onTriggered: root.renameRequested()
     }
 
     W7Sep { visible: !root.isEmpty }
     W7Item {
-        text: "Propiedades"
+        text: (i18n.lang, i18n.t("Propiedades"))
         enabled: root.targetItem !== null; visible: !root.isEmpty
         onTriggered: root.propertiesRequested()
     }
 
     // ── Empty area ─────────────────────────────────────────────────────────
     W7Menu {
-        title: "Ver"
+        title: (i18n.lang, i18n.t("Ver"))
         visible: root.isEmpty; enabled: root.isEmpty
-        W7Item { text: "Iconos muy grandes"; checkable: true; checked: root.viewMode==="xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
-        W7Item { text: "Iconos grandes";     checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
-        W7Item { text: "Iconos medianos";    checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
-        W7Item { text: "Iconos pequeños";    checkable: true; checked: root.viewMode==="small";   onTriggered: root.viewModeChangeRequested("small") }
-        W7Item { text: "Lista";              checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
-        W7Item { text: "Detalles";           checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
-        W7Item { text: "Mosaicos";           checkable: true; checked: root.viewMode==="tiles";   onTriggered: root.viewModeChangeRequested("tiles") }
-        W7Item { text: "Contenido";          checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
+        W7Item { text: (i18n.lang, i18n.t("Iconos muy grandes")); checkable: true; checked: root.viewMode==="xlarge";  onTriggered: root.viewModeChangeRequested("xlarge") }
+        W7Item { text: (i18n.lang, i18n.t("Iconos grandes"));     checkable: true; checked: root.viewMode==="large";   onTriggered: root.viewModeChangeRequested("large") }
+        W7Item { text: (i18n.lang, i18n.t("Iconos medianos"));    checkable: true; checked: root.viewMode==="medium";  onTriggered: root.viewModeChangeRequested("medium") }
+        W7Item { text: (i18n.lang, i18n.t("Iconos pequeños"));    checkable: true; checked: root.viewMode==="small";   onTriggered: root.viewModeChangeRequested("small") }
+        W7Item { text: (i18n.lang, i18n.t("Lista"));              checkable: true; checked: root.viewMode==="list";    onTriggered: root.viewModeChangeRequested("list") }
+        W7Item { text: (i18n.lang, i18n.t("Detalles"));           checkable: true; checked: root.viewMode==="details"; onTriggered: root.viewModeChangeRequested("details") }
+        W7Item { text: (i18n.lang, i18n.t("Mosaicos"));           checkable: true; checked: root.viewMode==="tiles";   onTriggered: root.viewModeChangeRequested("tiles") }
+        W7Item { text: (i18n.lang, i18n.t("Contenido"));          checkable: true; checked: root.viewMode==="content"; onTriggered: root.viewModeChangeRequested("content") }
     }
 
     W7Menu {
-        title: "Ordenar por"
+        title: (i18n.lang, i18n.t("Ordenar por"))
         visible: root.isEmpty; enabled: root.isEmpty
-        W7Item { text: "Nombre";                checkable: true; checked: root.sortBy==="name";     onTriggered: root.sortRequested("name") }
-        W7Item { text: "Fecha de modificación"; checkable: true; checked: root.sortBy==="modified"; onTriggered: root.sortRequested("modified") }
-        W7Item { text: "Tipo";                  checkable: true; checked: root.sortBy==="type";     onTriggered: root.sortRequested("type") }
-        W7Item { text: "Tamaño";                checkable: true; checked: root.sortBy==="size";     onTriggered: root.sortRequested("size") }
+        W7Item { text: (i18n.lang, i18n.t("Nombre"));                checkable: true; checked: root.sortBy==="name";     onTriggered: root.sortRequested("name") }
+        W7Item { text: (i18n.lang, i18n.t("Fecha de modificación")); checkable: true; checked: root.sortBy==="modified"; onTriggered: root.sortRequested("modified") }
+        W7Item { text: (i18n.lang, i18n.t("Tipo"));                  checkable: true; checked: root.sortBy==="type";     onTriggered: root.sortRequested("type") }
+        W7Item { text: (i18n.lang, i18n.t("Tamaño"));                checkable: true; checked: root.sortBy==="size";     onTriggered: root.sortRequested("size") }
         W7Sep {}
-        W7Item { text: "Ascendente";  checkable: true; checked: root.sortDir==="asc";  onTriggered: root.sortDirRequested("asc") }
-        W7Item { text: "Descendente"; checkable: true; checked: root.sortDir==="desc"; onTriggered: root.sortDirRequested("desc") }
+        W7Item { text: (i18n.lang, i18n.t("Ascendente"));  checkable: true; checked: root.sortDir==="asc";  onTriggered: root.sortDirRequested("asc") }
+        W7Item { text: (i18n.lang, i18n.t("Descendente")); checkable: true; checked: root.sortDir==="desc"; onTriggered: root.sortDirRequested("desc") }
     }
 
     W7Menu {
-        title: "Agrupar por"
+        title: (i18n.lang, i18n.t("Agrupar por"))
         visible: root.isEmpty; enabled: root.isEmpty
-        W7Item { text: "(Ninguno)";             checkable: true; checked: root.groupBy==="none";     onTriggered: root.groupRequested("none") }
+        W7Item { text: (i18n.lang, i18n.t("(Ninguno)"));             checkable: true; checked: root.groupBy==="none";     onTriggered: root.groupRequested("none") }
         W7Sep {}
-        W7Item { text: "Nombre";                checkable: true; checked: root.groupBy==="name";     onTriggered: root.groupRequested("name") }
-        W7Item { text: "Fecha de modificación"; checkable: true; checked: root.groupBy==="modified"; onTriggered: root.groupRequested("modified") }
-        W7Item { text: "Tipo";                  checkable: true; checked: root.groupBy==="type";     onTriggered: root.groupRequested("type") }
-        W7Item { text: "Tamaño";                checkable: true; checked: root.groupBy==="size";     onTriggered: root.groupRequested("size") }
+        W7Item { text: (i18n.lang, i18n.t("Nombre"));                checkable: true; checked: root.groupBy==="name";     onTriggered: root.groupRequested("name") }
+        W7Item { text: (i18n.lang, i18n.t("Fecha de modificación")); checkable: true; checked: root.groupBy==="modified"; onTriggered: root.groupRequested("modified") }
+        W7Item { text: (i18n.lang, i18n.t("Tipo"));                  checkable: true; checked: root.groupBy==="type";     onTriggered: root.groupRequested("type") }
+        W7Item { text: (i18n.lang, i18n.t("Tamaño"));                checkable: true; checked: root.groupBy==="size";     onTriggered: root.groupRequested("size") }
     }
 
-    W7Item { text: "Actualizar"; visible: root.isEmpty; onTriggered: root.refreshRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Actualizar")); visible: root.isEmpty; onTriggered: root.refreshRequested() }
 
     W7Sep { visible: root.isEmpty }
-    W7Item { text: "Pegar";                visible: root.isEmpty; onTriggered: root.pasteRequested() }
-    W7Item { text: "Pegar acceso directo"; visible: root.isEmpty; onTriggered: {} }
+    W7Item { text: (i18n.lang, i18n.t("Pegar"));                visible: root.isEmpty; onTriggered: root.pasteRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Pegar acceso directo")); visible: root.isEmpty; onTriggered: {} }
     W7Sep { visible: root.isEmpty }
     W7Menu {
-        title: "Nuevo"
+        title: (i18n.lang, i18n.t("Nuevo"))
         visible: root.isEmpty; enabled: root.isEmpty
-        W7Item { text: "Carpeta";        onTriggered: root.newFolderRequested() }
-        W7Item { text: "Acceso directo"; onTriggered: {} }
+        W7Item { text: (i18n.lang, i18n.t("Carpeta"));        onTriggered: root.newFolderRequested() }
+        W7Item { text: (i18n.lang, i18n.t("Acceso directo")); onTriggered: {} }
     }
     W7Sep { visible: root.isEmpty }
-    W7Item { text: "Propiedades"; visible: root.isEmpty; onTriggered: root.refreshRequested() }
+    W7Item { text: (i18n.lang, i18n.t("Propiedades")); visible: root.isEmpty; onTriggered: root.refreshRequested() }
 }
