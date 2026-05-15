@@ -17,6 +17,9 @@ class FileSystemBackend : public QObject
 {
     Q_OBJECT
 
+public:
+    static FileSystemBackend *instance() { return s_instance; }
+
     // Current directory being viewed
     Q_PROPERTY(QString currentPath READ currentPath WRITE setCurrentPath NOTIFY currentPathChanged)
 
@@ -156,6 +159,8 @@ private:
     bool m_showHiddenFiles   = false;
 
     QFileSystemWatcher *m_mountWatcher = nullptr;
+
+    static FileSystemBackend *s_instance;
 };
 
 #endif // FILESYSTEMBACKEND_H

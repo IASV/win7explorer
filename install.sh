@@ -54,6 +54,10 @@ echo "    Built: $BINARY"
 # ── Install binary ─────────────────────────────────────────────────────────────
 echo "==> Installing binary to $INSTALLED_BIN ..."
 sudo install -Dm755 "$BINARY" "$INSTALLED_BIN"
+# Strip debug/symbol tables to shrink the installed binary (faster cold-load)
+if command -v strip &>/dev/null; then
+    sudo strip --strip-unneeded "$INSTALLED_BIN" 2>/dev/null || true
+fi
 
 # ── Write .desktop with the exact installed path ──────────────────────────────
 echo "==> Writing desktop file to $DESKTOP_DEST ..."

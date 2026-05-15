@@ -7,7 +7,7 @@ Window {
     property var  pal
     property bool showHiddenFiles: false
 
-    title:         (i18n.lang, i18n.t("Opciones de carpeta"))
+    title:         (I18n.lang, I18n.t("Opciones de carpeta"))
     width:         380
     height:        200
     minimumWidth:  320
@@ -35,7 +35,7 @@ Window {
             spacing:         6
 
             Label {
-                text:           (i18n.lang, i18n.t("General"))
+                text:           (I18n.lang, I18n.t("General"))
                 font.pixelSize: 11
                 font.bold:      true
                 color:          root.pal ? root.pal.text : "#000"
@@ -49,18 +49,18 @@ Window {
 
             CheckBox {
                 id:             showHiddenCheckbox
-                text:           (i18n.lang, i18n.t("Mostrar archivos y carpetas ocultos"))
+                text:           (I18n.lang, I18n.t("Mostrar archivos y carpetas ocultos"))
                 font.pixelSize: 11
                 checked:        root.showHiddenFiles
             }
 
             CheckBox {
-                text:           (i18n.lang, i18n.t("Mostrar archivos del sistema operativo"))
+                text:           (I18n.lang, I18n.t("Mostrar archivos del sistema operativo"))
                 font.pixelSize: 11
                 enabled:        false
                 opacity:        0.5
                 ToolTip.visible: hovered
-                ToolTip.text:    (i18n.lang, i18n.t("Próximamente"))
+                ToolTip.text:    (I18n.lang, I18n.t("Próximamente"))
             }
 
             Item { Layout.fillHeight: true }
@@ -78,7 +78,7 @@ Window {
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text:      (i18n.lang, i18n.t("Aceptar"))
+                    text:      (I18n.lang, I18n.t("Aceptar"))
 
                     onClicked: {
                         root.optionsChanged(showHiddenCheckbox.checked)
@@ -87,7 +87,7 @@ Window {
                 }
 
                 Button {
-                    text:      (i18n.lang, i18n.t("Cancelar"))
+                    text:      (I18n.lang, I18n.t("Cancelar"))
                     onClicked: root.close()
                 }
             }

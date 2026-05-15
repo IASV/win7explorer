@@ -38,9 +38,12 @@ static bool copyDirRecursively(const QString &src, const QString &dst)
     return true;
 }
 
+FileSystemBackend *FileSystemBackend::s_instance = nullptr;
+
 FileSystemBackend::FileSystemBackend(QObject *parent)
     : QObject(parent)
 {
+    s_instance = this;
     m_currentPath = QDir::homePath();
     // Defer first directory scan so the window can render its first frame
     // before any filesystem I/O blocks the main thread.

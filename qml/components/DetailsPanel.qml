@@ -32,7 +32,7 @@ Rectangle {
         interval: 150
         onTriggered: {
             if (root.detailItem && root.detailItem.id && root.detailItem.id.startsWith('/'))
-                root.fileMetadata = fsBackend.getFileMetadata(root.detailItem.id)
+                root.fileMetadata = FsBackend.getFileMetadata(root.detailItem.id)
             else
                 root.fileMetadata = {}
         }
@@ -45,7 +45,7 @@ Rectangle {
         propagateComposedEvents: true
         onClicked: function(mouse) {
             if (mouse.button === Qt.RightButton) {
-                var h = nativeMenu.showDetailsPanelSizeMenu()
+                var h = NativeMenu.showDetailsPanelSizeMenu()
                 if (h > 0) root.panelHeight = h
             }
         }
@@ -76,9 +76,9 @@ Rectangle {
         }
         Rectangle { Layout.preferredWidth: 1; Layout.fillHeight: true; color: pal.border; opacity: 0.5 }
         ColumnLayout { Layout.fillWidth: true; spacing: 3
-            Label { text: (i18n.lang, root.systemInfo ? (i18n.t("Memoria: ") + root.systemInfo.ramFormatted) : "")
+            Label { text: (I18n.lang, root.systemInfo ? (I18n.t("Memoria: ") + root.systemInfo.ramFormatted) : "")
                     color: pal.muted; font.pixelSize: 11 }
-            Label { text: (i18n.lang, root.systemInfo ? (i18n.t("Procesador: ") + root.systemInfo.cpuModel) : "")
+            Label { text: (I18n.lang, root.systemInfo ? (I18n.t("Procesador: ") + root.systemInfo.cpuModel) : "")
                     color: pal.muted; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
         }
     }
@@ -100,7 +100,7 @@ Rectangle {
         ColumnLayout { Layout.fillWidth: true; spacing: 3
             Label { text: root.currentFolderName; color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
-            Label { text: (i18n.lang, root.currentItemCount + " " + (root.currentItemCount === 1 ? i18n.t("elemento") : i18n.t("elementos")))
+            Label { text: (I18n.lang, root.currentItemCount + " " + (root.currentItemCount === 1 ? I18n.t("elemento") : I18n.t("elementos")))
                     color: pal.muted; font.pixelSize: 11 }
         }
     }
@@ -134,7 +134,7 @@ Rectangle {
                     color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             Label { visible: root.totalSelectedSize !== ""
-                    text: (i18n.lang, i18n.t("Tamaño: ")) + root.totalSelectedSize
+                    text: (I18n.lang, I18n.t("Tamaño: ")) + root.totalSelectedSize
                     color: pal.muted; font.pixelSize: 11 }
         }
     }
@@ -158,12 +158,12 @@ Rectangle {
                     color: pal.text; font.pixelSize: 13
                     elide: Text.ElideRight; Layout.fillWidth: true }
             RowLayout { spacing: 20
-                Label { text: (i18n.lang, i18n.t("Espacio disponible: ")) + (root.detailItem ? (root.detailItem.free || 0).toFixed(1) : "0") + " GB"
+                Label { text: (I18n.lang, I18n.t("Espacio disponible: ")) + (root.detailItem ? (root.detailItem.free || 0).toFixed(1) : "0") + " GB"
                         color: pal.muted; font.pixelSize: 11 }
-                Label { text: (i18n.lang, i18n.t("Total: ")) + (root.detailItem ? (root.detailItem.total || 0).toFixed(1) : "0") + " GB"
+                Label { text: (I18n.lang, I18n.t("Total: ")) + (root.detailItem ? (root.detailItem.total || 0).toFixed(1) : "0") + " GB"
                         color: pal.muted; font.pixelSize: 11 }
                 Label { visible: root.detailItem && !!root.detailItem.typeStr
-                        text: (i18n.lang, i18n.t("Sistema de archivos: ")) + (root.detailItem ? root.detailItem.typeStr : "")
+                        text: (I18n.lang, I18n.t("Sistema de archivos: ")) + (root.detailItem ? root.detailItem.typeStr : "")
                         color: pal.muted; font.pixelSize: 11 }
             }
         }
@@ -265,7 +265,7 @@ Rectangle {
                 Label { visible: (root.fileMetadata.dimensions || "") !== ""
                         text: root.fileMetadata.dimensions || ""; color: pal.muted; font.pixelSize: 11 }
                 Label { visible: (root.fileMetadata.duration || "") !== ""
-                        text: (i18n.lang, i18n.t("Duración: ")) + (root.fileMetadata.duration || ""); color: pal.muted; font.pixelSize: 11 }
+                        text: (I18n.lang, I18n.t("Duración: ")) + (root.fileMetadata.duration || ""); color: pal.muted; font.pixelSize: 11 }
                 Label { visible: root.detailItem && !!root.detailItem.size
                         text: root.detailItem ? (root.detailItem.size || "") : ""; color: pal.muted; font.pixelSize: 11 }
             }
@@ -298,7 +298,7 @@ Rectangle {
                 Label { visible: root.detailItem && !!root.detailItem.size
                         text: root.detailItem ? (root.detailItem.size || "") : ""; color: pal.muted; font.pixelSize: 11 }
                 Label { visible: root.detailItem && !!root.detailItem.modified
-                        text: (i18n.lang, root.detailItem ? (i18n.t("Modificado: ") + (root.detailItem.modified || "")) : "")
+                        text: (I18n.lang, root.detailItem ? (I18n.t("Modificado: ") + (root.detailItem.modified || "")) : "")
                         color: pal.muted; font.pixelSize: 11 }
             }
         }

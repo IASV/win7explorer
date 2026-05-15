@@ -34,16 +34,15 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    // Expose real filesystem backend to QML
     FileSystemBackend *fsBackend = new FileSystemBackend(&app);
-    engine.rootContext()->setContextProperty("fsBackend", fsBackend);
+    engine.rootContext()->setContextProperty("FsBackend", fsBackend);
 
     I18n *i18n = new I18n(&app);
-    engine.rootContext()->setContextProperty("i18n", i18n);
+    engine.rootContext()->setContextProperty("I18n", i18n);
 
     NativeMenu *nativeMenu = new NativeMenu(&app);
     nativeMenu->setI18n(i18n);
-    engine.rootContext()->setContextProperty("nativeMenu", nativeMenu);
+    engine.rootContext()->setContextProperty("NativeMenu", nativeMenu);
 
     // Register custom icon provider
     engine.addImageProvider("fileicons", new IconProvider);

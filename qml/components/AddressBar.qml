@@ -242,9 +242,9 @@ Rectangle {
                                         var parts = p.split("/").filter(function(x){ return x !== "" })
                                         if (parts.length > 0) parts.pop()
                                         var parentPath = parts.length > 0 ? "/" + parts.join("/") : "/"
-                                        segRow.siblings = fsBackend.getSubdirectories(parentPath)
+                                        segRow.siblings = FsBackend.getSubdirectories(parentPath)
                                     }
-                                    var chosen = nativeMenu.showSiblingsMenu(segRow.siblings)
+                                    var chosen = NativeMenu.showSiblingsMenu(segRow.siblings)
                                     if (chosen) root.segmentClicked(chosen)
                                 }
                             }
@@ -265,7 +265,7 @@ Rectangle {
             TextField {
                 id: searchFld
                 anchors.fill: parent; anchors.rightMargin: 26
-                placeholderText: (i18n.lang, root.currentFolderName ? i18n.t("Buscar en ") + root.currentFolderName : i18n.t("Buscar"))
+                placeholderText: (I18n.lang, root.currentFolderName ? I18n.t("Buscar en ") + root.currentFolderName : I18n.t("Buscar"))
                 background: Item {}
                 color: root.pal.text; font.pixelSize: 12; leftPadding: 8
                 onTextChanged: root.searchChanged(text)

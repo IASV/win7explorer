@@ -22,11 +22,11 @@ Rectangle {
 
         Repeater {
             model: [
-                { title: (i18n.lang, i18n.t("Archivo")),      sig: "archivo" },
-                { title: (i18n.lang, i18n.t("Edición")),      sig: "edicion" },
-                { title: (i18n.lang, i18n.t("Ver")),          sig: "ver" },
-                { title: (i18n.lang, i18n.t("Herramientas")), sig: "herramientas" },
-                { title: (i18n.lang, i18n.t("Ayuda")),        sig: "ayuda" }
+                { title: (I18n.lang, I18n.t("Archivo")),      sig: "archivo" },
+                { title: (I18n.lang, I18n.t("Edición")),      sig: "edicion" },
+                { title: (I18n.lang, I18n.t("Ver")),          sig: "ver" },
+                { title: (I18n.lang, I18n.t("Herramientas")), sig: "herramientas" },
+                { title: (I18n.lang, I18n.t("Ayuda")),        sig: "ayuda" }
             ]
             delegate: Rectangle {
                 implicitWidth:  mbLbl.implicitWidth + 16

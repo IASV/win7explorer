@@ -45,14 +45,14 @@ ApplicationWindow {
         }
     }
 
-    // Incremented every time fsBackend reports a device change, forcing
+    // Incremented every time FsBackend reports a device change, forcing
     // groupedItems (which calls plain functions) to re-evaluate.
     property int _devicesVersion: 0
 
     // ── Preferences ───────────────────────────────────────────────────────
     property bool deleteToTrash:   true
     property bool showHiddenFiles: false
-    onShowHiddenFilesChanged: fsBackend.showHiddenFiles = showHiddenFiles
+    onShowHiddenFilesChanged: FsBackend.showHiddenFiles = showHiddenFiles
 
     // ── Theme ──────────────────────────────────────────────────────────────
     property string themeName: "glass"
@@ -60,10 +60,10 @@ ApplicationWindow {
     color: pal.bg1
 
     title: {
-        var _l = i18n.lang
-        if (currentId === "libraries") return i18n.t("Bibliotecas — Win7 Explorer")
-        if (isRealPath && fsBackend.pathSegments.length > 0)
-            return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name + " — Win7 Explorer"
+        var _l = I18n.lang
+        if (currentId === "libraries") return I18n.t("Bibliotecas — Win7 Explorer")
+        if (isRealPath && FsBackend.pathSegments.length > 0)
+            return FsBackend.pathSegments[FsBackend.pathSegments.length - 1].name + " — Win7 Explorer"
         if (currentNode) return currentNode.name + " — Win7 Explorer"
         return "Win7 Explorer"
     }
@@ -78,30 +78,30 @@ ApplicationWindow {
 
     // ── Favorites ──────────────────────────────────────────────────────────
     property var favorites: [
-        { name: (i18n.lang, i18n.t("Escritorio")), path: fsBackend.desktopPath(),   icon: "folder-closed" },
-        { name: (i18n.lang, i18n.t("Descargas")),  path: fsBackend.downloadsPath(), icon: "folder-blue" }
+        { name: (I18n.lang, I18n.t("Escritorio")), path: FsBackend.desktopPath(),   icon: "folder-closed" },
+        { name: (I18n.lang, I18n.t("Descargas")),  path: FsBackend.downloadsPath(), icon: "folder-blue" }
     ]
     onFavoritesChanged: if (win._settingsReady) appSettings.favoritesJson = JSON.stringify(favorites)
 
     function addToFavorites(item) {
         if (!item || item.type !== "folder") return
         for (var i = 0; i < favorites.length; i++)
-            if (favorites[i].path === item.id) { showToast(i18n.t("Ya está en Favoritos")); return }
+            if (favorites[i].path === item.id) { showToast(I18n.t("Ya está en Favoritos")); return }
         var copy = favorites.slice()
         copy.push({ name: item.name, path: item.id, icon: "folder-closed" })
         favorites = copy
-        showToast("'" + item.name + "' " + i18n.t("agregado a Favoritos"))
+        showToast("'" + item.name + "' " + I18n.t("agregado a Favoritos"))
     }
 
     readonly property bool isRealPath: currentId.startsWith("/")
     readonly property var  currentNode: isRealPath ? null : fs.findNode(currentId)
     readonly property var  pathToCurrent: {
         if (currentId === "libraries")
-            return [{ name: (i18n.lang, i18n.t("Bibliotecas")), id: "libraries", path: "libraries" }]
+            return [{ name: (I18n.lang, I18n.t("Bibliotecas")), id: "libraries", path: "libraries" }]
         if (currentId === "trash")
-            return [{ name: (i18n.lang, i18n.t("Papelera de reciclaje")), id: "trash", path: "trash" }]
+            return [{ name: (I18n.lang, I18n.t("Papelera de reciclaje")), id: "trash", path: "trash" }]
         if (isRealPath) {
-            var segs = fsBackend.pathSegments
+            var segs = FsBackend.pathSegments
             var result = []
             for (var i = 0; i < segs.length; i++)
                 result.push({ name: segs[i].name, path: segs[i].path, id: segs[i].path })
@@ -126,24 +126,24 @@ ApplicationWindow {
 
     // ── Special-path detection ─────────────────────────────────────────────
     function specialFolderIcon(path) {
-        if (path === fsBackend.documentsPath()) return "document"
-        if (path === fsBackend.musicPath())     return "music"
-        if (path === fsBackend.picturesPath())  return "picture"
-        if (path === fsBackend.videosPath())    return "video"
-        if (path === fsBackend.downloadsPath()) return "folder-blue"
+        if (path === FsBackend.documentsPath()) return "document"
+        if (path === FsBackend.musicPath())     return "music"
+        if (path === FsBackend.picturesPath())  return "picture"
+        if (path === FsBackend.videosPath())    return "video"
+        if (path === FsBackend.downloadsPath()) return "folder-blue"
         return null
     }
 
     readonly property bool isSpecialPath: {
         if (!isRealPath)
             return currentId === "trash" || currentId === "network" || currentId === "libraries"
-        return currentId === fsBackend.homePath()      ||
-               currentId === fsBackend.desktopPath()   ||
-               currentId === fsBackend.documentsPath() ||
-               currentId === fsBackend.musicPath()     ||
-               currentId === fsBackend.picturesPath()  ||
-               currentId === fsBackend.videosPath()    ||
-               currentId === fsBackend.downloadsPath()
+        return currentId === FsBackend.homePath()      ||
+               currentId === FsBackend.desktopPath()   ||
+               currentId === FsBackend.documentsPath() ||
+               currentId === FsBackend.musicPath()     ||
+               currentId === FsBackend.picturesPath()  ||
+               currentId === FsBackend.videosPath()    ||
+               currentId === FsBackend.downloadsPath()
     }
 
     readonly property string currentFolderIconSrc: {
@@ -158,11 +158,11 @@ ApplicationWindow {
     }
 
     readonly property string currentFolderName: {
-        var _l = i18n.lang
-        if (currentId === "libraries") return i18n.t("Bibliotecas")
-        if (currentId === "trash")     return i18n.t("Papelera de reciclaje")
-        if (isRealPath && fsBackend.pathSegments.length > 0)
-            return fsBackend.pathSegments[fsBackend.pathSegments.length - 1].name
+        var _l = I18n.lang
+        if (currentId === "libraries") return I18n.t("Bibliotecas")
+        if (currentId === "trash")     return I18n.t("Papelera de reciclaje")
+        if (isRealPath && FsBackend.pathSegments.length > 0)
+            return FsBackend.pathSegments[FsBackend.pathSegments.length - 1].name
         if (currentNode) return currentNode.name
         return ""
     }
@@ -174,7 +174,7 @@ ApplicationWindow {
         var totalBytes = 0
         for (var i = 0; i < pool.length; i++)
             if (selectedIds[pool[i].id]) totalBytes += (pool[i].sizeBytes || 0)
-        return totalBytes > 0 ? fsBackend.formatFileSize(totalBytes) : ""
+        return totalBytes > 0 ? FsBackend.formatFileSize(totalBytes) : ""
     }
 
     readonly property string selectedItemType: {
@@ -217,11 +217,11 @@ ApplicationWindow {
     }
     Timer { id: toastTimer; interval: 2800; onTriggered: win.toastMsg = "" }
 
-    // ── fsBackend sync ─────────────────────────────────────────────────────
+    // ── FsBackend sync ─────────────────────────────────────────────────────
     Connections {
-        target: fsBackend
+        target: FsBackend
         function onCurrentFilesChanged() {
-            var raw = fsBackend.currentFiles
+            var raw = FsBackend.currentFiles
             var arr = []
             for (var i = 0; i < raw.length; i++) {
                 var f = raw[i]
@@ -262,7 +262,7 @@ ApplicationWindow {
     readonly property var items: {
         var raw
         if (currentId === "libraries") {
-            var libList = fsBackend.getLibraries()
+            var libList = FsBackend.getLibraries()
             raw = []
             for (var li = 0; li < libList.length; li++) {
                 var lib = libList[li]
@@ -270,7 +270,7 @@ ApplicationWindow {
                     id: lib.path, name: lib.name, type: "folder",
                     size: "", sizeBytes: 0, modified: "",
                     iconSrc:    "image://fileicons/" + lib.icon,
-                    typeStr:    i18n.t("Biblioteca"),
+                    typeStr:    I18n.t("Biblioteca"),
                     previewSrc: ""
                 })
             }
@@ -319,7 +319,7 @@ ApplicationWindow {
         var n = currentNode
         var arr = []
         if (n.kind === "computer") {
-            var drives = fsBackend.getStorageDevices()
+            var drives = FsBackend.getStorageDevices()
             for (var i = 0; i < drives.length; i++) {
                 var d = drives[i]
                 arr.push({
@@ -330,11 +330,11 @@ ApplicationWindow {
                     total:   d.totalGb,
                     free:    d.freeGb,
                     iconSrc: "image://fileicons/drive-" + d.kind,
-                    typeStr: d.fsType || i18n.t("Unidad local")
+                    typeStr: d.fsType || I18n.t("Unidad local")
                 })
             }
         } else if (n.kind === "network") {
-            var netDevs = fsBackend.getNetworkDevices()
+            var netDevs = FsBackend.getNetworkDevices()
             for (var j = 0; j < netDevs.length; j++) {
                 var nd = netDevs[j]
                 arr.push({
@@ -345,7 +345,7 @@ ApplicationWindow {
                     total:   nd.totalGb || 0,
                     free:    nd.freeGb  || 0,
                     iconSrc: "image://fileicons/network",
-                    typeStr: nd.kind ? (nd.kind.toUpperCase() + " Share") : i18n.t("Recurso de red")
+                    typeStr: nd.kind ? (nd.kind.toUpperCase() + " Share") : I18n.t("Recurso de red")
                 })
             }
         }
@@ -355,9 +355,9 @@ ApplicationWindow {
     // ── Navigation helpers ─────────────────────────────────────────────────
     function _syncBackend(id) {
         if (id === "trash")
-            fsBackend.navigateTo(fsBackend.homePath() + "/.local/share/Trash/files")
+            FsBackend.navigateTo(FsBackend.homePath() + "/.local/share/Trash/files")
         else if (id.startsWith("/"))
-            fsBackend.navigateTo(id)
+            FsBackend.navigateTo(id)
     }
 
     function navigate(id) {
@@ -450,12 +450,12 @@ ApplicationWindow {
         if (keys.length === 0) return
         if (isRealPath) {
             for (var i = 0; i < keys.length; i++) {
-                if (win.deleteToTrash) fsBackend.trashItem(keys[i])
-                else                   fsBackend.removeItem(keys[i])
+                if (win.deleteToTrash) FsBackend.trashItem(keys[i])
+                else                   FsBackend.removeItem(keys[i])
             }
-            fsBackend.refresh()
+            FsBackend.refresh()
         } else {
-            showToast(i18n.t("Eliminar: solo disponible en modo sistema de archivos real"))
+            showToast(I18n.t("Eliminar: solo disponible en modo sistema de archivos real"))
         }
     }
 
@@ -463,26 +463,26 @@ ApplicationWindow {
 
     function handleNewFolder() {
         if (isRealPath) {
-            var newFolderName = i18n.t("Nueva carpeta")
+            var newFolderName = I18n.t("Nueva carpeta")
             win.pendingRenameOnRefresh = currentId.replace(/\/$/, '') + "/" + newFolderName
-            fsBackend.createFolder(currentId, newFolderName)
+            FsBackend.createFolder(currentId, newFolderName)
             // createFolder calls refresh() internally; no need to call again
         } else {
-            showToast(i18n.t("Nueva carpeta: solo disponible en modo sistema de archivos real"))
+            showToast(I18n.t("Nueva carpeta: solo disponible en modo sistema de archivos real"))
         }
     }
 
     function handlePaste() {
-        if (!clipboardPath || !isRealPath) { showToast(i18n.t("No hay nada que pegar")); return }
+        if (!clipboardPath || !isRealPath) { showToast(I18n.t("No hay nada que pegar")); return }
         var dest = currentId + "/" + clipboardPath.split("/").pop()
-        if (clipboardMode === "cut") { fsBackend.moveItem(clipboardPath, dest); clipboardPath = "" }
-        else fsBackend.copyItem(clipboardPath, dest)
-        fsBackend.refresh()
+        if (clipboardMode === "cut") { FsBackend.moveItem(clipboardPath, dest); clipboardPath = "" }
+        else FsBackend.copyItem(clipboardPath, dest)
+        FsBackend.refresh()
     }
 
     // ── Keyboard shortcuts ─────────────────────────────────────────────────
     Shortcut { sequence: "F2";          onActivated: { if (win.selectedItem && win.isRealPath) win.renamingId = win.selectedItem.id } }
-    Shortcut { sequence: "F5";          onActivated: { if (isRealPath) fsBackend.refresh() } }
+    Shortcut { sequence: "F5";          onActivated: { if (isRealPath) FsBackend.refresh() } }
     Shortcut { sequence: "F10";         onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+Return";  onActivated: win.showMenuBar = !win.showMenuBar }
     Shortcut { sequence: "Alt+F10";    onActivated: win.showMenuBar = !win.showMenuBar }
@@ -503,41 +503,41 @@ ApplicationWindow {
         if (action === "paste")            { win.handlePaste(); return }
         if (action === "delete")           { win.handleDelete(); return }
         if (action === "rename")           { if (win.selectedItem && win.isRealPath) win.renamingId = win.selectedItem.id; return }
-        if (action === "restore")          { if (win.selectedItem) fsBackend.restoreFromTrash(win.selectedItem.id); return }
+        if (action === "restore")          { if (win.selectedItem) FsBackend.restoreFromTrash(win.selectedItem.id); return }
         if (action === "properties")       { if (win.selectedItem) { propertiesDialog.item = win.selectedItem; propertiesDialog.transientParent = win; propertiesDialog.show() }; return }
         if (action === "new-folder")       { win.handleNewFolder(); return }
         if (action.startsWith("new-file:")) {
-            if (!win.isRealPath) { win.showToast(i18n.t("Solo disponible en el sistema de archivos real")); return }
+            if (!win.isRealPath) { win.showToast(I18n.t("Solo disponible en el sistema de archivos real")); return }
             var nfExt = action.substring(9)
             var nfName, nfContent
-            if      (nfExt === "txt")   { nfName = i18n.t("Nuevo archivo de texto.txt"); nfContent = "" }
-            else if (nfExt === "html")  { nfName = i18n.t("Nuevo documento.html"); nfContent = "<!DOCTYPE html>\n<html>\n<head><title></title></head>\n<body>\n\n</body>\n</html>\n" }
-            else                        { nfName = i18n.t("Nuevo archivo"); nfContent = "" }
-            fsBackend.createFile(win.currentId, nfName, nfContent)
+            if      (nfExt === "txt")   { nfName = I18n.t("Nuevo archivo de texto.txt"); nfContent = "" }
+            else if (nfExt === "html")  { nfName = I18n.t("Nuevo documento.html"); nfContent = "<!DOCTYPE html>\n<html>\n<head><title></title></head>\n<body>\n\n</body>\n</html>\n" }
+            else                        { nfName = I18n.t("Nuevo archivo"); nfContent = "" }
+            FsBackend.createFile(win.currentId, nfName, nfContent)
             return
         }
         if (action === "open")             { win.handleOpen(win.selectedItem); return }
         if (action === "favorites")        { win.addToFavorites(win.selectedItem); return }
-        if (action === "extract-here")     { if (win.selectedItem) fsBackend.extractHere(win.selectedItem.id); return }
-        if (action === "refresh")          { if (win.isRealPath) fsBackend.refresh(); return }
+        if (action === "extract-here")     { if (win.selectedItem) FsBackend.extractHere(win.selectedItem.id); return }
+        if (action === "refresh")          { if (win.isRealPath) FsBackend.refresh(); return }
         if (action === "select-all")       { win.selectAll(); return }
         if (action === "invert-selection") { win.invertSelection(); return }
         if (action === "close")            { Qt.quit(); return }
         if (action === "about")            { aboutDialog.open(); return }
         if (action === "help")             { Qt.openUrlExternally("https://github.com/"); return }
-        if (action === "open-window")      { nativeMenu.openNewWindow(win.isRealPath ? win.currentId : ""); return }
-        if (action === "terminal")         { nativeMenu.openTerminalAt(win.isRealPath ? win.currentId : ""); return }
+        if (action === "open-window")      { NativeMenu.openNewWindow(win.isRealPath ? win.currentId : ""); return }
+        if (action === "terminal")         { NativeMenu.openTerminalAt(win.isRealPath ? win.currentId : ""); return }
         if (action === "connect-drive")    { connectDriveDialog.open(); return }
-        if (action === "disconnect-drive") { if (win.selectedItem) { fsBackend.disconnectFromServer(win.selectedItem.id); win.showToast(i18n.t("Desconectando…")) }; return }
+        if (action === "disconnect-drive") { if (win.selectedItem) { FsBackend.disconnectFromServer(win.selectedItem.id); win.showToast(I18n.t("Desconectando…")) }; return }
         if (action === "folder-options")   { folderOptionsDialog.showHiddenFiles = win.showHiddenFiles; folderOptionsDialog.open(); return }
         if (action === "toggle:hidden")    { win.showHiddenFiles = !win.showHiddenFiles; return }
         if (action === "copy-to-folder")   { folderPickerDialog.operation = "copy"; folderPickerDialog.open(win.isRealPath ? win.currentId : ""); return }
         if (action === "move-to-folder")   { folderPickerDialog.operation = "move"; folderPickerDialog.open(win.isRealPath ? win.currentId : ""); return }
         if (action === "send-to:desktop") {
             if (win.selectedItem) {
-                var desktopDest = fsBackend.desktopPath() + "/" + win.selectedItem.name
-                fsBackend.createSymlink(win.selectedItem.id, desktopDest)
-                win.showToast(i18n.t("Acceso directo creado en el Escritorio"))
+                var desktopDest = FsBackend.desktopPath() + "/" + win.selectedItem.name
+                FsBackend.createSymlink(win.selectedItem.id, desktopDest)
+                win.showToast(I18n.t("Acceso directo creado en el Escritorio"))
             }
             return
         }
@@ -552,16 +552,16 @@ ApplicationWindow {
         if (action === "paste-shortcut") {
             if (win.clipboardPath && win.isRealPath) {
                 var fn = win.clipboardPath.split("/").pop()
-                fsBackend.createSymlink(win.clipboardPath, win.currentId + "/" + fn)
-                fsBackend.refresh()
+                FsBackend.createSymlink(win.clipboardPath, win.currentId + "/" + fn)
+                FsBackend.refresh()
             }
             return
         }
         if (action === "new-shortcut") {
             if (win.selectedItem && win.isRealPath) {
-                var shortcutName = win.selectedItem.name + " " + i18n.t("(acceso directo)")
-                fsBackend.createSymlink(win.selectedItem.id, win.currentId + "/" + shortcutName)
-                fsBackend.refresh()
+                var shortcutName = win.selectedItem.name + " " + I18n.t("(acceso directo)")
+                FsBackend.createSymlink(win.selectedItem.id, win.currentId + "/" + shortcutName)
+                FsBackend.refresh()
             }
             return
         }
@@ -571,7 +571,7 @@ ApplicationWindow {
         if (action.startsWith("group:"))   { win.groupBy = action.substring(6); return }
         if (action === "toggle:trash")     { win.deleteToTrash = !win.deleteToTrash; return }
         if (action.startsWith("theme:"))   { win.themeName = action.substring(6); return }
-        if (action.startsWith("language:")){ i18n.lang = action.substring(9); return }
+        if (action.startsWith("language:")){ I18n.lang = action.substring(9); return }
         if (action.startsWith("layout:"))  {
             var layout = action.substring(7)
             if (layout === "menu-bar")      { win.showMenuBar      = !win.showMenuBar;      return }
@@ -596,14 +596,14 @@ ApplicationWindow {
             showStatusBar:       win.showStatusBar,
             showContentPreviews: win.showContentPreviews,
             themeName:           win.themeName,
-            language:            i18n.lang,
+            language:            I18n.lang,
             deleteToTrash:       win.deleteToTrash
         }
     }
 
     function showContextMenu(item) {
         var isEmpty = (item === null || item === undefined)
-        var action = nativeMenu.showMenu({
+        var action = NativeMenu.showMenu({
             type:          isEmpty ? "empty" : "file",
             item:          isEmpty ? {} : { id: item.id, name: item.name, type: item.type },
             selectedCount: win.selectedCount,
@@ -632,7 +632,7 @@ ApplicationWindow {
         onRenameConfirmed: function(oldPath, newName) {
             var dir = oldPath.substring(0, oldPath.lastIndexOf('/'))
             var newPath = dir + "/" + newName
-            fsBackend.renameItem(oldPath, newPath)
+            FsBackend.renameItem(oldPath, newPath)
         }
     }
 
@@ -647,8 +647,8 @@ ApplicationWindow {
         id: connectDriveDialog
         pal: win.pal
         onConnectRequested: function(uri) {
-            fsBackend.connectToServer(uri)
-            win.showToast(i18n.t("Conectando a ") + uri + "…")
+            FsBackend.connectToServer(uri)
+            win.showToast(I18n.t("Conectando a ") + uri + "…")
         }
     }
 
@@ -661,10 +661,10 @@ ApplicationWindow {
             if (keys.length === 0) return
             for (var i = 0; i < keys.length; i++) {
                 var fn = keys[i].split("/").pop()
-                if (op === "move") fsBackend.moveItem(keys[i], destPath + "/" + fn)
-                else               fsBackend.copyItem(keys[i], destPath + "/" + fn)
+                if (op === "move") FsBackend.moveItem(keys[i], destPath + "/" + fn)
+                else               FsBackend.copyItem(keys[i], destPath + "/" + fn)
             }
-            fsBackend.refresh()
+            FsBackend.refresh()
         }
     }
 
@@ -691,12 +691,12 @@ ApplicationWindow {
                 }
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: (i18n.lang, i18n.t("No se detectaron dispositivos de red"))
+                    text: (I18n.lang, I18n.t("No se detectaron dispositivos de red"))
                     color: win.pal.muted; font.pixelSize: 13
                 }
                 Label {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: (i18n.lang, i18n.t("Comprueba que estés conectado a una red local"))
+                    text: (I18n.lang, I18n.t("Comprueba que estés conectado a una red local"))
                     color: win.pal.muted; font.pixelSize: 11; opacity: 0.7
                 }
             }
@@ -721,7 +721,7 @@ ApplicationWindow {
                         ctx.moveTo(20,32); ctx.lineTo(44,32); ctx.moveTo(20,40); ctx.lineTo(36,40); ctx.stroke()
                     }
                 }
-                Label { anchors.horizontalCenter: parent.horizontalCenter; text: (i18n.lang, i18n.t("Esta carpeta está vacía")); color: win.pal.muted; font.pixelSize: 13 }
+                Label { anchors.horizontalCenter: parent.horizontalCenter; text: (I18n.lang, I18n.t("Esta carpeta está vacía")); color: win.pal.muted; font.pixelSize: 13 }
             }
         }
     }
@@ -745,12 +745,12 @@ ApplicationWindow {
             onRenameCommitted: function(id, newName) {
                 win.renamingId = ""
                 var dir = id.substring(0, id.lastIndexOf('/'))
-                fsBackend.renameItem(id, dir + "/" + newName)
+                FsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
     }
@@ -770,7 +770,7 @@ ApplicationWindow {
             onEmptyAreaClicked: win.selectedIds = ({})
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
     }
@@ -799,12 +799,12 @@ ApplicationWindow {
             onRenameCommitted: function(id, newName) {
                 win.renamingId = ""
                 var dir = id.substring(0, id.lastIndexOf('/'))
-                fsBackend.renameItem(id, dir + "/" + newName)
+                FsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
     }
@@ -826,12 +826,12 @@ ApplicationWindow {
             onRenameCommitted: function(id, newName) {
                 win.renamingId = ""
                 var dir = id.substring(0, id.lastIndexOf('/'))
-                fsBackend.renameItem(id, dir + "/" + newName)
+                FsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
     }
@@ -852,12 +852,12 @@ ApplicationWindow {
             onRenameCommitted: function(id, newName) {
                 win.renamingId = ""
                 var dir = id.substring(0, id.lastIndexOf('/'))
-                fsBackend.renameItem(id, dir + "/" + newName)
+                FsBackend.renameItem(id, dir + "/" + newName)
             }
             onRenameCancelled: win.renamingId = ""
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
     }
@@ -876,9 +876,17 @@ ApplicationWindow {
             }
             onItemDroppedOnFolder: function(srcPath, destFolder) {
                 var fileName = srcPath.split("/").pop()
-                if (fileName) fsBackend.moveItem(srcPath, destFolder + "/" + fileName)
+                if (fileName) FsBackend.moveItem(srcPath, destFolder + "/" + fileName)
             }
         }
+    }
+
+    // Lazy-paint flag: heavy UI defers itself until after the first frame so
+    // the window appears immediately with just its background colour.
+    property bool _heavyReady: false
+    Timer {
+        interval: 1; running: true; repeat: false
+        onTriggered: win._heavyReady = true
     }
 
     // ── Layout ─────────────────────────────────────────────────────────────
@@ -911,11 +919,11 @@ ApplicationWindow {
             clip: true
             visible: win.showMenuBar
             pal: win.pal
-            onArchivoClicked:     win.handleMenuAction(nativeMenu.showMenuBarMenu("archivo",     win.menuBarParams()))
-            onEdicionClicked:     win.handleMenuAction(nativeMenu.showMenuBarMenu("edicion",     win.menuBarParams()))
-            onVerClicked:         win.handleMenuAction(nativeMenu.showMenuBarMenu("ver",         win.menuBarParams()))
-            onHerramientasClicked:win.handleMenuAction(nativeMenu.showMenuBarMenu("herramientas",win.menuBarParams()))
-            onAyudaClicked:       win.handleMenuAction(nativeMenu.showMenuBarMenu("ayuda",       win.menuBarParams()))
+            onArchivoClicked:     win.handleMenuAction(NativeMenu.showMenuBarMenu("archivo",     win.menuBarParams()))
+            onEdicionClicked:     win.handleMenuAction(NativeMenu.showMenuBarMenu("edicion",     win.menuBarParams()))
+            onVerClicked:         win.handleMenuAction(NativeMenu.showMenuBarMenu("ver",         win.menuBarParams()))
+            onHerramientasClicked:win.handleMenuAction(NativeMenu.showMenuBarMenu("herramientas",win.menuBarParams()))
+            onAyudaClicked:       win.handleMenuAction(NativeMenu.showMenuBarMenu("ayuda",       win.menuBarParams()))
         }
 
         // Command bar
@@ -927,7 +935,7 @@ ApplicationWindow {
             showPreview:      win.showPreview
             viewMode:         win.viewMode
             selectedItemType: win.selectedItemType
-            onOrganizeClicked:          win.handleMenuAction(nativeMenu.showOrganizeMenu({ selectedCount: win.selectedCount, showMenuBar: win.showMenuBar, showDetailsPanel: win.showDetailsPanel, showPreview: win.showPreview, showSidebar: win.showSidebar, showContentPreviews: win.showContentPreviews }))
+            onOrganizeClicked:          win.handleMenuAction(NativeMenu.showOrganizeMenu({ selectedCount: win.selectedCount, showMenuBar: win.showMenuBar, showDetailsPanel: win.showDetailsPanel, showPreview: win.showPreview, showSidebar: win.showSidebar, showContentPreviews: win.showContentPreviews }))
             onDeleteRequested:          win.handleDelete()
             onNewFolderRequested:       win.handleNewFolder()
             onPreviewToggled:           win.showPreview = !win.showPreview
@@ -995,6 +1003,7 @@ ApplicationWindow {
                 Loader {
                     id: viewLoader
                     anchors.fill: parent
+                    asynchronous: true
                     sourceComponent: {
                         if (win.useGroupedView && win.groupedItems.length === 0) return networkEmptyComp
                         if (win.useGroupedView)        return groupedComp
@@ -1070,7 +1079,7 @@ ApplicationWindow {
             useGroupedView:      win.useGroupedView
             currentKind:         win.currentNode ? (win.currentNode.kind || "") : ""
             systemInfo:          (win.useGroupedView && win.currentNode && win.currentNode.kind === "computer")
-                                     ? fsBackend.getSystemInfo() : null
+                                     ? FsBackend.getSystemInfo() : null
         }
 
         // Status bar

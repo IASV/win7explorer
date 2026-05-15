@@ -13,11 +13,22 @@ Rectangle {
     color: pal.sidebar
     border.color: pal.borderSoft
 
-    FolderTree {
+    // Defer building the (heavy) tree until after the window's first paint.
+    // The panel is visible immediately with its sidebar colour; the tree
+    // streams in asynchronously, so the rest of the UI doesn't block on it.
+    Loader {
         anchors.fill: parent
-        pal:         root.pal
-        currentPath: root.currentPath
-        favorites:   root.favorites
-        onFolderActivated: function(path) { root.folderActivated(path) }
+        asynchronous: true
+        sourceComponent: treeComp
+    }
+
+    Component {
+        id: treeComp
+        FolderTree {
+            pal:         root.pal
+            currentPath: root.currentPath
+            favorites:   root.favorites
+            onFolderActivated: function(path) { root.folderActivated(path) }
+        }
     }
 }

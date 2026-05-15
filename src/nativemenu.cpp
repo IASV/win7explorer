@@ -23,7 +23,9 @@
 
 using namespace Qt::StringLiterals;
 
-NativeMenu::NativeMenu(QObject *parent) : QObject(parent) {}
+NativeMenu *NativeMenu::s_instance = nullptr;
+
+NativeMenu::NativeMenu(QObject *parent) : QObject(parent) { s_instance = this; }
 
 static QIcon ti(const QString &name) { return QIcon::fromTheme(name); }
 

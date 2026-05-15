@@ -24,11 +24,11 @@ ScrollView {
 
         Repeater {
             model: [
-                { title: (i18n.lang, i18n.t("Unidades de disco duro")),
+                { title: (I18n.lang, I18n.t("Unidades de disco duro")),
                   filter: function(i){ return i.type === "drive" && i.kind !== "disc" && i.kind !== "removable" && i.kind !== "mtp" } },
-                { title: (i18n.lang, i18n.t("Dispositivos con almacenamiento extraíble")),
+                { title: (I18n.lang, I18n.t("Dispositivos con almacenamiento extraíble")),
                   filter: function(i){ return i.type === "drive" && (i.kind === "disc" || i.kind === "removable" || i.kind === "mtp") } },
-                { title: (i18n.lang, i18n.t("Otros")),
+                { title: (I18n.lang, I18n.t("Otros")),
                   filter: function(i){ return i.kind === "pc" || i.kind === "printer" || i.type === "network" } }
             ]
 
@@ -206,7 +206,7 @@ ScrollView {
 
                                     Label {
                                         visible: modelData.total !== undefined && modelData.total > 0
-                                        text: (i18n.lang, modelData.free.toFixed(1) + " " + i18n.t("GB libres de") + " " + modelData.total.toFixed(1) + " GB")
+                                        text: (I18n.lang, modelData.free.toFixed(1) + " " + I18n.t("GB libres de") + " " + modelData.total.toFixed(1) + " GB")
                                         color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted
                                         font.pixelSize: 10
                                         elide: Text.ElideRight

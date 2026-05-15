@@ -38,27 +38,27 @@ Rectangle {
 
         Repeater {
             model: [
-                { label: (i18n.lang, i18n.t("Organizar")),             chevron: true, always: true, visFor: null,
+                { label: (I18n.lang, I18n.t("Organizar")),             chevron: true, always: true, visFor: null,
                   action: function(){ root.organizeClicked() } },
                 { sep: true, visFor: null },
-                { label: (i18n.lang, i18n.t("Incluir en biblioteca")), chevron: true, visFor: ["folder","drive"],
+                { label: (I18n.lang, I18n.t("Incluir en biblioteca")), chevron: true, visFor: ["folder","drive"],
                   action: function(){ root.libraryClicked() } },
-                { label: (i18n.lang, i18n.t("Abrir")),                 chevron: true, visFor: ["document","generic"],
+                { label: (I18n.lang, I18n.t("Abrir")),                 chevron: true, visFor: ["document","generic"],
                   action: function(){ root.openClicked() } },
-                { label: (i18n.lang, i18n.t("Compartir con")),         visFor: ["folder","drive","document","generic"],
+                { label: (I18n.lang, I18n.t("Compartir con")),         visFor: ["folder","drive","document","generic"],
                   action: function(){ root.shareClicked() } },
-                { label: (i18n.lang, i18n.t("Presentación")),          visFor: ["image"],
+                { label: (I18n.lang, I18n.t("Presentación")),          visFor: ["image"],
                   action: function(){ root.slideShowClicked() } },
-                { label: (i18n.lang, i18n.t("Reproducir")),            visFor: ["audio","video"],
+                { label: (I18n.lang, I18n.t("Reproducir")),            visFor: ["audio","video"],
                   action: function(){ root.playClicked() } },
-                { label: (i18n.lang, i18n.t("Imprimir")),              visFor: ["image","document"],
+                { label: (I18n.lang, I18n.t("Imprimir")),              visFor: ["image","document"],
                   action: function(){ root.printClicked() } },
-                { label: (i18n.lang, i18n.t("Correo")),                visFor: ["image","audio","video","document","generic"],
+                { label: (I18n.lang, I18n.t("Correo")),                visFor: ["image","audio","video","document","generic"],
                   action: function(){ root.emailClicked() } },
-                { label: (i18n.lang, i18n.t("Eliminar")),              visFor: ["folder","drive","image","audio","video","document","generic"],
+                { label: (I18n.lang, I18n.t("Eliminar")),              visFor: ["folder","drive","image","audio","video","document","generic"],
                   action: function(){ root.deleteRequested() } },
                 { sep: true, visFor: null },
-                { label: (i18n.lang, i18n.t("Nueva carpeta")),         always: true, visFor: null,
+                { label: (I18n.lang, I18n.t("Nueva carpeta")),         always: true, visFor: null,
                   action: function(){ root.newFolderRequested() } }
             ]
             delegate: Loader {
@@ -187,7 +187,7 @@ Rectangle {
                 }
                 MouseArea {
                     id: vsIconMa; anchors.fill: parent; hoverEnabled: true
-                    onClicked: { var m = nativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
+                    onClicked: { var m = NativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
                 }
             }
             Rectangle {
@@ -206,7 +206,7 @@ Rectangle {
                 }
                 MouseArea {
                     id: vsChevMa; anchors.fill: parent; hoverEnabled: true
-                    onClicked: { var m = nativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
+                    onClicked: { var m = NativeMenu.showViewDropdown(root.viewMode); if (m) root.viewModeChangeRequested(m) }
                 }
             }
         }

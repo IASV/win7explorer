@@ -6,6 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+# Faster startup / smaller binary in Release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+include(CheckIPOSupported)
+check_ipo_supported(RESULT _ipo_ok OUTPUT _ipo_err)
+if(_ipo_ok)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 Widgets)
 
 qt_add_executable(win7explorer
@@ -122,6 +132,8 @@ qt_add_resources(win7explorer "winicons"
         icons/details-shadow.png
         icons/libraries.png
 )
+
+target_include_directories(win7explorer PRIVATE src)
 
 target_link_libraries(win7explorer PRIVATE
     Qt6::Quick

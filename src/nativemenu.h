@@ -12,6 +12,8 @@ public:
     explicit NativeMenu(QObject *parent = nullptr);
     void setI18n(I18n *i) { m_i18n = i; }
 
+    static NativeMenu *instance() { return s_instance; }
+
     // Context menu (right-click on file/empty area)
     Q_INVOKABLE QString showMenu(const QVariantMap &params);
 
@@ -43,4 +45,5 @@ public:
 
 private:
     I18n *m_i18n = nullptr;
+    static NativeMenu *s_instance;
 };

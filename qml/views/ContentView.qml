@@ -114,10 +114,10 @@ ListView {
 
                 Label {
                     text: {
-                        var _l = i18n.lang
+                        var _l = I18n.lang
                         var parts = [modelData.typeStr || ""]
                         if (modelData.size)     parts.push(modelData.size)
-                        if (modelData.modified) parts.push(i18n.t("Modificado: ") + modelData.modified)
+                        if (modelData.modified) parts.push(I18n.t("Modificado: ") + modelData.modified)
                         return parts.filter(Boolean).join("  ·  ")
                     }
                     color: root.selectedIds[modelData.id] ? root.pal.selText : root.pal.muted

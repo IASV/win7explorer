@@ -7,7 +7,7 @@ Window {
     property var    pal
     property string operation: "copy"
 
-    title:    (i18n.lang, i18n.t("Seleccionar carpeta de destino"))
+    title:    (I18n.lang, I18n.t("Seleccionar carpeta de destino"))
     width:    420
     height:   110
     modality: Qt.ApplicationModal
@@ -34,9 +34,9 @@ Window {
             spacing:         8
 
             Label {
-                text:           (i18n.lang, root.operation === "move"
-                                    ? i18n.t("Mover a:")
-                                    : i18n.t("Copiar a:"))
+                text:           (I18n.lang, root.operation === "move"
+                                    ? I18n.t("Mover a:")
+                                    : I18n.t("Copiar a:"))
                 font.pixelSize: 11
                 color:          root.pal ? root.pal.text : "#000"
             }
@@ -62,7 +62,7 @@ Window {
 
                 Button {
                     id:        selectButton
-                    text:      (i18n.lang, i18n.t("Seleccionar"))
+                    text:      (I18n.lang, I18n.t("Seleccionar"))
 
                     enabled:   destField.text.charAt(0) === "/"
                     onClicked: {
@@ -72,7 +72,7 @@ Window {
                 }
 
                 Button {
-                    text:      (i18n.lang, i18n.t("Cancelar"))
+                    text:      (I18n.lang, I18n.t("Cancelar"))
                     onClicked: root.close()
                 }
             }

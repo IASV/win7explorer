@@ -31,27 +31,27 @@ Menu {
     signal propertiesRequested
     signal closeRequested
 
-    MenuItem { text: (i18n.lang, i18n.t("Deshacer")); enabled: false; onTriggered: root.undoRequested() }
-    MenuItem { text: (i18n.lang, i18n.t("Rehacer")); enabled: false;  onTriggered: root.redoRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Deshacer")); enabled: false; onTriggered: root.undoRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Rehacer")); enabled: false;  onTriggered: root.redoRequested() }
     MenuSeparator {}
-    MenuItem { text: (i18n.lang, i18n.t("Cortar"));  enabled: root.selectedCount > 0; onTriggered: root.cutRequested() }
-    MenuItem { text: (i18n.lang, i18n.t("Copiar"));  enabled: root.selectedCount > 0; onTriggered: root.copyRequested() }
-    MenuItem { text: (i18n.lang, i18n.t("Pegar"));                                    onTriggered: root.pasteRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Cortar"));  enabled: root.selectedCount > 0; onTriggered: root.cutRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Copiar"));  enabled: root.selectedCount > 0; onTriggered: root.copyRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Pegar"));                                    onTriggered: root.pasteRequested() }
     MenuSeparator {}
-    MenuItem { text: (i18n.lang, i18n.t("Seleccionar todo")); onTriggered: root.selectAllRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Seleccionar todo")); onTriggered: root.selectAllRequested() }
     MenuSeparator {}
     Menu {
-        title: (i18n.lang, i18n.t("Diseño"))
-        MenuItem { text: (i18n.lang, i18n.t("Barra de menús"));        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
-        MenuItem { text: (i18n.lang, i18n.t("Panel de detalles"));     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
-        MenuItem { text: (i18n.lang, i18n.t("Panel de vista previa")); checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
-        MenuItem { text: (i18n.lang, i18n.t("Panel de navegación"));   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
+        title: (I18n.lang, I18n.t("Diseño"))
+        MenuItem { text: (I18n.lang, I18n.t("Barra de menús"));        checkable: true; checked: root.showMenuBar;      onTriggered: root.menuBarToggled() }
+        MenuItem { text: (I18n.lang, I18n.t("Panel de detalles"));     checkable: true; checked: root.showDetailsPanel; onTriggered: root.detailsPanelToggled() }
+        MenuItem { text: (I18n.lang, I18n.t("Panel de vista previa")); checkable: true; checked: root.showPreview;      onTriggered: root.previewToggled() }
+        MenuItem { text: (I18n.lang, I18n.t("Panel de navegación"));   checkable: true; checked: root.showSidebar;      onTriggered: root.sidebarToggled() }
     }
     MenuSeparator {}
-    MenuItem { text: (i18n.lang, i18n.t("Eliminar"));       enabled: root.selectedCount > 0;    onTriggered: root.deleteRequested() }
-    MenuItem { text: (i18n.lang, i18n.t("Cambiar nombre")); enabled: root.selectedCount === 1;  onTriggered: root.renameRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Eliminar"));       enabled: root.selectedCount > 0;    onTriggered: root.deleteRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Cambiar nombre")); enabled: root.selectedCount === 1;  onTriggered: root.renameRequested() }
     MenuSeparator {}
-    MenuItem { text: (i18n.lang, i18n.t("Propiedades")); enabled: root.selectedCount > 0;       onTriggered: root.propertiesRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Propiedades")); enabled: root.selectedCount > 0;       onTriggered: root.propertiesRequested() }
     MenuSeparator {}
-    MenuItem { text: (i18n.lang, i18n.t("Cerrar")); onTriggered: root.closeRequested() }
+    MenuItem { text: (I18n.lang, I18n.t("Cerrar")); onTriggered: root.closeRequested() }
 }

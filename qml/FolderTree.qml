@@ -7,8 +7,8 @@ Item {
     property var    pal
     property string currentPath: ""
     property var    favorites: [
-        { name: (i18n.lang, i18n.t("Escritorio")), path: fsBackend.desktopPath(),   icon: "folder-closed" },
-        { name: (i18n.lang, i18n.t("Descargas")),  path: fsBackend.downloadsPath(), icon: "folder-blue" }
+        { name: (I18n.lang, I18n.t("Escritorio")), path: FsBackend.desktopPath(),   icon: "folder-closed" },
+        { name: (I18n.lang, I18n.t("Descargas")),  path: FsBackend.downloadsPath(), icon: "folder-blue" }
     ]
 
     signal folderActivated(string path)
@@ -187,7 +187,7 @@ Item {
                         hasChildren: false, expanded: false, sectionType: ""
                     })
             } else if (sType === "libraries") {
-                var libs = fsBackend.getLibraries()
+                var libs = FsBackend.getLibraries()
                 for (var b = libs.length - 1; b >= 0; b--)
                     treeModel.insert(idx + 1, {
                         name: libs[b].name, type: "special", level: childLevel,
@@ -195,7 +195,7 @@ Item {
                         hasChildren: false, expanded: false, sectionType: ""
                     })
             } else if (sType === "equipo") {
-                var drives = fsBackend.getStorageDevices()
+                var drives = FsBackend.getStorageDevices()
                 for (var c = drives.length - 1; c >= 0; c--)
                     treeModel.insert(idx + 1, {
                         name: drives[c].displayName, type: "special", level: childLevel,
@@ -203,9 +203,9 @@ Item {
                         hasChildren: drives[c].path !== "", expanded: false, sectionType: ""
                     })
             } else if (sType === "network") {
-                var nets = fsBackend.getNetworkDevices()
+                var nets = FsBackend.getNetworkDevices()
                 treeModel.insert(idx + 1, {
-                    name: (i18n.lang, i18n.t("Conectar a servidor…")), type: "special", level: childLevel,
+                    name: (I18n.lang, I18n.t("Conectar a servidor…")), type: "special", level: childLevel,
                     icon: "network-connect", path: "network:connect",
                     hasChildren: false, expanded: false, sectionType: ""
                 })
@@ -217,7 +217,7 @@ Item {
                     })
             } else {
                 // Real filesystem folder
-                var subs = fsBackend.getSubdirectories(path)
+                var subs = FsBackend.getSubdirectories(path)
                 for (var d = subs.length - 1; d >= 0; d--)
                     treeModel.insert(idx + 1, {
                         name: subs[d].name, type: "folder", level: childLevel,
@@ -235,7 +235,7 @@ Item {
 
         // Favoritos
         treeModel.append({
-            name: (i18n.lang, i18n.t("Favoritos")), type: "header", level: 0, icon: "folder-closed",
+            name: (I18n.lang, I18n.t("Favoritos")), type: "header", level: 0, icon: "folder-closed",
             path: "", hasChildren: favorites.length > 0, expanded: true, sectionType: "favorites"
         })
         for (var i = 0; i < favorites.length; i++)
@@ -246,9 +246,9 @@ Item {
             })
 
         // Bibliotecas
-        var libs = fsBackend.getLibraries()
+        var libs = FsBackend.getLibraries()
         treeModel.append({
-            name: (i18n.lang, i18n.t("Bibliotecas")), type: "header", level: 0, icon: "libraries",
+            name: (I18n.lang, I18n.t("Bibliotecas")), type: "header", level: 0, icon: "libraries",
             path: "libraries", hasChildren: libs.length > 0, expanded: true, sectionType: "libraries"
         })
         for (var j = 0; j < libs.length; j++)
@@ -258,9 +258,9 @@ Item {
             })
 
         // Equipo
-        var drives = fsBackend.getStorageDevices()
+        var drives = FsBackend.getStorageDevices()
         treeModel.append({
-            name: (i18n.lang, i18n.t("Equipo")), type: "header", level: 0, icon: "computer",
+            name: (I18n.lang, I18n.t("Equipo")), type: "header", level: 0, icon: "computer",
             path: "computer", hasChildren: drives.length > 0, expanded: true, sectionType: "equipo"
         })
         for (var k = 0; k < drives.length; k++)
@@ -273,19 +273,19 @@ Item {
 
         // Red
         treeModel.append({
-            name: (i18n.lang, i18n.t("Red")), type: "header", level: 0, icon: "network-workgroup",
+            name: (I18n.lang, I18n.t("Red")), type: "header", level: 0, icon: "network-workgroup",
             path: "network", hasChildren: true, expanded: false, sectionType: "network"
         })
 
         // Papelera de reciclaje
         treeModel.append({
-            name: (i18n.lang, i18n.t("Papelera de reciclaje")), type: "special", level: 0, icon: "user-trash",
+            name: (I18n.lang, I18n.t("Papelera de reciclaje")), type: "special", level: 0, icon: "user-trash",
             path: "trash", hasChildren: false, expanded: false, sectionType: ""
         })
     }
 
     Connections {
-        target: fsBackend
+        target: FsBackend
         function onDevicesChanged() { refreshDevices() }
     }
 
